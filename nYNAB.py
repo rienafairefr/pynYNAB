@@ -37,8 +37,6 @@ br.open(url)
 
 firstlogin=dorequest({"email":email,"password":password,"remember_me":True,"device_info":{"id":id}},'loginUser')
 sessionToken=firstlogin["session_token"]
-cp.set('YNAB','sessionToken',sessionToken)
-cp.set('YNAB','firstlogin',json.dumps(firstlogin))
 session.headers['X-Session-Token']=sessionToken
 session.headers['User-Agent']='python nYNAB API bot - rienafairefr rienafairefr@gmail.com'
 session.headers['X-YNAB-Client-App-Version']='build/staging/v0.6.8597'
