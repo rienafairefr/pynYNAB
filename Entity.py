@@ -1,4 +1,5 @@
 import collections
+import uuid
 
 
 class Entity(object):
@@ -31,9 +32,10 @@ class Entity(object):
         self.fields = self.fields if hasattr(self,'fields') else {}
         self.listfields = self.listfields if hasattr(self,'listfields') else {}
         for field in self.fields:
-            self.values[field]=Entity()
+            self.values[field]=None
         for listfield in self.listfields.iterkeys():
             self.values[listfield]=ListofEntities(self.listfields[listfield])
+        self.values['id']=str(uuid.uuid4())
 
     def update_from_changed_entities(self,changed_entities):
         for listfield in self.listfields:
@@ -65,7 +67,10 @@ class ListofEntities(object):
             except KeyError:
                 self.dict_entities[entity_id]=self.typeItems()
                 self.dict_entities[entity_id].update_from_dict(entity)
-
+    def append(self,o):
+        if not isinstance(o,Entity):
+            raise ValueError('this ListofEntities can only contain Entities')
+        self.dict_entities[o.id]=o
     def __iter__(self):
         return self.dict_entities.itervalues()
 
@@ -74,3 +79,16 @@ class ListofEntities(object):
 
     def __getitem__(self, item):
         return self.dict_entities.values().__getitem__(item)
+
+    def getdiff(self,other):
+        if not isinstance(other,ListofEntities):
+            return
+        changed=[]
+        for id,entity in other.dict_entities.iteritems():
+            try:
+                if self.dict_entities[id] != entity:
+                    changed.append(entity)
+            except KeyError:
+                # entity is added in other compared to self
+                changed.append(entity)
+        return changed

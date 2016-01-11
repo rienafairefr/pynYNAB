@@ -69,3 +69,6 @@ class Catalog(Entity):
             'ce_budgets': CatalogBudget
         }
         Entity.__init__(self)
+        self.knowledge = 0
+        self.current_knowledge=0
+        self.server_knowledge_of_device = 0

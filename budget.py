@@ -369,5 +369,6 @@ class BudgetBudget(Entity):
         ]
         Entity.__init__(self)
 
-        self.current_server_knowledge = 0
+        self.knowledge = 0
+        self.current_knowledge = 0
         self.server_knowledge_of_device = 0
