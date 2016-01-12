@@ -27,10 +27,10 @@ class nYNAB(object):
     def sync(self):
         # ending-starting represents the number of modifications that have been done to the data ?
         self.previouscatalog=copy.copy(self.catalog)
-        changed_entities={l:self.catalog.values[l].getdiff(self.previouscatalog.values[l]) for l in self.catalog.listfields}
+        changed_entities=self.catalog.get_changed_entities(self.previouscatalog)
         syncCatalogData=self.ynab.dorequest({"starting_device_knowledge":self.catalog.knowledge,
                                              "ending_device_knowledge":self.catalog.current_knowledge,
-                                             "device_knowledge_of_server":self.catalog.knowledge,
+                                             "device_knowledge_of_server":self.catalog.device_knowledge_of_server,
                                              "changed_entities":changed_entities},'syncCatalogData')
         self.catalog.update_from_changed_entities(syncCatalogData['changed_entities'])
         self.catalog.server_knowledge_of_device=syncCatalogData['server_knowledge_of_device']
@@ -43,16 +43,18 @@ class nYNAB(object):
             except KeyError:
                 budget=BudgetBudget()
                 previousbudget=BudgetBudget()
-            changed_entities={l:budget.values[l].getdiff(previousbudget.values[l]) for l in budget.listfields}
+            changed_entities=budget.get_changed_entities(previousbudget)
             syncBudget=self.ynab.dorequest({"budget_version_id":budget_version.id,
                                             "starting_device_knowledge":budget.knowledge,
                                             "ending_device_knowledge":budget.current_knowledge,
-                                            "device_knowledge_of_server":self.catalog.knowledge,
-                                            "calculated_entities_included":True,
+                                            "device_knowledge_of_server":self.catalog.device_knowledge_of_server,
+                                            "calculated_entities_included":False,
                                             "changed_entities":changed_entities},'syncBudgetData')
 
             budget.update_from_changed_entities(syncBudget['changed_entities'])
             budget.server_knowledge_of_device=syncBudget['server_knowledge_of_device']
+            budget.device_knowledge_of_server=syncBudget['device_knowledge_of_server']
+
             self.budgetsdict[budget_version.id]=budget
 
         self.budgets=self.budgetsdict.values()
