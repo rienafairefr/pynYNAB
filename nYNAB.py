@@ -34,6 +34,7 @@ class nYNAB(object):
                                              "changed_entities":changed_entities},'syncCatalogData')
         self.catalog.update_from_changed_entities(syncCatalogData['changed_entities'])
         self.catalog.server_knowledge_of_device=syncCatalogData['server_knowledge_of_device']
+        self.catalog.device_knowledge_of_server=syncCatalogData['current_server_knowledge']
 
         self.previousbudgetdict=copy.copy(self.budgetsdict)
         for budget_version in self.catalog.ce_budget_versions:
@@ -53,7 +54,7 @@ class nYNAB(object):
 
             budget.update_from_changed_entities(syncBudget['changed_entities'])
             budget.server_knowledge_of_device=syncBudget['server_knowledge_of_device']
-            budget.device_knowledge_of_server=syncBudget['device_knowledge_of_server']
+            budget.device_knowledge_of_server=syncBudget['current_server_knowledge']
 
             self.budgetsdict[budget_version.id]=budget
 
