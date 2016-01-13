@@ -46,9 +46,9 @@ class nYNAB(object):
                 previousbudget=BudgetBudget()
             changed_entities=budget.get_changed_entities(previousbudget)
             syncBudget=self.ynab.dorequest({"budget_version_id":budget_version.id,
-                                            "starting_device_knowledge":budget.knowledge,
-                                            "ending_device_knowledge":budget.current_knowledge,
-                                            "device_knowledge_of_server":self.catalog.device_knowledge_of_server,
+                                            "starting_device_knowledge":previousbudget.knowledge,
+                                            "ending_device_knowledge":previousbudget.current_knowledge,
+                                            "device_knowledge_of_server":previousbudget.device_knowledge_of_server,
                                             "calculated_entities_included":False,
                                             "changed_entities":changed_entities},'syncBudgetData')
 
@@ -57,6 +57,7 @@ class nYNAB(object):
             budget.device_knowledge_of_server=syncBudget['current_server_knowledge']
 
             self.budgetsdict[budget_version.id]=budget
+            self.previousbudgetsdict[budget_version.id]=budget
 
         self.budgets=self.budgetsdict.values()
 

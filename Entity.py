@@ -24,7 +24,9 @@ class Entity(object):
         object.__setattr__(self,key,value)
 
     def get_changed_entities(self,other):
-        return {l:getattr(self,l).get_changed_entities(getattr(other,l)) for l in self.listfields}
+        firstrun= {l:getattr(self,l).get_changed_entities(getattr(other,l)) for l in self.listfields}
+        return {k:v for k,v in firstrun.iteritems() if v!=[]}
+
 
     def __init__(self):
         # initialize the Entity, go through the instance fields and fetch the actual fields and listfields
@@ -56,6 +58,8 @@ class ListofEntities(object):
         return self.__str__()
 
     def update_from_changed_entities(self,changed_entities):
+        if changed_entities is None:
+            return
         for entity in changed_entities:
             entity_id=entity['id']
             try:
