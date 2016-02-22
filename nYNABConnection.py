@@ -9,6 +9,7 @@ import os
 from budget import BudgetBudget
 from catalog import Catalog
 from config import appdir
+from Entity import ComplexEncoder
 
 
 class nYNABConnexionError(Exception):
@@ -65,7 +66,7 @@ class nYNABConnection(object):
         # getInstitutionLoginFields,getInstitutionAccountList,registerAccountForDirectConnect,
         # updateDirectConnectCredentials,poll,createFeedback,runSqlStatement
 
-        params = {'request_data': json.dumps(request_dic), u'operation_name': opname}
+        params = {'request_data': json.dumps(request_dic, cls=ComplexEncoder), u'operation_name': opname}
         r = self.session.post(self.urlCatalog, params, verify=False)
         js = r.json()
         if r.status_code != 200:

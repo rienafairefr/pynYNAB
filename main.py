@@ -33,18 +33,24 @@ def successivesyncs():
 # if we want to modify an entity and send its modification to the server and to have it accepted:
 
 def addtransaction():
+    from datetime import datetime
+
     transaction=Transaction()
     transaction.accepted=True
     transaction.amount=666
+    transaction.cash_amount=0
+    transaction.cleared='Uncleared'
+    transaction.date=datetime.now().strftime('%Y-%m-%d')
     transaction.cleared='Cleared'
-    transaction.credit_amount=666
-    transaction.entities_account_id=nYNABobject.budgets[0].be_accounts[0].id
-    transaction.entities_payee_id=nYNABobject.budgets[0].be_payees[0].id
-    transaction.entities_subcategory_id=nYNABobject.budgets[0].be_subcategories[0].id
-    transaction.is_tombstone=False
+    transaction.credit_amount=0
+    k0=nYNABobject.budgets.keys()[0]
 
-    nYNABobject.budgets[0].be_transactions.append(transaction)
-    nYNABobject.budgets[0].current_knowledge += 1
+    transaction.entities_account_id=nYNABobject.budgets[k0].be_accounts[0].id
+    transaction.entities_payee_id=None
+    transaction.entities_subcategory_id=None
+    transaction.is_tombstone=False
+    nYNABobject.budgets[k0].be_transactions.append(transaction)
+    nYNABobject.budgets[k0].current_knowledge += 1
 
     nYNABobject.sync()
 

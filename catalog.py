@@ -1,4 +1,4 @@
-from Entity import Entity, ListofEntities, EntityField
+from Entity import Entity, ListofEntities, EntityField, Fields
 
 
 class CatalogBudget(Entity):
@@ -6,7 +6,9 @@ class CatalogBudget(Entity):
         self.budget_name=EntityField()
         self.id=EntityField()
         self.is_tombstone=EntityField()
-        Entity.__init__(self)
+
+        Fields.register(self)
+        super(CatalogBudget, self).__init__()
 
 
 class UserBudget(Entity):
@@ -16,7 +18,9 @@ class UserBudget(Entity):
         self.id=EntityField()
         self.is_tombstone=EntityField()
         self.permissions=EntityField()
-        Entity.__init__(self)
+
+        Fields.register(self)
+        super(UserBudget, self).__init__()
 
 
 class UserSetting(Entity):
@@ -26,7 +30,8 @@ class UserSetting(Entity):
         self.id=EntityField()
         self.setting_value=EntityField()
 
-        Entity.__init__(self)
+        Fields.register(self)
+        super(UserSetting, self).__init__()
 
 
 class User(Entity):
@@ -35,7 +40,9 @@ class User(Entity):
         self.trial_expires_on=EntityField()
         self.is_tombstone=EntityField()
         self.email=EntityField()
-        Entity.__init__(self)
+
+        Fields.register(self)
+        super(User, self).__init__()
 
 
 class BudgetVersion(Entity):
@@ -46,7 +53,9 @@ class BudgetVersion(Entity):
         self.budget_id=EntityField()
         self.is_tombstone=EntityField()
         self.version_name=EntityField()
-        Entity.__init__(self)
+
+        Fields.register(self)
+        super(BudgetVersion, self).__init__()
 
 
 class Catalog(Entity):
@@ -56,7 +65,10 @@ class Catalog(Entity):
         self.ce_budget_versions=ListofEntities( BudgetVersion)
         self.ce_users=ListofEntities(User)
         self.ce_budgets=ListofEntities(CatalogBudget)
-        Entity.__init__(self)
+
+        Fields.register(self)
+        super(Catalog, self).__init__()
+
         self.knowledge = 0
         self.current_knowledge = 0
         self.device_knowledge_of_server = 0
