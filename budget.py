@@ -1,47 +1,49 @@
-from Entity import Entity, ListofEntities, EntityField, Fields
+from Entity import Entity, ListofEntities, EntityField, Fields, undef
 
 
 class Transaction(Entity):
     def __init__(self):
-        self.accepted = EntityField()
-        self.amount = EntityField()
-        self.cash_amount = EntityField()
-        self.check_number = EntityField()
-        self.cleared = EntityField()
-        self.credit_amount = EntityField()
-        self.date = EntityField()
-        self.date_entered_from_schedule = EntityField()
-        self.entities_account_id = EntityField()
-        self.entities_payee_id = EntityField()
-        self.entities_scheduled_transaction_id = EntityField()
-        self.entities_subcategory_id = EntityField()
-        self.flag = EntityField()
-        self.id = EntityField()
-        self.imported_date = EntityField()
-        self.imported_payee = EntityField()
-        self.is_tombstone = EntityField()
-        self.matched_transaction_id = EntityField()
-        self.memo = EntityField()
-        self.source = EntityField()
-        self.transfer_account_id = EntityField()
-        self.transfer_subtransaction_id = EntityField()
-        self.transfer_transaction_id = EntityField()
-        self.ynab_id = EntityField()
+        self.accepted = None
+        self.amount = None
+        self.cash_amount = None
+        self.check_number = None
+        self.cleared = None
+        self.credit_amount = None
+        self.date = None
+        self.date_entered_from_schedule = None
+        self.entities_account_id = None
+        self.entities_payee_id = None
+        self.entities_scheduled_transaction_id = None
+        self.entities_subcategory_id = None
+        self.flag = None
+        self.id = None
+        self.imported_date = None
+        self.imported_payee = None
+        self.is_tombstone = None
+        self.matched_transaction_id = None
+        self.memo = None
+        self.source = None
+        self.transfer_account_id = None
+        self.transfer_subtransaction_id = None
+        self.transfer_transaction_id = None
+        self.ynab_id = None
         Fields.register(self)
 
         super(Transaction, self).__init__()
 
 
+
+
 class MasterCategory(Entity):
     def __init__(self):
-        self.deletable = EntityField()
-        self.id = EntityField()
-        self.internal_name = EntityField()
-        self.is_hidden = EntityField()
-        self.is_tombstone = EntityField()
-        self.name = EntityField()
-        self.note = EntityField()
-        self.sortable_index = EntityField()
+        self.deletable = None
+        self.id = None
+        self.internal_name = None
+        self.is_hidden = None
+        self.is_tombstone = None
+        self.name = None
+        self.note = None
+        self.sortable_index = None
 
         Fields.register(self)
         super(MasterCategory, self).__init__()
@@ -49,9 +51,9 @@ class MasterCategory(Entity):
 
 class Setting(Entity):
     def __init__(self):
-        self.id = EntityField()
-        self.setting_name = EntityField()
-        self.setting_value = EntityField()
+        self.id = None
+        self.setting_name = None
+        self.setting_value = None
 
         Fields.register(self)
         super(Setting, self).__init__()
@@ -59,28 +61,28 @@ class Setting(Entity):
 
 class MonthlyBudgetCalculation(Entity):
     def __init__(self):
-        self.additional_to_be_budgeted = EntityField()
-        self.age_of_money = EntityField()
-        self.available_to_budget = EntityField()
-        self.balance = EntityField()
-        self.budgeted = EntityField()
-        self.calculation_notes = EntityField()
-        self.cash_outflows = EntityField()
-        self.credit_outflows = EntityField()
-        self.deferred_income = EntityField()
-        self.entities_monthly_budget_id = EntityField()
-        self.hidden_balance = EntityField()
-        self.hidden_budgeted = EntityField()
-        self.hidden_cash_outflows = EntityField()
-        self.hidden_credit_outflows = EntityField()
-        self.id = EntityField()
-        self.immediate_income = EntityField()
-        self.is_tombstone = EntityField()
-        self.over_spent = EntityField()
-        self.previous_income = EntityField()
-        self.uncategorized_balance = EntityField()
-        self.uncategorized_cash_outflows = EntityField()
-        self.uncategorized_credit_outflows = EntityField()
+        self.additional_to_be_budgeted = None
+        self.age_of_money = None
+        self.available_to_budget = None
+        self.balance = None
+        self.budgeted = None
+        self.calculation_notes = None
+        self.cash_outflows = None
+        self.credit_outflows = None
+        self.deferred_income = None
+        self.entities_monthly_budget_id = None
+        self.hidden_balance = None
+        self.hidden_budgeted = None
+        self.hidden_cash_outflows = None
+        self.hidden_credit_outflows = None
+        self.id = None
+        self.immediate_income = None
+        self.is_tombstone = None
+        self.over_spent = None
+        self.previous_income = None
+        self.uncategorized_balance = None
+        self.uncategorized_cash_outflows = None
+        self.uncategorized_credit_outflows = None
 
         Fields.register(self)
         super(MonthlyBudgetCalculation, self).__init__()
@@ -88,17 +90,17 @@ class MonthlyBudgetCalculation(Entity):
 
 class AccountMapping(Entity):
     def __init__(self):
-        self.date_sequence = EntityField()
-        self.entities_account_id = EntityField()
-        self.fid = EntityField()
-        self.hash = EntityField()
-        self.id = EntityField()
-        self.is_tombstone = EntityField()
-        self.salt = EntityField()
-        self.shortened_account_id = EntityField()
-        self.should_flip_payees_memos = EntityField()
-        self.should_import_memos = EntityField()
-        self.skip_import = EntityField()
+        self.date_sequence = None
+        self.entities_account_id = None
+        self.fid = None
+        self.hash = None
+        self.id = None
+        self.is_tombstone = None
+        self.salt = None
+        self.shortened_account_id = None
+        self.should_flip_payees_memos = None
+        self.should_import_memos = None
+        self.skip_import = None
 
         Fields.register(self)
         super(AccountMapping, self).__init__()
@@ -106,19 +108,19 @@ class AccountMapping(Entity):
 
 class Subtransaction(Entity):
     def __init__(self):
-        self.amount = EntityField()
-        self.cash_amount = EntityField()
-        self.check_number = EntityField()
-        self.credit_amount = EntityField()
-        self.entities_payee_id = EntityField()
-        self.entities_subcategory_id = EntityField()
-        self.entities_transaction_id = EntityField()
-        self.id = EntityField()
-        self.is_tombstone = EntityField()
-        self.memo = EntityField()
-        self.sortable_index = EntityField()
-        self.transfer_account_id = EntityField()
-        self.transfer_transaction_id = EntityField()
+        self.amount = None
+        self.cash_amount = None
+        self.check_number = None
+        self.credit_amount = None
+        self.entities_payee_id = None
+        self.entities_subcategory_id = None
+        self.entities_transaction_id = None
+        self.id = None
+        self.is_tombstone = None
+        self.memo = None
+        self.sortable_index = None
+        self.transfer_account_id = None
+        self.transfer_transaction_id = None
 
         Fields.register(self)
         super(Subtransaction, self).__init__()
@@ -126,15 +128,15 @@ class Subtransaction(Entity):
 
 class ScheduledSubtransaction(Entity):
     def __init__(self):
-        self.amount = EntityField()
-        self.entities_payee_id = EntityField()
-        self.entities_scheduled_transaction_id = EntityField()
-        self.entities_subcategory_id = EntityField()
-        self.id = EntityField()
-        self.is_tombstone = EntityField()
-        self.memo = EntityField()
-        self.sortable_index = EntityField()
-        self.transfer_account_id = EntityField()
+        self.amount = None
+        self.entities_payee_id = None
+        self.entities_scheduled_transaction_id = None
+        self.entities_subcategory_id = None
+        self.id = None
+        self.is_tombstone = None
+        self.memo = None
+        self.sortable_index = None
+        self.transfer_account_id = None
 
         Fields.register(self)
         super(ScheduledSubtransaction, self).__init__()
@@ -142,10 +144,10 @@ class ScheduledSubtransaction(Entity):
 
 class MonthlyBudget(Entity):
     def __init__(self):
-        self.id = EntityField()
-        self.is_tombstone = EntityField()
-        self.month = EntityField()
-        self.note = EntityField()
+        self.id = None
+        self.is_tombstone = None
+        self.month = None
+        self.note = None
 
         Fields.register(self)
         super(MonthlyBudget, self).__init__()
@@ -153,21 +155,21 @@ class MonthlyBudget(Entity):
 
 class Subcategory(Entity):
     def __init__(self):
-        self.entities_account_id = EntityField()
-        self.entities_master_category_id = EntityField()
-        self.goal_creation_month = EntityField()
-        self.goal_type = EntityField()
-        self.id = EntityField()
-        self.internal_name = EntityField()
-        self.is_hidden = EntityField()
-        self.is_tombstone = EntityField()
-        self.monthly_funding = EntityField()
-        self.name = EntityField()
-        self.note = EntityField()
-        self.sortable_index = EntityField()
-        self.target_balance = EntityField()
-        self.target_balance_month = EntityField()
-        self.type = EntityField()
+        self.entities_account_id = None
+        self.entities_master_category_id = None
+        self.goal_creation_month = None
+        self.goal_type = None
+        self.id = None
+        self.internal_name = None
+        self.is_hidden = None
+        self.is_tombstone = None
+        self.monthly_funding = None
+        self.name = None
+        self.note = None
+        self.sortable_index = None
+        self.target_balance = None
+        self.target_balance_month = None
+        self.type = None
 
         Fields.register(self)
         super(Subcategory, self).__init__()
@@ -175,11 +177,11 @@ class Subcategory(Entity):
 
 class PayeeLocation(Entity):
     def __init__(self):
-        self.entities_payee_id = EntityField()
-        self.id = EntityField()
-        self.is_tombstone = EntityField()
-        self.latitude = EntityField()
-        self.longitude = EntityField()
+        self.entities_payee_id = None
+        self.id = None
+        self.is_tombstone = None
+        self.latitude = None
+        self.longitude = None
 
         Fields.register(self)
         super(PayeeLocation, self).__init__()
@@ -187,31 +189,31 @@ class PayeeLocation(Entity):
 
 class AccountCalculation(Entity):
     def __init__(self):
-        self.cleared_balance = EntityField()
-        self.entities_account_id = EntityField()
-        self.error_count = EntityField()
-        self.id = EntityField()
-        self.info_count = EntityField()
-        self.is_tombstone = EntityField()
-        self.transaction_count = EntityField()
-        self.uncleared_balance = EntityField()
-        self.warning_count = EntityField()
+        self.cleared_balance = None
+        self.entities_account_id = None
+        self.error_count = None
+        self.id = None
+        self.info_count = None
+        self.is_tombstone = None
+        self.transaction_count = None
+        self.uncleared_balance = None
+        self.warning_count = None
         Fields.register(self)
         super(AccountCalculation, self).__init__()
 
 
 class MonthlyAccountCalculation(Entity):
     def __init__(self):
-        self.cleared_balance = EntityField()
-        self.entities_account_id = EntityField()
-        self.error_count = EntityField()
-        self.id = EntityField()
-        self.info_count = EntityField()
-        self.is_tombstone = EntityField()
-        self.month = EntityField()
-        self.transaction_count = EntityField()
-        self.uncleared_balance = EntityField()
-        self.warning_count = EntityField()
+        self.cleared_balance = None
+        self.entities_account_id = None
+        self.error_count = None
+        self.id = None
+        self.info_count = None
+        self.is_tombstone = None
+        self.month = None
+        self.transaction_count = None
+        self.uncleared_balance = None
+        self.warning_count = None
 
         Fields.register(self)
         super(MonthlyAccountCalculation, self).__init__()
@@ -219,33 +221,33 @@ class MonthlyAccountCalculation(Entity):
 
 class MonthlySubcategoryBudgetCalculation(Entity):
     def __init__(self):
-        self.all_spending = EntityField()
-        self.all_spending_since_last_payment = EntityField()
-        self.balance = EntityField()
-        self.balance_previous_month = EntityField()
-        self.budgeted_average = EntityField()
-        self.budgeted_cash_outflows = EntityField()
-        self.budgeted_credit_outflows = EntityField()
-        self.budgeted_previous_month = EntityField()
-        self.budgeted_spending = EntityField()
-        self.cash_outflows = EntityField()
-        self.credit_outflows = EntityField()
-        self.entities_monthly_subcategory_budget_id = EntityField()
-        self.goal_expected_completion = EntityField()
-        self.goal_overall_funded = EntityField()
-        self.goal_overall_left = EntityField()
-        self.goal_target = EntityField()
-        self.goal_under_funded = EntityField()
-        self.id = EntityField()
-        self.is_tombstone = EntityField()
-        self.overspending_affects_buffer = EntityField()
-        self.payment_average = EntityField()
-        self.payment_previous_month = EntityField()
-        self.spent_average = EntityField()
-        self.spent_previous_month = EntityField()
-        self.unbudgeted_cash_outflows = EntityField()
-        self.unbudgeted_credit_outflows = EntityField()
-        self.upcoming_transactions = EntityField()
+        self.all_spending = None
+        self.all_spending_since_last_payment = None
+        self.balance = None
+        self.balance_previous_month = None
+        self.budgeted_average = None
+        self.budgeted_cash_outflows = None
+        self.budgeted_credit_outflows = None
+        self.budgeted_previous_month = None
+        self.budgeted_spending = None
+        self.cash_outflows = None
+        self.credit_outflows = None
+        self.entities_monthly_subcategory_budget_id = None
+        self.goal_expected_completion = None
+        self.goal_overall_funded = None
+        self.goal_overall_left = None
+        self.goal_target = None
+        self.goal_under_funded = None
+        self.id = None
+        self.is_tombstone = None
+        self.overspending_affects_buffer = None
+        self.payment_average = None
+        self.payment_previous_month = None
+        self.spent_average = None
+        self.spent_previous_month = None
+        self.unbudgeted_cash_outflows = None
+        self.unbudgeted_credit_outflows = None
+        self.upcoming_transactions = None
 
         Fields.register(self)
         super(MonthlySubcategoryBudgetCalculation, self).__init__()
@@ -253,18 +255,18 @@ class MonthlySubcategoryBudgetCalculation(Entity):
 
 class ScheduledTransaction(Entity):
     def __init__(self):
-        self.amount = EntityField()
-        self.date = EntityField()
-        self.entities_account_id = EntityField()
-        self.entities_payee_id = EntityField()
-        self.entities_subcategory_id = EntityField()
-        self.flag = EntityField()
-        self.frequency = EntityField()
-        self.id = EntityField()
-        self.is_tombstone = EntityField()
-        self.memo = EntityField()
-        self.transfer_account_id = EntityField()
-        self.upcoming_instances = EntityField()
+        self.amount = None
+        self.date = None
+        self.entities_account_id = None
+        self.entities_payee_id = None
+        self.entities_subcategory_id = None
+        self.flag = None
+        self.frequency = None
+        self.id = None
+        self.is_tombstone = None
+        self.memo = None
+        self.transfer_account_id = None
+        self.upcoming_instances = None
 
         Fields.register(self)
         super(ScheduledTransaction, self).__init__()
@@ -272,19 +274,19 @@ class ScheduledTransaction(Entity):
 
 class Payee(Entity):
     def __init__(self):
-        self.auto_fill_amount = EntityField()
-        self.auto_fill_amount_enabled = EntityField()
-        self.auto_fill_memo = EntityField()
-        self.auto_fill_memo_enabled = EntityField()
-        self.auto_fill_subcategory_enabled = EntityField()
-        self.auto_fill_subcategory_id = EntityField()
-        self.enabled = EntityField()
-        self.entities_account_id = EntityField()
-        self.id = EntityField()
-        self.internal_name = EntityField()
-        self.is_tombstone = EntityField()
-        self.name = EntityField()
-        self.rename_on_import_enabled = EntityField()
+        self.auto_fill_amount = None
+        self.auto_fill_amount_enabled = None
+        self.auto_fill_memo = None
+        self.auto_fill_memo_enabled = None
+        self.auto_fill_subcategory_enabled = None
+        self.auto_fill_subcategory_id = None
+        self.enabled = None
+        self.entities_account_id = None
+        self.id = None
+        self.internal_name = None
+        self.is_tombstone = None
+        self.name = None
+        self.rename_on_import_enabled = None
 
         Fields.register(self)
         super(Payee, self).__init__()
@@ -292,13 +294,13 @@ class Payee(Entity):
 
 class MonthlySubcategoryBudget(Entity):
     def __init__(self):
-        self.budgeted = EntityField()
-        self.entities_monthly_budget_id = EntityField()
-        self.entities_subcategory_id = EntityField()
-        self.id = EntityField()
-        self.is_tombstone = EntityField()
-        self.note = EntityField()
-        self.overspending_handling = EntityField()
+        self.budgeted = None
+        self.entities_monthly_budget_id = None
+        self.entities_subcategory_id = None
+        self.id = None
+        self.is_tombstone = None
+        self.note = None
+        self.overspending_handling = None
 
         Fields.register(self)
         super(MonthlySubcategoryBudget, self).__init__()
@@ -316,11 +318,11 @@ class TransactionGroup(Entity):
 
 class PayeeRenameCondition(Entity):
     def __init__(self):
-        self.entities_payee_id = EntityField()
-        self.id = EntityField()
-        self.is_tombstone = EntityField()
-        self.operand = EntityField()
-        self.operator = EntityField()
+        self.entities_payee_id = None
+        self.id = None
+        self.is_tombstone = None
+        self.operand = None
+        self.operator = None
 
         Fields.register(self)
         super(PayeeRenameCondition, self).__init__()
@@ -328,22 +330,22 @@ class PayeeRenameCondition(Entity):
 
 class Account(Entity):
     def __init__(self):
-        self.account_name = EntityField()
-        self.account_type = EntityField()
-        self.direct_connect_account_id = EntityField()
-        self.direct_connect_enabled = EntityField()
-        self.direct_connect_institution_id = EntityField()
-        self.hidden = EntityField()
-        self.id = EntityField()
-        self.is_tombstone = EntityField()
-        self.last_entered_check_number = EntityField()
-        self.last_imported_at = EntityField()
-        self.last_imported_error_code = EntityField()
-        self.last_reconciled_balance = EntityField()
-        self.last_reconciled_date = EntityField()
-        self.note = EntityField()
-        self.on_budget = EntityField()
-        self.sortable_index = EntityField()
+        self.account_name = None
+        self.account_type = None
+        self.direct_connect_account_id = undef
+        self.direct_connect_enabled = None
+        self.direct_connect_institution_id = undef
+        self.hidden = None
+        self.id = None
+        self.is_tombstone = None
+        self.last_entered_check_number = None
+        self.last_imported_at = undef
+        self.last_imported_error_code = undef
+        self.last_reconciled_balance = None
+        self.last_reconciled_date = None
+        self.note = None
+        self.on_budget = None
+        self.sortable_index = None
 
         Fields.register(self)
         super(Account, self).__init__()
@@ -370,8 +372,8 @@ class BudgetBudget(Entity):
         self.be_payee_rename_conditions = ListofEntities(PayeeRenameCondition)
         self.be_accounts = ListofEntities(Account)
 
-        self.last_month = EntityField()
-        self.first_month = EntityField()
+        self.last_month = None
+        self.first_month = None
 
         Fields.register(self)
         super(BudgetBudget, self).__init__()

@@ -1,5 +1,9 @@
+import copy
 import json
 import uuid
+
+def undef():
+    pass
 
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -18,11 +22,14 @@ class Fields(dict):
     def register(self, obj):
         if not obj.__class__ in self.fields:
             self.fields[obj.__class__] = {k:v for k,v in obj.__dict__.iteritems()}
-        for k,v in obj.__dict__.iteritems():
+        for k,v in copy.deepcopy(obj.__dict__).iteritems():
             if isinstance(v,ListofEntities):
                 pass
             else:
-                setattr(obj,k,None)
+                if v==undef:
+                    delattr(obj,k)
+                else:
+                    setattr(obj,k,None)
         #obj.id=str(uuid.uuid4())
 
 
@@ -34,17 +41,23 @@ class Entity(object):
     def __str__(self):
         return self.__dict__.__str__()
 
+    @classmethod
+    def create(cls, **kwargs):
+        obj=cls()
+        obj.__dict__.update(kwargs)
+        return obj
+
     def __unicode__(self):
         return self.__str__()
 
     def getdict(self):
         return {k:getattr(self,k) for k in self.__dict__ if k!='fields' and k!='listfields'}
 
-    def get_changed_entities(self,other):
+    def get_changed_entities(self,previous):
         firstrun={}
         for namefield,field in Fields.fields[self.__class__].iteritems():
             if isinstance(field,ListofEntities):
-                firstrun[namefield]=getattr(self,namefield).get_changed_entities(getattr(other,namefield))
+                firstrun[namefield]=getattr(self,namefield).get_changed_entities(getattr(previous,namefield))
         return {k:v for k,v in firstrun.iteritems() if v!=[]}
 
     def update_from_changed_entities(self,changed_entities):
