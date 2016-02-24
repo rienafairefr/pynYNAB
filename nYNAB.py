@@ -7,6 +7,7 @@ from budget import BudgetBudget, TransactionGroup
 from catalog import Catalog
 from config import appdir
 
+
 class nYNAB(object):
     def __init__(self,nynabconnexion,reload=False):
         self.ynab=nynabconnexion
@@ -50,7 +51,7 @@ class nYNAB(object):
             if 'be_transactions' in changed_entities:
                 changed_entities['be_transaction_groups']=ListofEntities(TransactionGroup)
                 for tr in changed_entities.pop('be_transactions'):
-                    changed_entities['be_transaction_groups'].append(TransactionGroup.create(
+                    changed_entities['be_transaction_groups'].append(TransactionGroup(
                         id=tr.id,
                         be_transaction=tr,
                         be_matched_transaction=None,

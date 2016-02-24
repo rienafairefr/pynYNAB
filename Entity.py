@@ -1,72 +1,83 @@
-import copy
 import json
 import uuid
 
 def undef():
     pass
 
+
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Entity):
-            return obj.__dict__
-        if isinstance(obj, ListofEntities):
+            return {f:getattr(obj,f) for f in obj.AllFields}
+        elif isinstance(obj, ListofEntities):
             return obj._dict_entities.values()
-        return json.JSONEncoder.default(self, obj)
+        elif obj==undef:
+            return
+        else:
+            return json.JSONEncoder.default(self, obj)
 
 class EntityField(object):
-    pass
+    def __init__(self,default):
+        self.default=default
 
-class Fields(dict):
-    fields={}
-    @classmethod
-    def register(self, obj):
-        if not obj.__class__ in self.fields:
-            self.fields[obj.__class__] = {k:v for k,v in obj.__dict__.iteritems()}
-        for k,v in copy.deepcopy(obj.__dict__).iteritems():
-            if isinstance(v,ListofEntities):
-                pass
-            else:
-                if v==undef:
-                    delattr(obj,k)
-                else:
-                    setattr(obj,k,None)
-        #obj.id=str(uuid.uuid4())
+    def __call__(self, *args, **kwargs):
+        return self.default
+
+
+class EntityListField(object):
+    def __init__(self,type):
+        self.type=type
+
+    def __call__(self, *args, **kwargs):
+        return ListofEntities(self.type)
 
 
 class Entity(object):
-    def __init__(self):
-        self.id=str(uuid.uuid4())
+    def __init__(self,*args,**kwargs):
+        for namefield in self.AllFields:
+            setattr(self,namefield,kwargs.get(namefield) if kwargs.get(namefield) else self.AllFields[namefield]())
+        if self.id is None:
+            self.id=str(uuid.uuid4())
         super(Entity,self).__init__()
 
     def __str__(self):
-        return self.__dict__.__str__()
+        return str(self.getdict())
 
-    @classmethod
-    def create(cls, **kwargs):
-        obj=cls()
-        obj.__dict__.update(kwargs)
-        return obj
+    @property
+    def AllFields(self):
+        return dict(self.Fields.items()+self.CommonFields.items())
+
+    @property
+    def CommonFields(self):
+        return dict(
+            id=EntityField(None)
+        )
+
+    @property
+    def Fields(self):
+        return {}
+
+    @property
+    def ListFields(self):
+        return {namefield:value for namefield,value in self.AllFields.iteritems() if isinstance(value,EntityListField)}
 
     def __unicode__(self):
         return self.__str__()
 
     def getdict(self):
-        return {k:getattr(self,k) for k in self.__dict__ if k!='fields' and k!='listfields'}
+        return {namefield:getattr(self,namefield) for namefield in self.AllFields}
 
     def get_changed_entities(self,previous):
-        firstrun={}
-        for namefield,field in Fields.fields[self.__class__].iteritems():
-            if isinstance(field,ListofEntities):
-                firstrun[namefield]=getattr(self,namefield).get_changed_entities(getattr(previous,namefield))
-        return {k:v for k,v in firstrun.iteritems() if v!=[]}
+        firstrun={namefield:getattr(self,namefield).get_changed_entities(getattr(previous,namefield)) for namefield in self.ListFields}
+        return {namefield:value for namefield,value in firstrun.iteritems() if value != []}
 
     def update_from_changed_entities(self,changed_entities):
-        for namefield,field in Fields.fields[self.__class__].iteritems():
-            if isinstance(field,ListofEntities):
-                getattr(self,namefield).update_from_changed_entities(changed_entities[namefield])
+        for namefield in self.ListFields:
+            getattr(self,namefield).update_from_changed_entities(changed_entities.get(namefield))
 
     def update_from_dict(self,d):
         self.__dict__.update(d)
+
 
 class ListofEntities(object):
     def __init__(self, typ):
@@ -84,16 +95,15 @@ class ListofEntities(object):
         if changed_entities is None:
             return
         for entity in changed_entities:
-            entity_id=entity['id']
             try:
-                self._dict_entities[entity_id].update_from_changed_entities(entity)
+                self._dict_entities[entity.id].update_from_changed_entities(entity)
             except KeyError:
-                self._dict_entities[entity_id]=self.typeItems()
-                self._dict_entities[entity_id].update_from_dict(entity)
+                self._dict_entities[entity.id]=self.typeItems()
+                self._dict_entities[entity.id].update_from_dict(entity.getdict())
 
     def append(self,o):
-        if not isinstance(o,Entity):
-            raise ValueError('this ListofEntities can only contain Entities')
+        if not isinstance(o,self.typeItems):
+            raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
         self._dict_entities[o.id]=o
 
     def __iter__(self):

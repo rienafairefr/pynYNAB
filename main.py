@@ -58,20 +58,18 @@ def addaccount():
     budget=nYNABobject.budgets[k0]
 
     sortable_index=max([account.sortable_index for account in budget.be_accounts])
-    account=Account.create(
+    account=Account(
         account_type="Checking",
         account_name="Checking",
         on_budget=True,
         hidden=False,
-        is_tombstone=False,
         sortable_index=sortable_index,
         direct_connect_enabled=False
     )
 
-    payee=Payee.create(
+    payee=Payee(
         entities_account_id=account.id,
         enabled=True,
-        is_tombstone=False,
         auto_fill_subcategory_enabled=True,
         auto_fill_memo_enabled=False,
         auto_fill_amount_enabled=False,
@@ -83,9 +81,14 @@ def addaccount():
         if sub.internal_name=='Category/__ImmediateIncome__':
             immediateincomeid=sub.id
 
+    startingBalanceid=None
+    for p in nYNABobject.budgets[k0].be_payees:
+        if p.internal_name=='StartingBalancePayee':
+            startingBalanceid=p.id
+
 
     from datetime import datetime
-    transaction=Transaction.create(
+    transaction=Transaction(
         accepted=True,
         amount=0,
         entities_subcategory_id=immediateincomeid,
@@ -93,25 +96,19 @@ def addaccount():
         cleared='Cleared',
         date=datetime.now().strftime('%Y-%m-%d'),
         entities_account_id=account.id,
-        credit_amount=0
+        credit_amount=0,
+        entities_payee_id=startingBalanceid,
+        is_tombstone=False
     )
 
-    startingBalanceid=None
-    for p in nYNABobject.budgets[k0].be_payees:
-        if p.internal_name=='StartingBalancePayee':
-            startingBalanceid=p.id
-
-    transaction.entities_account_id=account.id
-    transaction.entities_payee_id=startingBalanceid
-    transaction.entities_subcategory_id=None
-    transaction.is_tombstone=False
 
 
-    nYNABobject.budgets[k0].be_accounts.append(account)
-    nYNABobject.budgets[k0].be_payees.append(payee)
-    nYNABobject.budgets[k0].be_transactions.append(transaction)
-    nYNABobject.budgets[k0].current_knowledge += 3
+    budget.be_accounts.append(account)
+    budget.be_payees.append(payee)
+    budget.be_transactions.append(transaction)
+    budget.current_knowledge += 3
 
+    nYNABobject.budgets[k0]=budget
 
     nYNABobject.sync()
 
