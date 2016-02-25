@@ -3,9 +3,7 @@ from datetime import datetime
 
 
 class Transaction(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             accepted=EntityField(None),
             amount=EntityField(None),
             cash_amount=EntityField(0),
@@ -33,9 +31,7 @@ class Transaction(Entity):
 
 
 class MasterCategory(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             deletable=EntityField(None),
             internal_name=EntityField(None),
             is_hidden=EntityField(None),
@@ -47,18 +43,14 @@ class MasterCategory(Entity):
 
 
 class Setting(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             setting_name=EntityField(None),
             setting_value=EntityField(None)
         )
 
 
 class MonthlyBudgetCalculation(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             additional_to_be_budgeted=EntityField(None),
             age_of_money=EntityField(None),
             available_to_budget=EntityField(None),
@@ -84,9 +76,7 @@ class MonthlyBudgetCalculation(Entity):
 
 
 class AccountMapping(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             date_sequence=EntityField(None),
             entities_account_id=EntityField(None),
             hash=EntityField(None),
@@ -100,9 +90,7 @@ class AccountMapping(Entity):
 
 
 class Subtransaction(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             amount=EntityField(None),
             cash_amount=EntityField(None),
             check_number=EntityField(None),
@@ -119,9 +107,7 @@ class Subtransaction(Entity):
 
 
 class ScheduledSubtransaction(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             amount=EntityField(None),
             entities_payee_id=EntityField(None),
             entities_scheduled_transaction_id=EntityField(None),
@@ -134,9 +120,7 @@ class ScheduledSubtransaction(Entity):
 
 
 class MonthlyBudget(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             is_tombstone=EntityField(False),
             month=EntityField(None),
             note=EntityField(None)
@@ -144,9 +128,7 @@ class MonthlyBudget(Entity):
 
 
 class Subcategory(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             entities_account_id=EntityField(None),
             entities_master_category_id=EntityField(None),
             goal_creation_month=EntityField(None),
@@ -165,9 +147,7 @@ class Subcategory(Entity):
 
 
 class PayeeLocation(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             entities_payee_id=EntityField(None),
             is_tombstone=EntityField(False),
             latitude=EntityField(None),
@@ -176,9 +156,7 @@ class PayeeLocation(Entity):
 
 
 class AccountCalculation(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             cleared_balance=EntityField(None),
             entities_account_id=EntityField(None),
             error_count=EntityField(None),
@@ -191,9 +169,7 @@ class AccountCalculation(Entity):
 
 
 class MonthlyAccountCalculation(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             cleared_balance=EntityField(None),
             entities_account_id=EntityField(None),
             error_count=EntityField(None),
@@ -207,9 +183,7 @@ class MonthlyAccountCalculation(Entity):
 
 
 class MonthlySubcategoryBudgetCalculation(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             all_spending=EntityField(None),
             all_spending_since_last_payment=EntityField(None),
             balance=EntityField(None),
@@ -240,9 +214,7 @@ class MonthlySubcategoryBudgetCalculation(Entity):
 
 
 class ScheduledTransaction(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             amount=EntityField(None),
             date=EntityField(None),
             entities_account_id=EntityField(None),
@@ -258,9 +230,7 @@ class ScheduledTransaction(Entity):
 
 
 class Payee(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             auto_fill_amount=EntityField(None),
             auto_fill_amount_enabled=EntityField(None),
             auto_fill_memo=EntityField(None),
@@ -277,9 +247,7 @@ class Payee(Entity):
 
 
 class MonthlySubcategoryBudget(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             budgeted=EntityField(None),
             entities_monthly_budget_id=EntityField(None),
             entities_subcategory_id=EntityField(None),
@@ -290,19 +258,15 @@ class MonthlySubcategoryBudget(Entity):
 
 
 class TransactionGroup(Entity):
-    @property
-    def Fields(self):
-        return dict(
-            be_transaction=EntityField([]),
-            be_subtransactions=EntityField([]),
-            be_matched_transaction=EntityField([])
+    Fields= dict(
+            be_transaction=EntityField(None),
+            be_subtransactions=EntityField(None),
+            be_matched_transaction=EntityField(None)
         )
 
 
 class PayeeRenameCondition(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             entities_payee_id=EntityField(None),
             is_tombstone=EntityField(False),
             operand=EntityField(None),
@@ -311,9 +275,7 @@ class PayeeRenameCondition(Entity):
 
 
 class Account(Entity):
-    @property
-    def Fields(self):
-        return dict(
+    Fields= dict(
             account_name=EntityField(None),
             account_type=EntityField(None),
             direct_connect_account_id=EntityField(undef),
@@ -332,35 +294,4 @@ class Account(Entity):
         )
 
 
-class BudgetBudget(Entity):
-    @property
-    def Fields(self):
-        return dict(
-            be_transactions=EntityListField(Transaction),
-            be_master_categories=EntityListField(MasterCategory),
-            be_settings=EntityListField(Setting),
-            be_monthly_budget_calculations=EntityListField(MonthlyBudgetCalculation),
-            be_account_mappings=EntityListField(AccountMapping),
-            be_subtransactions=EntityListField(Subtransaction),
-            be_scheduled_subtransactions=EntityListField(ScheduledSubtransaction),
-            be_monthly_budgets=EntityListField(MonthlyBudget),
-            be_subcategories=EntityListField(Subcategory),
-            be_payee_locations=EntityListField(PayeeLocation),
-            be_account_calculations=EntityListField(AccountCalculation),
-            be_monthly_account_calculations=EntityListField(MonthlyAccountCalculation),
-            be_monthly_subcategory_budget_calculations=EntityListField(MonthlySubcategoryBudgetCalculation),
-            be_scheduled_transactions=EntityListField(ScheduledTransaction),
-            be_payees=EntityListField(Payee),
-            be_monthly_subcategory_budgets=EntityListField(MonthlySubcategoryBudget),
-            be_payee_rename_conditions=EntityListField(PayeeRenameCondition),
-            be_accounts=EntityListField(Account),
-            last_month=EntityField(None),
-            first_month=EntityField(None)
-        )
 
-    def __init__(self,*args,**kwargs):
-        self.knowledge = 0
-        self.current_knowledge = 0
-        self.server_knowledge_of_device = 0
-        self.device_knowledge_of_server = 0
-        super(BudgetBudget, self).__init__(*args,**kwargs)

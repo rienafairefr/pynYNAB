@@ -1,22 +1,22 @@
 # coding=utf-8
 import mechanize
+import logging
 import json
 import uuid
 import pickle
 import requests
 from requests.cookies import RequestsCookieJar
 import os
-from budget import BudgetBudget
-from catalog import Catalog
 from config import appdir
 from Entity import ComplexEncoder
 
+logger=logging.getLogger('pynYNAB')
 
-class nYNABConnexionError(Exception):
+class NYnabConnectionError(Exception):
     pass
 
 
-class nYNABConnection(object):
+class NYnabConnection(object):
     url = 'https://app.youneedabudget.com/users/login'
     urlCatalog = 'https://app.youneedabudget.com/api/v1/catalog'
     sessionpath = os.path.join(appdir.user_data_dir, 'session')
@@ -24,7 +24,7 @@ class nYNABConnection(object):
     def getsession(self):
         self.session.cookies = RequestsCookieJar()
         self.browser.open(self.url)
-        self.id = str(uuid.uuid3(uuid.NAMESPACE_DNS, "rienafairefr"))
+
         self.session.headers['X-YNAB-Device-Id'] = self.id
         self.session.headers['User-Agent'] = 'python nYNAB API bot - rienafairefr rienafairefr@gmail.com'
 
@@ -50,6 +50,7 @@ class nYNABConnection(object):
         self.session = requests.Session()
         self.browser = mechanize.Browser()
         self.browser.set_handle_robots(False)
+        self.id = str(uuid.uuid3(uuid.NAMESPACE_DNS, 'rienafairefr.pynYNAB'))
 
         if reload:
             self.getsession()
@@ -66,16 +67,17 @@ class nYNABConnection(object):
         # getInstitutionLoginFields,getInstitutionAccountList,registerAccountForDirectConnect,
         # updateDirectConnectCredentials,poll,createFeedback,runSqlStatement
 
-        params = {'request_data': json.dumps(request_dic, cls=ComplexEncoder), u'operation_name': opname}
+        params = { u'operation_name': opname,'request_data': json.dumps(request_dic, cls=ComplexEncoder),}
+        logger.debug('POST-ing ...',params)
         r = self.session.post(self.urlCatalog, params, verify=False)
         js = r.json()
         if r.status_code != 200:
-            print(r.text)
-            raise nYNABConnexionError('non-200 HTTP code returned from the API')
+            logger.debug(r.text)
+            raise NYnabConnectionError('non-200 HTTP code returned from the API')
         if js['error'] is None:
             return js
         else:
-            raise nYNABConnexionError('Error was returned from the API')
+            raise NYnabConnectionError('Error was returned from the API')
 
 
 
