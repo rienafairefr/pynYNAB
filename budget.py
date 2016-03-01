@@ -102,6 +102,7 @@ class AccountMapping(Entity):
         date_sequence=DateField(None),
         entities_account_id=EntityField(None),
         hash=EntityField(None),
+        fid=EntityField(None),
         is_tombstone=EntityField(False),
         salt=EntityField(None),
         shortened_account_id=EntityField(None),
