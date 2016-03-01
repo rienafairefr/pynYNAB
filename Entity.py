@@ -1,6 +1,7 @@
 import json
 import uuid
 import KeyGenerator
+from config import logger
 
 
 def undef():
@@ -35,11 +36,16 @@ class ComplexEncoder(json.JSONEncoder):
 
 def obj_from_dict(obj_type,dictionary):
     treated={}
-
+    obt=obj_type()
     for key,value in dictionary.iteritems():
-        field=obj_type().AllFields[key]
+        try:
+            field=obt.AllFields[key]
+        except KeyError:
+            logger.ERROR('Encountered field %s in a dictionary to create an entity of type %s '%(key,obj_type))
+            raise ValueError()
         if isinstance(field,EntityField):
             treated[key]=field.posttreat(value)
+
     return obj_type(**treated)
 
 
