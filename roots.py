@@ -1,8 +1,8 @@
-from Entity import EntityListField, Entity, EntityField, ListofEntities
+from Entity import EntityListField, Entity, EntityField, ListofEntities, obj_from_dict
 from budget import MasterCategory, Setting, MonthlyBudgetCalculation, AccountMapping, Subtransaction, \
     ScheduledSubtransaction, Subcategory, PayeeLocation, AccountCalculation, MonthlyAccountCalculation, \
     MonthlySubcategoryBudgetCalculation, ScheduledTransaction, Payee, MonthlySubcategoryBudget, PayeeRenameCondition, \
-    Account, MonthlyBudget, TransactionGroup
+    Account, MonthlyBudget, TransactionGroup, DateField
 from budget import Transaction
 from catalog import UserBudget, UserSetting, BudgetVersion, User, CatalogBudget
 
@@ -24,13 +24,28 @@ class Root(Entity):
         change, request_data=self.get_request_data()
         syncData=connection.dorequest(request_data,opname)
         self.knowledge+=change
-        self.update_from_changed_entities(syncData['changed_entities'])
+        changed_entities={}
+        for name,value in syncData['changed_entities'].iteritems():
+            if isinstance(value,list):
+                for entityDict in value:
+                    obj=obj_from_dict(self.ListFields[name].type,entityDict)
+                    try:
+                        changed_entities[name].append(obj)
+                    except KeyError:
+                        changed_entities[name]=[obj]
+            else:
+                changed_entities[name]=self.AllFields[name].posttreat(value)
+
+        self.update_from_changed_entities(changed_entities)
         self.server_knowledge_of_device=syncData['server_knowledge_of_device']
+        # To handle cases where the local knwoledge got out of sync
+        if self.server_knowledge_of_device>self.knowledge:
+            self.knowledge=self.server_knowledge_of_device
         self.device_knowledge_of_server=syncData['current_server_knowledge']
 
     def get_request_data(self):
         changed_entities=self.get_changed_entities()
-        change= knowledge_change(changed_entities)
+        change = knowledge_change(changed_entities)
         return (change,{"starting_device_knowledge":self.knowledge,
                                      "ending_device_knowledge":self.knowledge+change,
                                      "device_knowledge_of_server":self.device_knowledge_of_server,
@@ -60,8 +75,8 @@ class Budget(Root):
             be_monthly_subcategory_budgets=EntityListField(MonthlySubcategoryBudget),
             be_payee_rename_conditions=EntityListField(PayeeRenameCondition),
             be_accounts=EntityListField(Account),
-            last_month=EntityField(None),
-            first_month=EntityField(None)
+            last_month=DateField(None),
+            first_month=DateField(None)
         )
 
     def get_request_data(self):
@@ -75,10 +90,18 @@ class Budget(Root):
         if 'be_transactions' in changed_entities:
             changed_entities['be_transaction_groups']=ListofEntities(TransactionGroup)
             for tr in changed_entities.pop('be_transactions'):
+                subtransactions=ListofEntities(Subtransaction)
+                if 'be_subtransactions' in changed_entities:
+                    for subtr in [subtransaction for subtransaction in changed_entities.get('be_subtransactions') if subtransaction.entities_transaction_id==tr.id]:
+                        changed_entities['be_subtransactions'].remove(subtr)
+                        subtransactions.append(subtr)
                 changed_entities['be_transaction_groups'].append(TransactionGroup(
                     id=tr.id,
                     be_transaction=tr,
+                    be_subtransactions=subtransactions
                 ))
+        if changed_entities.get('be_subtransactions')==[]:
+            del changed_entities['be_subtransactions']
         return changed_entities
 
 class Catalog(Root):

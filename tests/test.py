@@ -12,42 +12,16 @@ from roots import Budget, Catalog
 
 class Test1(unittest.TestCase):
     maxDiff=None
-
-    def successivesyncs(self):
-        #test succesive syncs
-
-        import configparser
-        from nYNAB import NYnab
-        from NYnabConnection import NYnabConnection
-
-        cp = configparser.ConfigParser()
-        cp.read("ynab.conf")
-        email = cp.get('AUTHENTICATION', 'email')
-        password = cp.get('AUTHENTICATION', 'password')
-
-        connection = NYnabConnection(email, password, reload=True)
-        nYNABobject = NYnab(connection, reload=True)
-
-        print(nYNABobject.catalog.knowledge)
-        nYNABobject.sync()
-        print(nYNABobject.catalog.knowledge)
-        nYNABobject.sync()
-        print(nYNABobject.catalog.knowledge)
-
     def testEntityjson(self):
         class MyEntity(Entity):
-            @property
-            def Fields(self):
-                return {'greatfield':EntityField(2)}
+             Fields={'greatfield':EntityField(2)}
         obj=MyEntity()
         jsonroundtrip=json.loads(json.dumps(obj, cls=ComplexEncoder))
         assert(jsonroundtrip=={'id':obj.id,'greatfield': 2})
 
     def testListEntityjson(self):
         class MyEntity(Entity):
-            @property
-            def Fields(self):
-                return {'accounts':EntityListField(Account)}
+           Fields=dict(accounts=EntityListField(Account))
         obj=MyEntity()
         account=Account()
         obj.accounts.append(account)
@@ -100,12 +74,12 @@ class Test1(unittest.TestCase):
 
     def testupdatechangedentities(self):
         obj=Budget()
-        assert(obj.be_accounts.__class__==ListofEntities)
-        assert(obj.be_accounts.typeItems==Account)
-        assert(len(obj.be_accounts)==0)
+        assert(obj.be_accounts.__class__ == ListofEntities)
+        assert(obj.be_accounts.typeItems == Account)
+        assert(len(obj.be_accounts) == 0)
         account=Account()
         changed_entities=dict(
-            be_accounts=[account.getdict()]
+            be_accounts=[account]
         )
         obj.update_from_changed_entities(changed_entities)
         assert(len(obj.be_accounts) == 1)

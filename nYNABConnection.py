@@ -9,6 +9,7 @@ from requests.cookies import RequestsCookieJar
 import os
 from config import appdir
 from Entity import ComplexEncoder
+from utils import RateLimited
 
 logger=logging.getLogger('pynYNAB')
 
@@ -16,7 +17,7 @@ class NYnabConnectionError(Exception):
     pass
 
 
-class NYnabConnection(object):
+class nYnabConnection(object):
     url = 'https://app.youneedabudget.com/users/login'
     urlCatalog = 'https://app.youneedabudget.com/api/v1/catalog'
     sessionpath = os.path.join(appdir.user_data_dir, 'session')
@@ -51,6 +52,7 @@ class NYnabConnection(object):
         self.browser = mechanize.Browser()
         self.browser.set_handle_robots(False)
         self.id = str(uuid.uuid3(uuid.NAMESPACE_DNS, 'rienafairefr.pynYNAB'))
+        self.lastrequest_elapsed=None
 
         if reload:
             self.getsession()
@@ -61,6 +63,7 @@ class NYnabConnection(object):
                 self.getsession()
         self.savesession()
 
+    @RateLimited(maxPerSecond=1)
     def dorequest(self, request_dic, opname):
         # Available operations : loginUser,getInitialUserData,logoutUser,createNewBudget,freshStartABudget,cloneBudget,
         # deleteTombstonedBudgets,syncCatalogData,syncBudgetData,getInstitutionList
@@ -70,6 +73,7 @@ class NYnabConnection(object):
         params = { u'operation_name': opname,'request_data': json.dumps(request_dic, cls=ComplexEncoder),}
         logger.debug('POST-ing ...',params)
         r = self.session.post(self.urlCatalog, params, verify=False)
+        self.lastrequest_elapsed=r.elapsed
         js = r.json()
         if r.status_code != 200:
             logger.debug(r.text)

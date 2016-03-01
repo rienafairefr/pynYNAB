@@ -1,8 +1,11 @@
 import json
 import uuid
+import KeyGenerator
+
 
 def undef():
     pass
+
 
 class AccountTypes(object):
     Checking = 'Checking'
@@ -21,7 +24,7 @@ class AccountTypes(object):
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Entity):
-            return {f:getattr(obj,f) for f in obj.AllFields}
+            return {namefield:field.pretreat(getattr(obj,namefield)) for namefield,field in obj.AllFields.iteritems()}
         elif isinstance(obj, ListofEntities):
             return obj._dict_entities.values()
         elif obj==undef:
@@ -29,7 +32,24 @@ class ComplexEncoder(json.JSONEncoder):
         else:
             return json.JSONEncoder.default(self, obj)
 
+
+def obj_from_dict(obj_type,dictionary):
+    treated={}
+
+    for key,value in dictionary.iteritems():
+        field=obj_type().AllFields[key]
+        if isinstance(field,EntityField):
+            treated[key]=field.posttreat(value)
+    return obj_type(**treated)
+
+
 class EntityField(object):
+    def pretreat(self,x):
+        return x
+
+    def posttreat(self,x):
+        return x
+
     def __init__(self,default):
         self.default=default
 
@@ -38,6 +58,12 @@ class EntityField(object):
 
 
 class EntityListField(object):
+    def pretreat(self,x):
+        return x
+
+    def posttreat(self,x):
+        return x
+
     def __init__(self,type):
         self.type=type
 
@@ -48,9 +74,10 @@ class EntityListField(object):
 class Entity(object):
     def __init__(self,*args,**kwargs):
         for namefield in self.AllFields:
-            setattr(self,namefield,kwargs.get(namefield) if kwargs.get(namefield) is not None else self.AllFields[namefield]())
+            value=kwargs.get(namefield) if kwargs.get(namefield) is not None else self.AllFields[namefield]()
+            setattr(self,namefield,value)
         if self.id is None:
-            self.id=str(uuid.uuid4())
+            self.id=self.create_id(*args,**kwargs)
         super(Entity,self).__init__()
 
     def __str__(self):
@@ -60,15 +87,10 @@ class Entity(object):
     def AllFields(self):
         return dict(self.Fields.items()+self.CommonFields.items())
 
-    @property
-    def CommonFields(self):
-        return dict(
+    CommonFields=dict(
             id=EntityField(None)
         )
-
-    @property
-    def Fields(self):
-        return {}
+    Fields={}
 
     @property
     def ListFields(self):
@@ -97,12 +119,17 @@ class Entity(object):
         else:
             return False
 
+    def create_id(self,*args,**kwargs):
+        return KeyGenerator.generateUUID()
+
+
 class ListofEntities(object):
     def __init__(self, typ):
         super(ListofEntities, self).__init__()
         from collections import OrderedDict
         self._dict_entities=OrderedDict()
         self.typeItems=typ
+        self.type_instance=typ()
         self.changed=[]
 
     def __str__(self):
@@ -117,14 +144,22 @@ class ListofEntities(object):
     def update_from_changed_entities(self,changed_entities):
         if changed_entities is None:
             return
-        for entityDict in changed_entities:
+        for entity in changed_entities:
             try:
-                self._dict_entities[entityDict['id']].update_from_changed_entities(entityDict)
+                self._dict_entities[entity.id].update_from_changed_entities(entity)
             except KeyError:
-                self._dict_entities[entityDict['id']]=self.typeItems(**entityDict)
+                self._dict_entities[entity.id]=entity
 
     def get(self,id):
         return self._dict_entities.get(id)
+
+    def extend(self,objects,track=True):
+        if not all(isinstance(x,self.typeItems) for x in objects):
+            raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
+        for o in objects:
+            self._dict_entities[o.id]=o
+        if track:
+            self.changed.extend(objects)
 
     def append(self,o,track=True):
         if not isinstance(o,self.typeItems):
@@ -139,8 +174,9 @@ class ListofEntities(object):
         if o.id in self._dict_entities:
             del self._dict_entities[o.id]
         if track:
-            o.is_tombstone=True
-            self.changed.append(o)
+            if not o.is_tombstone:
+                o.is_tombstone=True
+                self.changed.append(o)
 
     def modify(self,o,track=True):
         if not isinstance(o,self.typeItems):
@@ -162,12 +198,6 @@ class ListofEntities(object):
         else:
             return item.id in self._dict_entities
 
-
     def get_changed_entities(self):
         return self.changed
-
-    def query(self,searched):
-        for k,entity in self._dict_entities.iteritems():
-            if searched(entity):
-                return entity
 
