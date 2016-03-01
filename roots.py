@@ -23,6 +23,8 @@ class Root(Entity):
     def sync(self,connection,opname):
         change, request_data=self.get_request_data()
         syncData=connection.dorequest(request_data,opname)
+        for namefield in self.ListFields:
+            getattr(self,namefield).changed=[]
         self.knowledge+=change
         changed_entities={}
         for name,value in syncData['changed_entities'].iteritems():
