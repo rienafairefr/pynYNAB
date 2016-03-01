@@ -1,6 +1,6 @@
 import random
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 
 import KeyGenerator
@@ -83,6 +83,7 @@ class Live_tests(unittest.TestCase):
         transaction = Transaction(
             amount=1,
             cleared='Uncleared',
+            date=datetime.now(),
             entities_account_id=self.account.id,
         )
         self.nYNABobject.add_transaction(transaction)
@@ -95,12 +96,29 @@ class Live_tests(unittest.TestCase):
     @needs_account
     def test_addtransactions(self):
         from datetime import datetime
-        n = 3
+
         transactions = []
-        for i in range(n):
+        transactions.append(Transaction(
+                amount=random.randint(-10, 10),
+                cleared='Uncleared',
+                date=datetime.now()-8*timedelta(days=365),
+                entities_account_id=self.account.id,
+            ))
+
+        transactions.append(Transaction(
+                amount=random.randint(-10, 10),
+                cleared='Uncleared',
+                date=datetime.now()+8*timedelta(days=365),
+                entities_account_id=self.account.id,
+            ))
+
+
+        n = 3
+        for i in range(len(transactions)-n):
             transactions.append(Transaction(
                 amount=random.randint(-10, 10),
                 cleared='Uncleared',
+                date=datetime.now(),
                 entities_account_id=self.account.id,
             ))
         self.nYNABobject.add_transactions(transactions)

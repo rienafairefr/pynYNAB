@@ -145,13 +145,19 @@ class nYnab(object):
                                       "currency_format": json.dumps(currency_format),
                                       "date_format": json.dumps(date_format)
                                   })
+    def clean_transactions(self):
+        for transaction in self.budget.be_transactions:
+            self.budget.be_transactions.delete(transaction)
+        for subtransaction in self.budget.be_subtransactions:
+            self.budget.be_subtransactions.delete(subtransaction)
+        self.sync()
     def clean_budget(self):
+        self.clean_transactions()
         for sub_category in [sub_category for sub_category in self.budget.be_subcategories if sub_category.internal_name is None]:
             self.budget.be_subcategories.delete(sub_category)
         for mastercategory in [mastercategory for mastercategory in self.budget.be_master_categories if mastercategory.deletable]:
             self.budget.be_master_categories.delete(mastercategory)
-        for transaction in self.budget.be_transactions:
-            self.budget.be_transactions.delete(transaction)
+        self.clean_transactions()
         for payee in [payee for payee in self.budget.be_payees if payee.internal_name is None]:
             self.budget.be_payees.delete(payee)
         for account in self.budget.be_accounts:

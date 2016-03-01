@@ -10,7 +10,7 @@ from datetime import datetime
 import re
 
 from Entity import AccountTypes
-from NYnabConnection import nYnabConnection
+from NYnabConnection import nYnabConnection, NYnabConnectionError
 from budget import MasterCategory, Subcategory, Account, Payee, Transaction, Subtransaction
 from config import email, password
 from nYNAB import nYnab, BudgetNotFound
@@ -133,7 +133,7 @@ with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register:
         fullMigrate = True
         nYNABobject = nYnab(connection, reload=True)
         nYNABobject.createbudget(args.budgetname)
-
+    nYNABobject.clean_transactions()
     if fullMigrate:
 
         nYNABobject.clean_budget()
@@ -304,40 +304,64 @@ with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register:
     unsplittransactions=[transaction for transaction in transactions if transaction.entities_subcategory_id != split_id]
     splittransactions=[transaction for transaction in transactions if transaction.entities_subcategory_id == split_id]
 
-    for chunkelement in chunk(unsplittransactions,3):
-        nYNABobject.add_transactions(chunkelement)
+    transactions_dict={transaction.id:transaction for transaction in transactions}
+    subtransactions_dict={subtransaction.id:subtransaction for subtransaction in subtransactions}
 
-    nYNABobject.budget.be_subtransactions.extend(subtransactions)
+    transfers_dict = {tr.id: tr for tr in transfers}
+    random.shuffle(transfers)
+
+    for i1 in range(len(transfers)):
+        tr1 = transfers[i1]
+        foundit=False
+        for i2 in range(len(transfers)):
+            if i2 > i1:
+                tr2 = transfers[i2]
+                if isinstance(tr1, Transaction) and isinstance(tr2, Transaction):
+                    if tr1.entities_account_id == tr2.transfer_account_id \
+                            and tr1.date == tr2.date \
+                            and tr1.amount == -tr2.amount:
+
+                        tr1.transfer_transaction_id = tr2.id
+                        tr2.transfer_transaction_id = tr1.id
+
+                        transactions.append(tr1)
+                        transactions.append(tr2)
+                        foundit = True
+                elif isinstance(tr1, Transaction) and isinstance(tr2, Subtransaction):
+                    tr2parent = next(x for x in transactions if x.id == tr2.entities_transaction_id)
+                    if tr1.entities_account_id == tr2.transfer_account_id \
+                            and tr1.date == tr2parent.date \
+                            and tr1.amount == -tr2.amount:
+                        siblings = [subtransaction for subtransaction in subtransactions if subtransaction.entities_transaction_id == tr2parent.id]
+
+                        tr1.transfer_subtransaction_id = tr2.id
+                        tr2.transfer_transaction_id = tr1.id
+
+                        transactions.append(tr1)
+                        subtransactions.append(tr2)
+                        foundit = True
+                elif isinstance(tr1, Subtransaction) and isinstance(tr2, Transaction):
+                    tr1parent = next(x for x in transactions if x.id == tr1.entities_transaction_id)
+                    if tr1.entities_account_id == tr2.transfer_account_id \
+                            and tr1parent.date == tr2.date \
+                            and tr1.amount == -tr2.amount:
+                        siblings = [subtransaction for subtransaction in subtransactions if subtransaction.entities_transaction_id == tr1parent.id]
+
+                        tr1.transfer_transaction_id = tr2.id
+                        tr2.transfer_subtransaction_id = tr1.id
+
+                        subtransactions.append(tr1)
+                        transactions.append(tr2)
+
+                        foundit = True
+        if not foundit:
+            pass
+
+
     nYNABobject.budget.be_transactions.extend(transactions)
+    nYNABobject.budget.be_subtransactions.extend(subtransactions)
+
     nYNABobject.sync()
-
-    for i1, tr1 in enumerate(transfers):
-        for i2, tr2 in enumerate(transfers):
-            if isinstance(tr1, Transaction) and isinstance(tr2, Transaction):
-                if tr1.entities_account_id == tr2.transfer_account_id and tr1.date == tr2.date and tr1.amount == -tr2.amount:
-                    tr1.transfer_transaction_id = tr2.id
-                    tr2.transfer_transaction_id = tr1.id
-            if isinstance(tr1, Transaction) and isinstance(tr2, Subtransaction):
-                tr2parent = next(x for x in transactions if x.id == tr2.entities_transaction_id)
-                if tr1.entities_account_id == tr2.transfer_account_id and tr1.date == tr2parent.date and tr1.amount == -tr2.amount:
-                    tr1.transfer_subtransaction_id = tr2.id
-                    tr2.transfer_transaction_id = tr1.id
-
-            transfers[i1] = tr1
-            transfers[i2] = tr2
-
-    orphans = [x for x in transfers if isinstance(x,
-                                                  Transaction) and x.transfer_transaction_id is None and x.transfer_subtransaction_id is None] + [
-                  x for x in transfers if isinstance(x, Subtransaction) and x.transfer_transaction_id is None]
-    if len(orphans) > 0:
-        print('Orphans:')
-        for orphan in orphans:
-            print(orphan)
-    for tr in transfers:
-        if isinstance(tr, Transaction):
-            transactions.append(tr)
-        if isinstance(tr, Subtransaction):
-            subtransactions.append(tr)
 
 
 

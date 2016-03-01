@@ -63,7 +63,7 @@ class nYnabConnection(object):
                 self.getsession()
         self.savesession()
 
-    @RateLimited(maxPerSecond=1)
+    @RateLimited(maxPerSecond=10)
     def dorequest(self, request_dic, opname):
         # Available operations : loginUser,getInitialUserData,logoutUser,createNewBudget,freshStartABudget,cloneBudget,
         # deleteTombstonedBudgets,syncCatalogData,syncBudgetData,getInstitutionList
