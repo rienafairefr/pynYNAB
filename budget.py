@@ -7,10 +7,10 @@ class AmountField(EntityField):
         super(AmountField,self).__init__(0)
 
     def pretreat(self, x):
-        return x * 1000  if x is not None else x
+        return int(x * 1000)  if x is not None else x
 
     def posttreat(self, x):
-        return x / 1000  if x is not None else x
+        return float(x) / 1000  if x is not None else x
 
 
 class DateField(EntityField):
@@ -18,7 +18,10 @@ class DateField(EntityField):
         return x.strftime('%Y-%m-%d') if x is not None else x
 
     def posttreat(self, x):
-        return datetime.strptime(x, '%Y-%m-%d')  if x is not None else x
+        try:
+            return datetime.strptime(x, '%Y-%m-%d') if x is not None else x
+        except ValueError:
+            pass
 
 
 class Transaction(Entity):
