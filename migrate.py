@@ -1,5 +1,3 @@
-## TODO write a sript for migrating a YNAB4 CSV file
-
 import argparse
 from collections import namedtuple
 import dateparser
@@ -22,6 +20,8 @@ parser.add_argument('budget', metavar='BudgetPath', type=str,
                     help='The budget.csv file, e.g. MyBudget as of YYYY-HH-LL HSS-Budget.csv')
 parser.add_argument('register', metavar='RegisterPath', type=str,
                     help='The register.csv file , e.g. MyBudget as of YYYY-HH-LL HSS-Budget.csv')
+parser.add_argument('-accounttypes', metavar='accounttypesCSV', type=str,
+                    help='The migrate.csv file which defines account types', required=False)
 parser.add_argument('--full-migrate', dest='fullMigrate', action='store_true', default=False,
                     help='Migrate also the accounts and categories, in case this budget is not'
                          + ' already migrated through YNAB4 interface, EXPERIMENTAL')
@@ -53,22 +53,7 @@ def date_from_localeformatteddate(s):
     return datetime(year=parsed.year, month=parsed.month, day=1)
 
 
-def chunk(iterable, chunk_size):
-    """Generate sequences of `chunk_size` elements from `iterable`."""
-    iterable = iter(iterable)
-    while True:
-        chunk = []
-        try:
-            for _ in range(chunk_size):
-                chunk.append(iterable.next())
-            yield chunk
-        except StopIteration:
-            if chunk:
-                yield chunk
-            break
-
-
-with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register:
+with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register , open(args.accounttypes, 'rb') as account_types:
     from unicodecsv.py2 import UnicodeReader, Dialect
 
 
@@ -159,13 +144,34 @@ with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register:
 
         nYNABobject.sync()
 
+        account_types_lines = filter(lambda x:not x.startswith('#'),account_types.readlines())
+        account_types_reader = UnicodeReader(account_types_lines, encoding='utf-8')
+        account_types_headers = account_types_reader.next()
+
+        account_types_rows=[account_types_row for account_types_row in account_types_reader if len(account_types_row) == 3]
+
+        account_types_dict={account_types_row[0]: getattr(AccountTypes,account_types_row[1]) for account_types_row in account_types_rows if hasattr(AccountTypes,account_types_row[1])}
+
+        def str2bool(v):
+            return v.lower() in ("yes", "true", "t", "1")
+        account_onbudget_dict={account_types_row[0]: str2bool(account_types_row[2]) for account_types_row in account_types_rows}
+
         for account_name in set([register_row.AccountName for register_row in RegisterRows]):
             mindate = min(
                 [register_row.Date for register_row in RegisterRows if register_row.AccountName == account_name])
-            # Can't know the type of account from the register or budget file...
+            # Can't know the type of account from the register or budget file, workaround is using a manual migrate.csv
+            try:
+                account_type=account_types_dict[account_name]
+            except KeyError:
+                account_type=AccountTypes.Checking
+            try:
+                on_budget=account_onbudget_dict[account_name]
+            except KeyError:
+                on_budget=True
             account = Account(
                 account_name=account_name,
-                account_type=AccountTypes.Checking,
+                account_type=account_type,
+                on_budget=on_budget,
                 sortable_index=random.randint(-50000, 50000)
             )
             nYNABobject.add_account(account, 0, mindate)
@@ -312,7 +318,6 @@ with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register:
 
     for i1 in range(len(transfers)):
         tr1 = transfers[i1]
-        foundit=False
         for i2 in range(len(transfers)):
             if i2 > i1:
                 tr2 = transfers[i2]
@@ -326,7 +331,6 @@ with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register:
 
                         transactions.append(tr1)
                         transactions.append(tr2)
-                        foundit = True
                 elif isinstance(tr1, Transaction) and isinstance(tr2, Subtransaction):
                     tr2parent = next(x for x in transactions if x.id == tr2.entities_transaction_id)
                     if tr1.entities_account_id == tr2.transfer_account_id \
@@ -339,10 +343,9 @@ with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register:
 
                         transactions.append(tr1)
                         subtransactions.append(tr2)
-                        foundit = True
                 elif isinstance(tr1, Subtransaction) and isinstance(tr2, Transaction):
                     tr1parent = next(x for x in transactions if x.id == tr1.entities_transaction_id)
-                    if tr1.entities_account_id == tr2.transfer_account_id \
+                    if tr1parent.entities_account_id == tr2.transfer_account_id \
                             and tr1parent.date == tr2.date \
                             and tr1.amount == -tr2.amount:
                         siblings = [subtransaction for subtransaction in subtransactions if subtransaction.entities_transaction_id == tr1parent.id]
@@ -353,9 +356,6 @@ with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register:
                         subtransactions.append(tr1)
                         transactions.append(tr2)
 
-                        foundit = True
-        if not foundit:
-            pass
 
 
     nYNABobject.budget.be_transactions.extend(transactions)
