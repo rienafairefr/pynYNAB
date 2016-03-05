@@ -1,13 +1,14 @@
 import json
 import unittest
 
-from Entity import Entity, EntityField, ComplexEncoder, EntityListField, ListofEntities, undef
-from catalog import BudgetVersion, CatalogBudget, User, UserBudget, UserSetting
-from budget import Account, AccountCalculation, AccountMapping, MasterCategory, Transaction, Subcategory, \
+from pynYNAB.Entity import Entity, ComplexEncoder, ListofEntities, undef
+from pynYNAB.budget import Account, AccountCalculation, AccountMapping, MasterCategory, Transaction, Subcategory, \
     MonthlyAccountCalculation, MonthlyBudget, MonthlySubcategoryBudget, MonthlyBudgetCalculation, \
     MonthlySubcategoryBudgetCalculation, PayeeLocation, Payee, PayeeRenameCondition, ScheduledSubtransaction, \
     ScheduledTransaction, Setting, Subtransaction, TransactionGroup
-from roots import Budget, Catalog
+from pynYNAB.catalog import BudgetVersion, CatalogBudget, User, UserBudget, UserSetting
+from pynYNAB.roots import Budget, Catalog
+from pynYNAB.schema.Fields import EntityField, EntityListField
 
 
 class Test1(unittest.TestCase):

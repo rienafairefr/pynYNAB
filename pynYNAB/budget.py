@@ -1,35 +1,5 @@
-from Entity import Entity, EntityListField, EntityField, undef, AccountTypes
-from datetime import datetime
-
-
-class AmountField(EntityField):
-    def __init__(self):
-        super(AmountField,self).__init__(0)
-
-    def pretreat(self, x):
-        return int(x * 1000)  if x is not None else x
-
-    def posttreat(self, x):
-        return float(x) / 1000  if x is not None else x
-
-
-class DateField(EntityField):
-    def pretreat(self, x):
-        return x.strftime('%Y-%m-%d') if x is not None else x
-
-    def posttreat(self, x):
-        try:
-            return datetime.strptime(x, '%Y-%m-%d').date() if x is not None else x
-        except ValueError:
-            pass
-
-class AccountTypeField(EntityField):
-    def pretreat(self, x):
-        return str(x)
-
-    def posttreat(self, x):
-        print(x)
-        return getattr(AccountTypes,x)
+from Entity import Entity, undef
+from schema.Fields import EntityField, AmountField, DateField, AccountTypeField
 
 
 class Transaction(Entity):

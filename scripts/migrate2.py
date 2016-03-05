@@ -1,24 +1,15 @@
 # Using package pyynab to get all the info needed
+import argparse
 import os
+import random
+import re
 
 from ynab import YNAB
 
-import argparse
-from collections import namedtuple
-import dateparser
-import random
-from _csv import QUOTE_NONE
-from datetime import datetime
-
-import re
-
-from ynab.models import AccountType
-
-from pynYNAB.Entity import AccountTypes
-from pynYNAB.connection import nYnabConnection, NYnabConnectionError
-from pynYNAB.budget import MasterCategory, Subcategory, Account, Payee, Transaction, Subtransaction
-from pynYNAB.config import email, password
 from pynYNAB.Client import nYnabClient, BudgetNotFound
+from pynYNAB.budget import MasterCategory, Subcategory, Account, Payee, Transaction
+from pynYNAB.config import email, password
+from pynYNAB.connection import nYnabConnection
 
 parser = argparse.ArgumentParser(description='Migrate a YNAB4 budget transaction history to nYNAB')
 parser.add_argument('budget', metavar='BudgetPath', type=str,

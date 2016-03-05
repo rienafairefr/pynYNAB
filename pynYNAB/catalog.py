@@ -1,4 +1,5 @@
-from Entity import Entity, ListofEntities, EntityField, undef, EntityListField
+from Entity import Entity, undef
+from pynYNAB.schema.Fields import EntityField
 
 
 class CatalogBudget(Entity):

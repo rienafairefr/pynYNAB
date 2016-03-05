@@ -1,15 +1,15 @@
 # coding=utf-8
 import random
 
+from Client import nYnabClient
 from budget import Transaction
 from config import email, password
-from nYNAB import nYnab
-from NYnabConnection import nYnabConnection
+from connection import nYnabConnection
 
 
 if __name__ == "__main__":
     connection = nYnabConnection(email, password, reload=True)
-    nYNABobject = nYnab(connection, budget_name='My Budget', reload=True)
+    nYNABobject = nYnabClient(connection, budget_name='My Budget', reload=True)
 
     from datetime import datetime
 

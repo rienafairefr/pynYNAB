@@ -1,12 +1,12 @@
 import argparse
-
 import re
+
 from ofxtools import OFXTree
 
-from pynYNAB.connection import nYnabConnection
-from pynYNAB.budget import Transaction, Payee
-from pynYNAB.config import email, password
 from pynYNAB.Client import nYnabClient, BudgetNotFound
+from pynYNAB.budget import Transaction
+from pynYNAB.config import email, password
+from pynYNAB.connection import nYnabConnection
 
 parser = argparse.ArgumentParser(description='Manually import an OFX into a nYNAB budget')
 parser.add_argument('ofxfile', metavar='OFXPath', type=str,
@@ -32,7 +32,7 @@ except BudgetNotFound:
 
 accounts=nYNABobject.budget.be_accounts
 reKey=re.compile('.*key\[(?P<key>.*)\]key')
-keystoaccounts={reKey.match(account.note).group('key'):account for account in accounts if account.note!=None}
+keystoaccounts={reKey.match(account.note).group('key'):account for account in accounts if account.note is not None}
 
 
 for stmt in stmts:
@@ -45,7 +45,7 @@ for stmt in stmts:
             accountnumber=input('Which account is this OFX for? ')
             try:
                 accountnumber=int(accountnumber)
-                if accountnumber >= 0 and accountnumber <= len(accounts)-1:
+                if 0 <= accountnumber <= len(accounts)-1:
                     break
             except ValueError:
                 pass

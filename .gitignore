@@ -1,3 +1,4 @@
 ynab.conf
 .idea/
 *.pyc
+migrate.csv

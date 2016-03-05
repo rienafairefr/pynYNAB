@@ -3,13 +3,11 @@ import unittest
 from datetime import datetime, timedelta
 from functools import wraps
 
-from budget import Transaction, Account, Subtransaction
-from config import email, password
-from nYNAB import nYnab
-
-import KeyGenerator
-from Entity import AccountTypes
-from NYnabConnection import nYnabConnection
+from pynYNAB.Client import nYnabClient
+from pynYNAB.Entity import AccountTypes
+from pynYNAB.budget import Transaction, Account, Subtransaction
+from pynYNAB.config import email, password
+from pynYNAB.connection import nYnabConnection
 
 
 class Live_tests(unittest.TestCase):
@@ -22,7 +20,7 @@ class Live_tests(unittest.TestCase):
 
     def setUp(self):
         connection = nYnabConnection(email, password, reload=True)
-        self.nYNABobject = nYnab(connection, budget_name='My Budget', reload=True)
+        self.nYNABobject = nYnabClient(connection, budget_name='My Budget', reload=True)
 
     def needs_account(fn):
         @wraps(fn)

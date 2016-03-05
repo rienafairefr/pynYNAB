@@ -1,11 +1,11 @@
 # coding=utf-8
-import logging
 import json
+import logging
 import uuid
-import pickle
+
 import requests
 from requests.cookies import RequestsCookieJar
-import os
+
 from Entity import ComplexEncoder
 from utils import RateLimited
 

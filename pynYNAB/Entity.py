@@ -4,6 +4,7 @@ from enum import Enum
 
 import KeyGenerator
 from config import logger
+from pynYNAB.schema.Fields import EntityField, EntityListField
 
 
 def undef():
@@ -20,7 +21,7 @@ class ComplexEncoder(json.JSONEncoder):
             return {namefield: field.pretreat(getattr(obj, namefield)) for namefield, field in
                     obj.AllFields.iteritems()}
         elif isinstance(obj, ListofEntities):
-            return obj._dict_entities.values()
+            return list(obj)
         elif obj == undef:
             return
         else:
@@ -40,34 +41,6 @@ def obj_from_dict(obj_type, dictionary):
             treated[key] = field.posttreat(value)
 
     return obj_type(**treated)
-
-
-class EntityField(object):
-    def pretreat(self, x):
-        return x
-
-    def posttreat(self, x):
-        return x
-
-    def __init__(self, default):
-        self.default = default
-
-    def __call__(self, *args, **kwargs):
-        return self.default
-
-
-class EntityListField(object):
-    def pretreat(self, x):
-        return x
-
-    def posttreat(self, x):
-        return x
-
-    def __init__(self, type):
-        self.type = type
-
-    def __call__(self, *args, **kwargs):
-        return ListofEntities(self.type)
 
 
 class Entity(object):

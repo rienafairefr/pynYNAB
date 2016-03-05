@@ -1,17 +1,17 @@
 import argparse
-from collections import namedtuple
-import dateparser
 import random
+import re
 from _csv import QUOTE_NONE
+from collections import namedtuple
 from datetime import datetime
 
-import re
+import dateparser
 
+from pynYNAB.Client import nYnabClient, BudgetNotFound
 from pynYNAB.Entity import AccountTypes
-from pynYNAB.connection import nYnabConnection, NYnabConnectionError
 from pynYNAB.budget import MasterCategory, Subcategory, Account, Payee, Transaction, Subtransaction
 from pynYNAB.config import email, password
-from pynYNAB.Client import nYnabClient, BudgetNotFound
+from pynYNAB.connection import nYnabConnection
 
 parser = argparse.ArgumentParser(description='Migrate a YNAB4 budget transaction history to nYNAB')
 parser.add_argument('budgetname', metavar='BudgetName', type=str,
@@ -215,7 +215,7 @@ with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register , 
     accumulatedSplits = []
     transfers = []
     reTransfer = re.compile('.*?Transfer : (?P<account>.*)')
-    reSplit = re.compile('\(Split\ (?P<num1>\d+)\/(?P<num2>\d+)\)')
+    reSplit = re.compile('\(Split (?P<num1>\d+)/(?P<num2>\d+)\)')
 
     split_id = next(x.id for x in nYNABobject.budget.be_subcategories if x.internal_name == 'Category/__Split__')
 
