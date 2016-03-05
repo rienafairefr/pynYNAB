@@ -1,4 +1,4 @@
-from Entity import Entity, EntityListField, EntityField, undef
+from Entity import Entity, EntityListField, EntityField, undef, AccountTypes
 from datetime import datetime
 
 
@@ -19,9 +19,17 @@ class DateField(EntityField):
 
     def posttreat(self, x):
         try:
-            return datetime.strptime(x, '%Y-%m-%d') if x is not None else x
+            return datetime.strptime(x, '%Y-%m-%d').date() if x is not None else x
         except ValueError:
             pass
+
+class AccountTypeField(EntityField):
+    def pretreat(self, x):
+        return str(x)
+
+    def posttreat(self, x):
+        print(x)
+        return getattr(AccountTypes,x)
 
 
 class Transaction(Entity):
@@ -300,7 +308,7 @@ class PayeeRenameCondition(Entity):
 class Account(Entity):
     Fields = dict(
         account_name=EntityField(None),
-        account_type=EntityField(None),
+        account_type=AccountTypeField(None),
         direct_connect_account_id=EntityField(undef),
         direct_connect_enabled=EntityField(False),
         direct_connect_institution_id=EntityField(undef),

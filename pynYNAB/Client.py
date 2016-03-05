@@ -4,35 +4,24 @@ import pickle
 from functools import wraps
 
 from Entity import ListofEntities
-from NYnabConnection import NYnabConnectionError
+from connection import NYnabConnectionError
 from budget import  TransactionGroup, Payee, Transaction
 from catalog import BudgetVersion
-from config import appdir
 from roots import Budget, Catalog
 
 class BudgetNotFound(Exception):
     pass
 
 class nYnab(object):
-    def  __init__(self, nynabconnection, budget_name=None, reload=False):
+    def  __init__(self, nynabconnection, budget_name=None):
         self.connection=nynabconnection
         self.budget_name=budget_name
-        self.do_init(reload)
-
-    def do_init(self,reload=False):
+        self.do_init()
         self.catalog=Catalog()
         self.budget=Budget()
         self.budget_version=BudgetVersion()
-        if reload:
+        if self.budget_name is not None:
             self.sync()
-        else:
-            try:
-                self.load()
-            except:
-                self.sync()
-
-    catalogpath=os.path.join(appdir.user_data_dir,'catalog')
-    budgetpath=os.path.join(appdir.user_data_dir,'budget')
 
     def getinitialdata(self):
         try:
@@ -52,22 +41,10 @@ class nYnab(object):
                     for budget_version in self.catalog.ce_budget_versions:
                         if budget_version.budget_id == catalogbudget.id:
                             self.budget.budget_version_id=budget_version.id
-        if self.budget.budget_version_id is None:
+        if self.budget.budget_version_id is None and self.budget_name is not None:
             raise BudgetNotFound()
         else:
             self.budget.sync(self.connection,'syncBudgetData')
-
-    def load(self):
-        with open(self.catalogpath,'r') as file:
-            self.catalog=pickle.load(file)
-        with open(self.budgetpath,'r') as file:
-            self.budgetsdict=pickle.load(file)
-
-    def save(self):
-        with open(self.catalogpath,'w') as file:
-            pickle.dump(self.catalog,file)
-        with open(self.budgetpath,'w') as file:
-            pickle.dump(self.budgetsdict,file)
 
     def operation(fn):
         @wraps(fn)
@@ -124,7 +101,23 @@ class nYnab(object):
     def delete_transaction(self, transaction):
         self.budget.be_transactions.delete(transaction)
 
-    def createbudget(self, budget_name):
+    @operation
+    def delete_budget(self,budget_name):
+        for budget in self.catalog.ce_budgets:
+            if budget.budget_name == budget_name and not budget.is_tombstone:
+                budget.is_tombstone = True
+                self.catalog.ce_budgets.modify(budget)
+
+    def select_budget(self, budget_name):
+        self.catalog.sync(self.connection,'syncCatalogData')
+        for budget_version in self.catalog.ce_budget_versions:
+            budget=self.catalog.ce_budgets.get(budget_version.budget_id)
+            if budget.budget_name == budget_name and not budget.is_tombstone:
+                self.budget.budget_version_id = budget_version.id
+                self.sync()
+                break
+
+    def create_budget(self, budget_name):
         import json
         currency_format = dict(
             iso_code='USD',
@@ -145,12 +138,15 @@ class nYnab(object):
                                       "currency_format": json.dumps(currency_format),
                                       "date_format": json.dumps(date_format)
                                   })
+
+    @operation
     def clean_transactions(self):
         for transaction in self.budget.be_transactions:
             self.budget.be_transactions.delete(transaction)
         for subtransaction in self.budget.be_subtransactions:
             self.budget.be_subtransactions.delete(subtransaction)
-        self.sync()
+
+    @operation
     def clean_budget(self):
         self.clean_transactions()
         for sub_category in [sub_category for sub_category in self.budget.be_subcategories if sub_category.internal_name is None]:
@@ -162,4 +158,3 @@ class nYnab(object):
             self.budget.be_payees.delete(payee)
         for account in self.budget.be_accounts:
             self.budget.be_accounts.delete(account)
-        self.sync()

@@ -3,10 +3,10 @@ import argparse
 import re
 from ofxtools import OFXTree
 
-from NYnabConnection import nYnabConnection
-from budget import Transaction, Payee
-from config import email, password
-from nYNAB import nYnab, BudgetNotFound
+from pynYNAB.connection import nYnabConnection
+from pynYNAB.budget import Transaction, Payee
+from pynYNAB.config import email, password
+from pynYNAB.Client import nYnabClient, BudgetNotFound
 
 parser = argparse.ArgumentParser(description='Manually import an OFX into a nYNAB budget')
 parser.add_argument('ofxfile', metavar='OFXPath', type=str,
@@ -25,7 +25,7 @@ response = tree.convert()
 stmts = response.statements
 
 try:
-    nYNABobject = nYnab(connection, budget_name=args.budgetname, reload=True)
+    nYNABobject = nYnabClient(connection, budget_name=args.budgetname, reload=True)
 except BudgetNotFound:
     print('No budget by this name found in nYNAB')
     exit(-1)

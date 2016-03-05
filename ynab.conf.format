@@ -1,5 +1,0 @@
-[AUTHENTICATION]
-email = your_nynab_email
-password = your_nynab_password
-[LOGGING]
-level=ERROR

@@ -14,11 +14,11 @@ import re
 
 from ynab.models import AccountType
 
-from Entity import AccountTypes
-from NYnabConnection import nYnabConnection, NYnabConnectionError
-from budget import MasterCategory, Subcategory, Account, Payee, Transaction, Subtransaction
-from config import email, password
-from nYNAB import nYnab, BudgetNotFound
+from pynYNAB.Entity import AccountTypes
+from pynYNAB.connection import nYnabConnection, NYnabConnectionError
+from pynYNAB.budget import MasterCategory, Subcategory, Account, Payee, Transaction, Subtransaction
+from pynYNAB.config import email, password
+from pynYNAB.Client import nYnabClient, BudgetNotFound
 
 parser = argparse.ArgumentParser(description='Migrate a YNAB4 budget transaction history to nYNAB')
 parser.add_argument('budget', metavar='BudgetPath', type=str,
@@ -34,12 +34,12 @@ thisynab = YNAB(budget_path,budget_name)
 
 connection = nYnabConnection(email, password, reload=True)
 try:
-    nYNABobject = nYnab(connection, budget_name=budget_name, reload=True)
+    nYNABobject = nYnabClient(connection, budget_name=budget_name, reload=True)
     # remove the existing one
     nYNABobject.delete_budget(budget_name)
 except BudgetNotFound:
     pass
-nYNABobject = nYnab(connection)
+nYNABobject = nYnabClient(connection)
 nYNABobject.create_budget(budget_name)
 nYNABobject.select_budget(budget_name)
 

@@ -1,12 +1,12 @@
+import json
+import unittest
+
 from Entity import Entity, EntityField, ComplexEncoder, EntityListField, ListofEntities, undef
+from catalog import BudgetVersion, CatalogBudget, User, UserBudget, UserSetting
 from budget import Account, AccountCalculation, AccountMapping, MasterCategory, Transaction, Subcategory, \
     MonthlyAccountCalculation, MonthlyBudget, MonthlySubcategoryBudget, MonthlyBudgetCalculation, \
     MonthlySubcategoryBudgetCalculation, PayeeLocation, Payee, PayeeRenameCondition, ScheduledSubtransaction, \
     ScheduledTransaction, Setting, Subtransaction, TransactionGroup
-import json
-import unittest
-
-from catalog import BudgetVersion, CatalogBudget, User, UserBudget, UserSetting
 from roots import Budget, Catalog
 
 

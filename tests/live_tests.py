@@ -3,12 +3,13 @@ import unittest
 from datetime import datetime, timedelta
 from functools import wraps
 
+from budget import Transaction, Account, Subtransaction
+from config import email, password
+from nYNAB import nYnab
+
 import KeyGenerator
 from Entity import AccountTypes
 from NYnabConnection import nYnabConnection
-from budget import Transaction, Account, Payee, Subtransaction
-from config import email, password
-from nYNAB import nYnab
 
 
 class Live_tests(unittest.TestCase):
@@ -47,26 +48,30 @@ class Live_tests(unittest.TestCase):
 
         return wrapped
 
-    def test_addaccount(self):
-        account_type = AccountTypes.Checking
-        account_name = KeyGenerator.generateUUID()
-        budget = self.nYNABobject.budget
+    def test_add_account_alltypes(self):
+        for account_type in AccountTypes:
+            account_name = KeyGenerator.generateUUID()
+            budget = self.nYNABobject.budget
 
-        for account in budget.be_accounts:
-            if account.account_name == account_name:
-                return
-        sortable_index = max([account.sortable_index for account in budget.be_accounts])
-        account = Account(
-            account_type=account_type,
-            account_name=account_name,
-            sortable_index=sortable_index,
-        )
+            for account in budget.be_accounts:
+                if account.account_name == account_name:
+                    return
+            if len(budget.be_accounts)>0:
+                sortable_index = max(account.sortable_index for account in budget.be_accounts)
+            else:
+                sortable_index=0
 
-        self.nYNABobject.add_account(account, balance=0, balance_date=datetime.now())
+            account = Account(
+                account_type=account_type,
+                account_name=account_name,
+                sortable_index=sortable_index,
+            )
 
-        self.nYNABobject.do_init(True)
+            self.nYNABobject.add_account(account, balance=random.randint(-10,10), balance_date=datetime.now())
 
-        self.assertIn(account, self.nYNABobject.budget.be_accounts)
+            self.nYNABobject.do_init(True)
+
+            self.assertIn(account, self.nYNABobject.budget.be_accounts)
 
     @needs_account
     def test_deleteaccount(self):
