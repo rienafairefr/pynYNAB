@@ -21,7 +21,7 @@ class nYnabConnection(object):
     url = 'https://app.youneedabudget.com/users/login'
     urlCatalog = 'https://app.youneedabudget.com/api/v1/catalog'
 
-    def getsession(self):
+    def _init_session(self):
         self.session.cookies = RequestsCookieJar()
 
         self.session.headers['X-YNAB-Device-Id'] = self.id
@@ -40,14 +40,19 @@ class nYnabConnection(object):
         self.id = str(uuid.uuid3(uuid.NAMESPACE_DNS, 'rienafairefr.pynYNAB'))
         self.lastrequest_elapsed=None
 
-        self.getsession()
+        self._init_session()
 
     @RateLimited(maxpersecond=5)
     def dorequest(self, request_dic, opname):
-        # Available operations : loginUser,getInitialUserData,logoutUser,createNewBudget,freshStartABudget,cloneBudget,
-        # deleteTombstonedBudgets,syncCatalogData,syncBudgetData,getInstitutionList
-        # getInstitutionLoginFields,getInstitutionAccountList,registerAccountForDirectConnect,
-        # updateDirectConnectCredentials,poll,createFeedback,runSqlStatement
+        """
+        :param request_dic: a dictionary containing parameters for the request
+        :param opname: An API operation name, available are: loginUser,getInitialUserData,logoutUser,createNewBudget,
+        freshStartABudget,cloneBudget,deleteTombstonedBudgets,syncCatalogData,syncBudgetData,getInstitutionList,
+        getInstitutionLoginFields,getInstitutionAccountList,registerAccountForDirectConnect,
+        updateDirectConnectCredentials,poll,createFeedback,runSqlStatement
+        :return: the dictionary of the result of the request
+        """
+        # Available operations :
 
         params = { u'operation_name': opname,'request_data': json.dumps(request_dic, cls=ComplexEncoder),}
         logger.debug('POST-ing ...',params)

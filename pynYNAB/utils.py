@@ -1,8 +1,8 @@
 import time
 
 
-def RateLimited(maxPerSecond):
-    minInterval = 1.0 / float(maxPerSecond)
+def RateLimited(maxpersecond):
+    minInterval = 1.0 / float(maxpersecond)
     def decorate(func):
         lastTimeCalled = [0.0]
         def rateLimitedFunction(*args,**kargs):
