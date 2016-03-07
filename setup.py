@@ -56,6 +56,7 @@ setup(
         'ofxtools',
         'pynab',
         'requests',
+        'jsontableschema',
         'unicodecsv',
         'appdirs'
     ],

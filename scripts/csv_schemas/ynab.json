@@ -1,0 +1,46 @@
+{
+    "fields": [
+        {
+            "name": "date",
+            "title": "Date",
+            "type": "date"
+        },
+        {
+            "name": "payee",
+            "title": "Payee",
+            "type": "string",
+            "constraints": {
+              "required": false
+            }
+        },
+        {
+            "name": "category",
+            "title": "Category",
+            "type": "string"
+        },
+        {
+            "name": "memo",
+            "title": "Memo",
+            "type": "string",
+            "constraints": {
+              "required": false
+            }
+        },
+        {
+            "name": "outflow",
+            "title": "Outflow",
+            "type": "string",
+            "constraints": {
+              "minimum":0
+            }
+        },
+        {
+            "name": "inflow",
+            "title": "Inflow",
+            "type": "number",
+            "constraints": {
+              "minimum":0
+            }
+        }
+    ]
+}

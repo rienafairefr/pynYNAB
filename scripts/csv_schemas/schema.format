@@ -1,0 +1,7 @@
+Uses JSON Table Schema
+    http://dataprotocols.org/json-table-schema/
+
+CSVimport looks for fields named:
+    date, payee, category, amount, outflow, inflow, account
+
+Not all fields need to be defined. At least, date and amount, with the account name passed as command line argument
