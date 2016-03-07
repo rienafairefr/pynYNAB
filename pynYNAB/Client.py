@@ -3,6 +3,7 @@ from functools import wraps
 from budget import Payee, Transaction
 from catalog import BudgetVersion
 from connection import NYnabConnectionError
+from pynYNAB.utils import chunk
 from roots import Budget, Catalog
 
 
@@ -92,8 +93,12 @@ class nYnabClient(object):
     def add_transaction(self, transaction):
         self.budget.be_transactions.append(transaction)
 
-    @operation
     def add_transactions(self, transaction_list):
+        for chunkelement in chunk(transaction_list, 50):
+            self._add_transactions(chunkelement)
+
+    @operation
+    def _add_transactions(self, transaction_list):
         for transaction in transaction_list:
             self.budget.be_transactions.append(transaction)
 
