@@ -50,7 +50,7 @@ setup(
     packages=find_packages(),
 
     install_requires=[
-        'configparser',
+        'configargparse',
         'dateparser',
         'enum',
         'ofxtools',
