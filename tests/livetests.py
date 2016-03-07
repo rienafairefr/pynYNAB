@@ -2,30 +2,33 @@ import random
 import unittest
 from datetime import datetime, timedelta
 from functools import wraps
+import configargparse
 
+from pynYNAB import KeyGenerator
 from pynYNAB.Client import nYnabClient
 from pynYNAB.Entity import AccountTypes
 from pynYNAB.budget import Transaction, Account, Subtransaction
-from pynYNAB.config import email, password
 from pynYNAB.connection import nYnabConnection
 
 
-class Live_tests(unittest.TestCase):
+class liveTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
-        super(Live_tests, self).__init__(*args, **kwargs)
+        super(liveTests, self).__init__(*args, **kwargs)
         self.account = None
         self.budet = None
         self.transaction = None
-        self.nYNABobject = None
+        self.client = None
 
     def setUp(self):
-        connection = nYnabConnection(email, password, reload=True)
-        self.nYNABobject = nYnabClient(connection, budget_name='My Budget', reload=True)
+        parser=configargparse.getArgumentParser('pynYNAB')
+        args=parser.parse_known_args()[0]
+        connection = nYnabConnection(args.email, args.password)
+        self.client = nYnabClient(connection, budget_name='My Budget')
 
     def needs_account(fn):
         @wraps(fn)
         def wrapped(self, *args, **kwargs):
-            for account in self.nYNABobject.budget.be_accounts:
+            for account in self.client.budget.be_accounts:
                 if not account.is_tombstone:
                     self.account = account
                     fn(self, *args, **kwargs)
@@ -37,7 +40,7 @@ class Live_tests(unittest.TestCase):
     def needs_transaction(fn):
         @wraps(fn)
         def wrapped(self, *args, **kwargs):
-            for transaction in self.nYNABobject.budget.be_transactions:
+            for transaction in self.client.budget.be_transactions:
                 if transaction.entities_account_id == self.account.id and not transaction.is_tombstone:
                     self.transaction = transaction
                     fn(self, *args, **kwargs)
@@ -48,16 +51,16 @@ class Live_tests(unittest.TestCase):
 
     def test_add_account_alltypes(self):
         for account_type in AccountTypes:
-            account_name = KeyGenerator.generateUUID()
-            budget = self.nYNABobject.budget
+            account_name = KeyGenerator.generateuuid()
+            budget = self.client.budget
 
             for account in budget.be_accounts:
                 if account.account_name == account_name:
                     return
-            if len(budget.be_accounts)>0:
+            if len(budget.be_accounts) > 0:
                 sortable_index = max(account.sortable_index for account in budget.be_accounts)
             else:
-                sortable_index=0
+                sortable_index = 0
 
             account = Account(
                 account_type=account_type,
@@ -65,18 +68,18 @@ class Live_tests(unittest.TestCase):
                 sortable_index=sortable_index,
             )
 
-            self.nYNABobject.add_account(account, balance=random.randint(-10,10), balance_date=datetime.now())
+            self.client.add_account(account, balance=random.randint(-10, 10), balance_date=datetime.now())
 
-            self.nYNABobject.do_init(True)
+            self.setUp()
 
-            self.assertIn(account, self.nYNABobject.budget.be_accounts)
+            self.assertIn(account, self.client.budget.be_accounts)
 
     @needs_account
     def test_deleteaccount(self):
-        self.nYNABobject.delete_account(self.account)
-        self.nYNABobject.do_init(True)
+        self.client.delete_account(self.account)
+        self.setUp()
 
-        result = self.nYNABobject.budget.be_transactions.get(self.account.id)
+        result = self.client.budget.be_transactions.get(self.account.id)
         self.assertTrue(result is None or result.is_tombstone == True)
         return
 
@@ -89,68 +92,63 @@ class Live_tests(unittest.TestCase):
             date=datetime.now(),
             entities_account_id=self.account.id,
         )
-        self.nYNABobject.add_transaction(transaction)
+        self.client.add_transaction(transaction)
 
-        self.nYNABobject.do_init(True)
+        self.setUp()
 
-        self.assertIn(transaction, self.nYNABobject.budget.be_transactions)
+        self.assertIn(transaction, self.client.budget.be_transactions)
         return
 
     @needs_account
     def test_addtransactions(self):
         from datetime import datetime
 
-        transactions = []
-        transactions.append(Transaction(
+        transactions = [
+            Transaction(
                 amount=random.randint(-10, 10),
                 cleared='Uncleared',
-                date=datetime.now()-8*timedelta(days=365),
+                date=datetime.now() - 8 * timedelta(days=365),
                 entities_account_id=self.account.id,
-            ))
-
-        transactions.append(Transaction(
+            ), Transaction(
                 amount=random.randint(-10, 10),
                 cleared='Uncleared',
-                date=datetime.now()+8*timedelta(days=365),
+                date=datetime.now() + 8 * timedelta(days=365),
                 entities_account_id=self.account.id,
-            ))
-
+            )]
 
         n = 3
-        for i in range(len(transactions)-n):
+        for i in range(len(transactions) - n):
             transactions.append(Transaction(
                 amount=random.randint(-10, 10),
                 cleared='Uncleared',
                 date=datetime.now(),
                 entities_account_id=self.account.id,
             ))
-        self.nYNABobject.add_transactions(transactions)
-        print('Time for request: ' + str(self.nYNABobject.connection.lastrequest_elapsed.total_seconds()) + ' s')
+        self.client.add_transactions(transactions)
+        print('Time for request: ' + str(self.client.connection.lastrequest_elapsed.total_seconds()) + ' s')
 
-        self.nYNABobject.do_init(True)
+        self.setUp()
         for transaction in transactions:
-            self.assertIn(transaction, self.nYNABobject.budget.be_transactions)
+            self.assertIn(transaction, self.client.budget.be_transactions)
 
     @needs_account
     @needs_transaction
     def test_deletetransaction(self):
-        budget = self.nYNABobject.budget
+        self.client.delete_transaction(self.transaction)
+        self.setUp()
 
-        self.nYNABobject.delete_transaction(self.transaction)
-        self.nYNABobject.do_init(True)
-
-        resulttransaction = self.nYNABobject.budget.be_transactions.get(self.transaction.id)
+        resulttransaction = self.client.budget.be_transactions.get(self.transaction.id)
         self.assertTrue(resulttransaction is None or resulttransaction.is_tombstone == True)
 
     @needs_account
     def test_add_splittransactions(self):
-        subcatSplit_id = next(subcategory.id for subcategory in self.nYNABobject.budget.be_subcategories if
+        subcatsplit_id = next(subcategory.id for subcategory in self.client.budget.be_subcategories if
                               subcategory.internal_name == 'Category/__Split__')
         transaction = Transaction(
             amount=1,
             date=datetime.now(),
             entities_account_id=self.account.id,
-            entities_subcategory_id=subcatSplit_id
+            entities_subcategory_id=subcatsplit_id
         )
         sub1 = Subtransaction(
             amount=5000,
@@ -160,25 +158,25 @@ class Live_tests(unittest.TestCase):
             amount=5000,
             entities_transaction_id=transaction.id
         )
-        self.nYNABobject.budget.be_transactions.append(transaction)
-        self.nYNABobject.budget.be_subtransactions.append(sub1)
-        self.nYNABobject.budget.be_subtransactions.append(sub2)
+        self.client.budget.be_transactions.append(transaction)
+        self.client.budget.be_subtransactions.append(sub1)
+        self.client.budget.be_subtransactions.append(sub2)
 
-        self.nYNABobject.sync()
+        self.client.sync()
 
-        self.nYNABobject.do_init(True)
+        self.setUp()
 
-        self.assertIn(transaction, self.nYNABobject.budget.be_transactions)
-        self.assertIn(sub1, self.nYNABobject.budget.be_subtransactions)
-        self.assertIn(sub2, self.nYNABobject.budget.be_subtransactions)
+        self.assertIn(transaction, self.client.budget.be_transactions)
+        self.assertIn(sub1, self.client.budget.be_subtransactions)
+        self.assertIn(sub2, self.client.budget.be_subtransactions)
 
     @needs_account
     @needs_transaction
     def test_split(self):
-        subcat1, subcat2 = tuple(random.sample(self.nYNABobject.budget.be_subcategories, 2))
-        subcatSplit_id = next(subcategory.id for subcategory in self.nYNABobject.budget.be_subcategories if
+        subcat1, subcat2 = tuple(random.sample(self.client.budget.be_subcategories, 2))
+        subcatsplit_id = next(subcategory.id for subcategory in self.client.budget.be_subcategories if
                               subcategory.internal_name == 'Category/__Split__')
-        self.transaction.entities_subcategory_id = subcatSplit_id
+        self.transaction.entities_subcategory_id = subcatsplit_id
 
         sub1 = Subtransaction(
             amount=self.transaction.amount - 5000,
@@ -191,14 +189,14 @@ class Live_tests(unittest.TestCase):
             entities_subcategory_id=subcat2.id
         )
 
-        self.nYNABobject.budget.be_subtransactions.append(sub1)
-        self.nYNABobject.budget.be_subtransactions.append(sub2)
-        self.nYNABobject.budget.be_transactions.modify(self.transaction)
+        self.client.budget.be_subtransactions.append(sub1)
+        self.client.budget.be_subtransactions.append(sub2)
+        self.client.budget.be_transactions.modify(self.transaction)
 
-        self.nYNABobject.sync()
+        self.client.sync()
 
-        self.nYNABobject.do_init(True)
+        self.setUp()
 
-        self.assertIn(sub1, self.nYNABobject.budget.be_subtransactions)
-        self.assertIn(self.transaction, self.nYNABobject.budget.be_transactions)
-        self.assertIn(sub2, self.nYNABobject.budget.be_subtransactions)
+        self.assertIn(sub1, self.client.budget.be_subtransactions)
+        self.assertIn(self.transaction, self.client.budget.be_transactions)
+        self.assertIn(sub2, self.client.budget.be_subtransactions)

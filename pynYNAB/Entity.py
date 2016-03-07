@@ -3,9 +3,8 @@ import json
 from enum import Enum
 
 import KeyGenerator
-from config import logger
+from config import get_logger
 from pynYNAB.schema.Fields import EntityField, EntityListField
-
 
 def undef():
     pass
@@ -35,7 +34,7 @@ def obj_from_dict(obj_type, dictionary):
         try:
             field = obt.AllFields[key]
         except KeyError:
-            logger.ERROR('Encountered field %s in a dictionary to create an entity of type %s ' % (key, obj_type))
+            get_logger().ERROR('Encountered field %s in a dictionary to create an entity of type %s ' % (key, obj_type))
             raise ValueError()
         if isinstance(field, EntityField):
             treated[key] = field.posttreat(value)
@@ -93,7 +92,7 @@ class Entity(object):
             return False
 
     def create_id(self, *args, **kwargs):
-        return KeyGenerator.generateUUID()
+        return KeyGenerator.generateuuid()
 
 
 class ListofEntities(object):
@@ -123,8 +122,8 @@ class ListofEntities(object):
             except KeyError:
                 self._dict_entities[entity.id] = entity
 
-    def get(self, id):
-        return self._dict_entities.get(id)
+    def get(self, entity_id):
+        return self._dict_entities.get(entity_id)
 
     def extend(self, objects, track=True):
         if not all(isinstance(x, self.typeItems) for x in objects):

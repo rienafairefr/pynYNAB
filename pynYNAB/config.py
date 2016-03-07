@@ -1,19 +1,32 @@
 import logging
 import os
+from appdirs import AppDirs
+import configargparse
 
-cwd=os.path.dirname(__file__)
+myAppdir = AppDirs('pynYNAB').user_config_dir
+configfile=os.path.join(myAppdir, 'ynab.conf')
 
-import configparser
-cp = configparser.ConfigParser()
-cp.read(os.path.join(cwd,"ynab.conf"))
-email = cp.get('AUTHENTICATION', 'email',fallback=None)
-password = cp.get('AUTHENTICATION', 'password',fallback=None)
+parser = configargparse.getArgumentParser('pynYNAB',default_config_files=[configfile])
+parser.add_argument('--email', metavar='Email', type=str, required=False,
+                    help='The Email User ID for nYNAB')
+parser.add_argument('--password', metavar='Password', type=str, required=False,
+                    help='The Password for nYNAB')
+parser.add_argument('--level', metavar='LoggingLevel', type=str, required=False,
+                    help='Logging Level')
 
-if email is None or password is None:
-    print('Please create or modify ynab.conf according to the format in ynab.conf')
+
+def get_logger():
+    args=parser.parse_known_args()[0]
+    logginglevel = args.level.upper()
+    logger = logging.getLogger('pynYNAB')
+    logging.basicConfig()
+    logger.setLevel(logginglevel)
+    return logging
+
+
+def alert_quit_badconfig():
+    print('Please modify ynab.conf situated in %s' % myAppdir)
+    import shutil
+
+    shutil.copy('ynab.conf.format', os.path.join(myAppdir, 'ynab.conf'))
     exit(-1)
-
-logginglevel=cp.get('LOGGING','level',fallback='ERROR').upper()
-logger=logging.getLogger('pynYNAB')
-logging.basicConfig()
-logger.setLevel(logginglevel)

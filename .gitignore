@@ -1,4 +1,6 @@
-ynab.conf
 .idea/
 *.pyc
-migrate.csv
+
+build/
+dist/
+pynYNAB.egg-info/

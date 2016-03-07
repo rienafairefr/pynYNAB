@@ -1,8 +1,6 @@
 from datetime import datetime
 
 
-
-
 class EntityField(object):
     def pretreat(self, x):
         return x
@@ -24,8 +22,8 @@ class EntityListField(object):
     def posttreat(self, x):
         return x
 
-    def __init__(self, type):
-        self.type = type
+    def __init__(self, typearg):
+        self.type = typearg
 
     def __call__(self, *args, **kwargs):
         from pynYNAB.Entity import ListofEntities
@@ -34,13 +32,13 @@ class EntityListField(object):
 
 class AmountField(EntityField):
     def __init__(self):
-        super(AmountField,self).__init__(0)
+        super(AmountField, self).__init__(0)
 
     def pretreat(self, x):
-        return int(x * 1000)  if x is not None else x
+        return int(x * 1000) if x is not None else x
 
     def posttreat(self, x):
-        return float(x) / 1000  if x is not None else x
+        return float(x) / 1000 if x is not None else x
 
 
 class DateField(EntityField):
@@ -56,9 +54,15 @@ class DateField(EntityField):
 
 class AccountTypeField(EntityField):
     def pretreat(self, x):
-        return str(x)
+        try:
+            return x.name
+        except AttributeError:
+            return None
 
     def posttreat(self, x):
-        from Entity import AccountTypes
-        print(x)
-        return getattr(AccountTypes,x)
+        from pynYNAB.Entity import AccountTypes
+        try:
+            return getattr(AccountTypes, x)
+        except:
+            # nYNAB servers can accept an account with account_type not set to a valid value apparently
+            return None

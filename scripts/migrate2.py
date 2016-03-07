@@ -1,5 +1,5 @@
 # Using package pyynab to get all the info needed
-import argparse
+import configargparse
 import os
 import random
 import re
@@ -8,14 +8,13 @@ from ynab import YNAB
 
 from pynYNAB.Client import nYnabClient, BudgetNotFound
 from pynYNAB.budget import MasterCategory, Subcategory, Account, Payee, Transaction
-from pynYNAB.config import email, password
 from pynYNAB.connection import nYnabConnection
 
-parser = argparse.ArgumentParser(description='Migrate a YNAB4 budget transaction history to nYNAB')
+parser = configargparse.getArgumentParser('pynYNAB')
+parser.description='Migrate a YNAB4 budget transaction history to nYNAB \r\n'
 parser.add_argument('budget', metavar='BudgetPath', type=str,
                     help='The budget .ynab4 directory')
-
-args = parser.parse_args()
+args = parser.parse_known_args()[0]
 
 budget_base_name=os.path.basename(args.budget)
 budget_path=os.path.dirname(args.budget)
@@ -23,9 +22,9 @@ budget_name=re.match(r"(?P<budget_name>.*)~[A-Z0-9]{8}\.ynab4",budget_base_name)
 
 thisynab = YNAB(budget_path,budget_name)
 
-connection = nYnabConnection(email, password, reload=True)
+connection = nYnabConnection(args.email, args.password)
 try:
-    nYNABobject = nYnabClient(connection, budget_name=budget_name, reload=True)
+    nYNABobject = nYnabClient(connection, budget_name=budget_name)
     # remove the existing one
     nYNABobject.delete_budget(budget_name)
 except BudgetNotFound:

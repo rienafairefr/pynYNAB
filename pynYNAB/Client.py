@@ -14,7 +14,6 @@ class nYnabClient(object):
     def __init__(self, nynabconnection, budget_name=None):
         self.connection = nynabconnection
         self.budget_name = budget_name
-        self.do_init()
         self.catalog = Catalog()
         self.budget = Budget()
         self.budget_version = BudgetVersion()

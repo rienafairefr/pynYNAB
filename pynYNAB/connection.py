@@ -2,6 +2,7 @@
 import json
 import logging
 import uuid
+from time import sleep
 
 import requests
 from requests.cookies import RequestsCookieJar
@@ -31,16 +32,17 @@ class nYnabConnection(object):
         self.sessionToken = firstlogin["session_token"]
         self.session.headers['X-Session-Token'] = self.sessionToken
 
-    def __init__(self, email, password, reload=False):
+    def __init__(self, email, password):
         self.email = email
         self.password = password
         self.session = requests.Session()
+        self.sessionToken = None
         self.id = str(uuid.uuid3(uuid.NAMESPACE_DNS, 'rienafairefr.pynYNAB'))
         self.lastrequest_elapsed=None
 
         self.getsession()
 
-    @RateLimited(maxPerSecond=10)
+    @RateLimited(maxpersecond=5)
     def dorequest(self, request_dic, opname):
         # Available operations : loginUser,getInitialUserData,logoutUser,createNewBudget,freshStartABudget,cloneBudget,
         # deleteTombstonedBudgets,syncCatalogData,syncBudgetData,getInstitutionList
@@ -53,12 +55,23 @@ class nYnabConnection(object):
         self.lastrequest_elapsed=r.elapsed
         js = r.json()
         if r.status_code != 200:
-            logger.debug(r.text)
-            raise NYnabConnectionError('non-200 HTTP code returned from the API')
+            logger.debug('non-200 HTTP code: %s ' % r.text)
         if js['error'] is None:
             return js
         else:
-            raise NYnabConnectionError('Error was returned from the API')
+            error=js['error']
+            if error['id'] == 'user_not_found':
+                logger.error('API error, User Not Found')
+            elif error['id'] == 'id=user_password_invalid':
+                logger.error('API error, User-Password combination invalid')
+            elif error['id'] == 'request_throttled':
+                logger.debug('API Rrequest throttled')
+                retyrafter=r.headers['Retry-After']
+                logger.debug('Waiting for %s s' % retyrafter)
+                sleep(float(retyrafter))
+                return self.dorequest(request_dic,opname)
+            else:
+                raise NYnabConnectionError('Unknown Error was returned from the API')
 
 
 

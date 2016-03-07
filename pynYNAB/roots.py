@@ -9,7 +9,7 @@ from pynYNAB.schema.Fields import EntityListField
 
 
 def knowledge_change(changed_entities):
-    return sum(map(lambda v: len(v), [v for k, v in changed_entities.iteritems()]))
+    return sum(map(lambda v: len(v), [changed_entitity for dictkey, changed_entitity in changed_entities.iteritems()]))
 
 
 class Root(Entity):
@@ -105,7 +105,7 @@ class Budget(Root):
                     be_transaction=tr,
                     be_subtransactions=subtransactions
                 ))
-        if not changed_entities.get('be_subtransactions'):
+        if changed_entities.get('be_subtransactions') is not None:
             del changed_entities['be_subtransactions']
         return changed_entities
 

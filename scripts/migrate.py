@@ -1,4 +1,4 @@
-import argparse
+import configargparse
 import random
 import re
 from _csv import QUOTE_NONE
@@ -10,22 +10,22 @@ import dateparser
 from pynYNAB.Client import nYnabClient, BudgetNotFound
 from pynYNAB.Entity import AccountTypes
 from pynYNAB.budget import MasterCategory, Subcategory, Account, Payee, Transaction, Subtransaction
-from pynYNAB.config import email, password
 from pynYNAB.connection import nYnabConnection
 
-parser = argparse.ArgumentParser(description='Migrate a YNAB4 budget transaction history to nYNAB')
+parser = configargparse.getArgumentParser('pynYNAB')
+parser.description='Migrate a YNAB4 budget transaction history to nYNAB \r\n'
 parser.add_argument('budgetname', metavar='BudgetName', type=str,
                     help='The budget to create')
 parser.add_argument('budget', metavar='BudgetPath', type=str,
                     help='The budget.csv file, e.g. MyBudget as of YYYY-HH-LL HSS-Budget.csv')
 parser.add_argument('register', metavar='RegisterPath', type=str,
-                    help='The register.csv file , e.g. MyBudget as of YYYY-HH-LL HSS-Budget.csv')
+                    help='The register.csv file , e.g. MyBudget as of YYYY-HH-LL HSS-Register.csv')
 parser.add_argument('-accounttypes', metavar='accounttypesCSV', type=str,
                     help='The migrate.csv file which defines account types', required=False)
 parser.add_argument('--full-migrate', dest='fullMigrate', action='store_true', default=False,
                     help='Migrate also the accounts and categories, in case this budget is not'
                          + ' already migrated through YNAB4 interface, EXPERIMENTAL')
-args = parser.parse_args()
+args = parser.parse_known_args()[0]
 
 dateformat = '%d/%m/%Y'
 decimal_separator = ','
@@ -33,7 +33,7 @@ currency_symbol = u'\u20ac'
 
 fullMigrate = args.fullMigrate
 
-connection = nYnabConnection(email, password, reload=True)
+connection = nYnabConnection(args.email, args.password)
 
 
 def unquote(string):
@@ -112,16 +112,16 @@ with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register , 
     ) for register_row in register_reader if len(register_row) == 13]
 
     try:
-        nYNABobject = nYnabClient(connection, budget_name=args.budgetname, reload=True)
+        client = nYnabClient(connection, budget_name=args.budgetname)
     except BudgetNotFound:
         # Do the full migration obviously...
         fullMigrate = True
-        nYNABobject = nYnabClient(connection, reload=True)
-        nYNABobject.createbudget(args.budgetname)
-    nYNABobject.clean_transactions()
+        client = nYnabClient(connection)
+        client.create_budget(args.budgetname)
+    client.clean_transactions()
     if fullMigrate:
 
-        nYNABobject.clean_budget()
+        client.clean_budget()
         MasterCategoryNames = set(map(lambda x: x.MasterCategoryName, BudgetRows))
         SubcategoryNames = {}
         for MasterCategoryName in MasterCategoryNames:
@@ -132,7 +132,7 @@ with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register , 
                 name=MasterCategoryName,
                 sortable_index=random.randint(-50000, 50000)
             )
-            nYNABobject.budget.be_master_categories.append(master_entity)
+            client.budget.be_master_categories.append(master_entity)
             subcategorynames = SubcategoryNames[MasterCategoryName]
             for subcategoryname in subcategorynames:
                 entity = Subcategory(
@@ -140,9 +140,9 @@ with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register , 
                     entities_master_category_id=master_entity.id,
                     sortable_index=random.randint(-50000, 50000)
                 )
-                nYNABobject.budget.be_subcategories.append(entity)
+                client.budget.be_subcategories.append(entity)
 
-        nYNABobject.sync()
+        client.sync()
 
         account_types_lines = filter(lambda x:not x.startswith('#'),account_types.readlines())
         account_types_reader = UnicodeReader(account_types_lines, encoding='utf-8')
@@ -174,26 +174,26 @@ with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register , 
                 on_budget=on_budget,
                 sortable_index=random.randint(-50000, 50000)
             )
-            nYNABobject.add_account(account, 0, mindate)
+            client.add_account(account, 0, mindate)
 
         for payee_name in set([Row.PayeeName for Row in RegisterRows]):
             if 'Transfer : ' in payee_name: continue  # This payee should already exist, created by the add_account
 
             payee = Payee(name=payee_name)
-            nYNABobject.budget.be_payees.append(payee)
-        nYNABobject.sync()
+            client.budget.be_payees.append(payee)
+        client.sync()
 
     # At this  point, we should have identical accounts, payees, categories between YNAB4 and nYNAB,
     # either  through migration above or through the YNAB4 builtin migration
 
-    accountmapping = {account.account_name: account.id for account in nYNABobject.budget.be_accounts}
-    payeemapping = {payee.name: payee.id for payee in nYNABobject.budget.be_payees}
+    accountmapping = {account.account_name: account.id for account in client.budget.be_accounts}
+    payeemapping = {payee.name: payee.id for payee in client.budget.be_payees}
     mastercategorymapping = {mastercategory.name: mastercategory.id for mastercategory in
-                             nYNABobject.budget.be_master_categories}
+                             client.budget.be_master_categories}
     submapping = {
-    mastercategory.name: {subcategory.name: subcategory.id for subcategory in nYNABobject.budget.be_subcategories if
-                          subcategory.entities_master_category_id == mastercategory.id} for mastercategory in
-    nYNABobject.budget.be_master_categories}
+        mastercategory.name: {subcategory.name: subcategory.id for subcategory in client.budget.be_subcategories if
+                              subcategory.entities_master_category_id == mastercategory.id} for mastercategory in
+        client.budget.be_master_categories}
 
     if not u'Pre-YNAB Debt' in mastercategorymapping and u'Credit Card Payments' in mastercategorymapping:
         mastercategorymapping[u'Pre-YNAB Debt'] = mastercategorymapping[u'Credit Card Payments']
@@ -201,11 +201,11 @@ with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register , 
 
     if not u'Income' in mastercategorymapping and u'Credit Card Payments' in mastercategorymapping:
         mastercategoryinternal_id = next(
-            mastercategory.id for mastercategory in nYNABobject.budget.be_master_categories if
+            mastercategory.id for mastercategory in client.budget.be_master_categories if
             mastercategory.internal_name == 'MasterCategory/__Internal__')
         mastercategorymapping[u'Income'] = mastercategoryinternal_id
 
-        subcategoryincome_id = next(subcategory.id for subcategory in nYNABobject.budget.be_subcategories if
+        subcategoryincome_id = next(subcategory.id for subcategory in client.budget.be_subcategories if
                                     subcategory.internal_name == 'Category/__ImmediateIncome__')
         submapping[u'Income'] = {'Available this month': subcategoryincome_id,
                                  'Available next month': subcategoryincome_id}
@@ -217,7 +217,7 @@ with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register , 
     reTransfer = re.compile('.*?Transfer : (?P<account>.*)')
     reSplit = re.compile('\(Split (?P<num1>\d+)/(?P<num2>\d+)\)')
 
-    split_id = next(x.id for x in nYNABobject.budget.be_subcategories if x.internal_name == 'Category/__Split__')
+    split_id = next(x.id for x in client.budget.be_subcategories if x.internal_name == 'Category/__Split__')
 
     for register_row in RegisterRows:
         try:
@@ -358,10 +358,10 @@ with open(args.budget, 'rb') as budget, open(args.register, 'rb') as register , 
 
 
 
-    nYNABobject.budget.be_transactions.extend(transactions)
-    nYNABobject.budget.be_subtransactions.extend(subtransactions)
+    client.budget.be_transactions.extend(transactions)
+    client.budget.be_subtransactions.extend(subtransactions)
 
-    nYNABobject.sync()
+    client.sync()
 
 
 
