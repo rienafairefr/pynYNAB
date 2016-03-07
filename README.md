@@ -12,7 +12,7 @@ Either code your own script that uses the pynYNAB api, or use the provided scrip
 
 # Scripts Documentation
 
-After install, you should be able to call nynabofximport and ynab4nmigrate directly, you either pass the email/password
+After install, you should be able to call ofximport and nmigrate scripts, you either pass the email/password
  as command line arguments or modify the ynab.conf file (Which should be created in some place dependent on your OS if 
  the script can't find it).
 
@@ -33,8 +33,9 @@ In order to write some data to YNAB servers for your budget, you just need to mo
  objects then call nYnabobject.sync . To append a new entity, delete or modify an existing one, call the appropriate 
   methods on a collection inside the budget or catalog objects.
     
- I've provided some tested methods e.g. add_account, add_transaction, in the nYnabClient object to
+ I've provided some tested methods e.g. add_account, add_transaction, in the nYnabClient class to
 add/delete accounts and transactions as examples.
 
 Caution with add_transaction, it works even for large amount of transactions (tested up to 3000), but please don't stress test
-the YNAB servers with it...
+the YNAB servers with it... Recently (I think), YNAB implemented throttling on their API, and pynYNAB honors it, by 
+catching request_throttled errors and waiting the time specified in the  Retry-After header
