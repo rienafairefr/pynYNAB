@@ -150,4 +150,4 @@ def csvimport_main():
     client.add_transactions(transactions)
 
 if __name__ == "__main__":
-    sys.exit(csvimport_main())
+    csvimport_main()

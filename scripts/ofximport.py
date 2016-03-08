@@ -87,4 +87,4 @@ def ofximport_main():
                 client.add_transaction(transaction)
 
 if __name__ == "__main__":
-    sys.exit(ofximport_main())
+    ofximport_main()

@@ -239,4 +239,4 @@ def migrate_main():
     #     pass
 
 if __name__ == "__main__":
-    sys.exit(migrate_main())
+    migrate_main()
