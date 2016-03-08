@@ -19,11 +19,14 @@ class liveTests(unittest.TestCase):
         self.transaction = None
         self.client = None
 
-    def setUp(self):
+    def reload(self):
         parser=configargparse.getArgumentParser('pynYNAB')
         args=parser.parse_known_args()[0]
         connection = nYnabConnection(args.email, args.password)
         self.client = nYnabClient(connection, budget_name='My Budget')
+
+    def setUp(self):
+        self.reload()
 
     def needs_account(fn):
         @wraps(fn)
@@ -49,8 +52,8 @@ class liveTests(unittest.TestCase):
 
         return wrapped
 
-    def test_add_account_alltypes(self):
-        for account_type in AccountTypes:
+    def test_add_delete_account_alltypes(self):
+        for account_type in AccountTypes.members:
             account_name = KeyGenerator.generateuuid()
             budget = self.client.budget
 
@@ -70,21 +73,20 @@ class liveTests(unittest.TestCase):
 
             self.client.add_account(account, balance=random.randint(-10, 10), balance_date=datetime.now())
 
-            self.setUp()
+            self.reload()
 
             self.assertIn(account, self.client.budget.be_accounts)
 
-    @needs_account
-    def test_deleteaccount(self):
-        self.client.delete_account(self.account)
-        self.setUp()
+            self.client.budget.delete_account(account)
 
-        result = self.client.budget.be_transactions.get(self.account.id)
-        self.assertTrue(result is None or result.is_tombstone == True)
-        return
+            self.reload()
+
+            result = self.client.budget.be_transactions.get(self.account.id)
+
+            self.assertTrue(result is None or result.is_tombstone)
 
     @needs_account
-    def test_addtransaction(self):
+    def test_add_deletetransaction(self):
         from datetime import datetime
         transaction = Transaction(
             amount=1,
@@ -94,13 +96,17 @@ class liveTests(unittest.TestCase):
         )
         self.client.add_transaction(transaction)
 
-        self.setUp()
+        self.reload()
 
         self.assertIn(transaction, self.client.budget.be_transactions)
-        return
+        self.client.delete_account(self.account)
+        self.reload()
+
+        result = self.client.budget.be_transactions.get(self.account.id)
+        self.assertTrue(result is None or result.is_tombstone)
 
     @needs_account
-    def test_addtransactions(self):
+    def test_add_deletetransactions(self):
         from datetime import datetime
 
         transactions = [
@@ -127,18 +133,18 @@ class liveTests(unittest.TestCase):
         self.client.add_transactions(transactions)
         print('Time for request: ' + str(self.client.connection.lastrequest_elapsed.total_seconds()) + ' s')
 
-        self.setUp()
+        self.reload()
         for transaction in transactions:
             self.assertIn(transaction, self.client.budget.be_transactions)
 
-    @needs_account
-    @needs_transaction
-    def test_deletetransaction(self):
-        self.client.delete_transaction(self.transaction)
-        self.setUp()
+        for transaction in transactions:
+            self.client.delete_transaction(transaction)
+        self.reload()
 
-        resulttransaction = self.client.budget.be_transactions.get(self.transaction.id)
-        self.assertTrue(resulttransaction is None or resulttransaction.is_tombstone == True)
+        for transaction in transactions:
+            resulttransaction = self.client.budget.be_transactions.get(transaction.id)
+            self.assertTrue(resulttransaction is None or resulttransaction.is_tombstone == True)
+
 
     @needs_account
     def test_add_splittransactions(self):
@@ -164,7 +170,7 @@ class liveTests(unittest.TestCase):
 
         self.client.sync()
 
-        self.setUp()
+        self.reload()
 
         self.assertIn(transaction, self.client.budget.be_transactions)
         self.assertIn(sub1, self.client.budget.be_subtransactions)
@@ -195,7 +201,7 @@ class liveTests(unittest.TestCase):
 
         self.client.sync()
 
-        self.setUp()
+        self.reload()
 
         self.assertIn(sub1, self.client.budget.be_subtransactions)
         self.assertIn(self.transaction, self.client.budget.be_transactions)

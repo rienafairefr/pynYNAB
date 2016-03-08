@@ -1,6 +1,8 @@
 from datetime import datetime
 
 
+
+
 class EntityField(object):
     def pretreat(self, x):
         return x
@@ -57,7 +59,9 @@ class AccountTypeField(EntityField):
         try:
             return x.name
         except AttributeError:
-            return None
+            from pynYNAB.Entity import AccountTypes
+            if x in AccountTypes:
+                return x
 
     def posttreat(self, x):
         from pynYNAB.Entity import AccountTypes

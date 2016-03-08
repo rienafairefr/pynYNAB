@@ -13,8 +13,6 @@ parser.add_argument('ofxfile', metavar='OFXPath', type=str,
                     help='The OFX file to import')
 parser.add_argument('budgetname', metavar='BudgetName', type=str,
                     help='The nYNAB budget to use (creates it if it doesn''t exist')
-parser.add_argument('accountname', metavar='AccountName', type=str, nargs='?',
-                    help='The nYNAB account name  to use (creates it if it doesn''t exist')
 
 args = parser.parse_known_args()[0]
 

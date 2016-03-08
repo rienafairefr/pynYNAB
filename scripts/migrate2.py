@@ -7,6 +7,7 @@ import re
 from ynab import YNAB
 
 from pynYNAB.Client import nYnabClient, BudgetNotFound
+from pynYNAB.Entity import AccountTypes
 from pynYNAB.budget import MasterCategory, Subcategory, Account, Payee, Transaction
 from pynYNAB.connection import nYnabConnection
 
@@ -14,24 +15,29 @@ parser = configargparse.getArgumentParser('pynYNAB')
 parser.description='Migrate a YNAB4 budget transaction history to nYNAB \r\n'
 parser.add_argument('budget', metavar='BudgetPath', type=str,
                     help='The budget .ynab4 directory')
+parser.add_argument('--budgetname', metavar='BudgetName', type=str,required=False,
+                    help='Migrate to a differently named budget')
 args = parser.parse_known_args()[0]
 
 budget_base_name=os.path.basename(args.budget)
 budget_path=os.path.dirname(args.budget)
 budget_name=re.match(r"(?P<budget_name>.*)~[A-Z0-9]{8}\.ynab4",budget_base_name).groupdict().get('budget_name')
 
+if args.budgetname is not None:
+    budget_name=args.budgetname
+
 thisynab = YNAB(budget_path,budget_name)
 
 connection = nYnabConnection(args.email, args.password)
 try:
-    nYNABobject = nYnabClient(connection, budget_name=budget_name)
+    client = nYnabClient(connection, budget_name=budget_name)
     # remove the existing one
-    nYNABobject.delete_budget(budget_name)
+    client.delete_budget(budget_name)
 except BudgetNotFound:
     pass
-nYNABobject = nYnabClient(connection)
-nYNABobject.create_budget(budget_name)
-nYNABobject.select_budget(budget_name)
+client = nYnabClient(connection)
+client.create_budget(budget_name)
+client.select_budget(budget_name)
 
 for ynab4_account in thisynab.accounts:
     account=Account(
@@ -41,14 +47,14 @@ for ynab4_account in thisynab.accounts:
         sortable_index=random.randint(-50000, 50000),
     )
     mindate=min([ynab4transaction.date for ynab4transaction in thisynab.transactions if ynab4transaction.account == ynab4_account])
-    nYNABobject.add_account(account,0,mindate)
+    client.add_account(account, 0, mindate)
 
 for master_category in thisynab.master_categories:
     master_entity = MasterCategory(
         name=master_category.name,
         sortable_index=random.randint(-50000, 50000)
     )
-    nYNABobject.budget.be_master_categories.append(master_entity)
+    client.budget.be_master_categories.append(master_entity)
     for category in master_category.categories:
 
         entity = Subcategory(
@@ -56,15 +62,15 @@ for master_category in thisynab.master_categories:
             entities_master_category_id=master_entity.id,
             sortable_index=random.randint(-50000, 50000)
         )
-        nYNABobject.budget.be_subcategories.append(entity)
-    nYNABobject.sync()
+        client.budget.be_subcategories.append(entity)
+    client.sync()
 
 for ynab4_payee in thisynab.payees:
     payee=Payee(
         name=ynab4_payee.name
                )
-    nYNABobject.budget.be_payees.append(payee)
-    nYNABobject.sync()
+    client.budget.be_payees.append(payee)
+    client.sync()
 
 for ynab4transaction in thisynab.transactions:
     transaction=Transaction(

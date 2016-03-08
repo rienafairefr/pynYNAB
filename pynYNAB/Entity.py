@@ -10,15 +10,29 @@ def undef():
     pass
 
 
-AccountTypes = Enum('AccountType',names=('Checking', 'Savings', 'CreditCard', 'Cash', 'LineOfCredit', 'Paypal', 'MerchantAccount',
-                    'InvestmentAccount', 'Mortgage', 'OtherAsset', 'OtherLiability'))
+class AccountTypes(Enum):
+    Checking = 'Checking'
+    Savings = 'Savings'
+    CreditCard = 'CreditCard'
+    Cash = 'Cash'
+    LineOfCredit = 'LineOfCredit'
+    Paypal = 'Paypal'
+    MerchantAccount = 'MerchantAccount'
+    InvestmentAccount = 'InvestmentAccount'
+    Mortgage = 'Mortgage'
+    OtherAsset = 'OtherAsset'
+    OtherLiability = 'OtherLiability'
 
 
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Entity):
-            return {namefield: field.pretreat(getattr(obj, namefield)) for namefield, field in
-                    obj.AllFields.iteritems()}
+            pretreated={}
+            for namefield, field in obj.AllFields.iteritems():
+                value=getattr(obj, namefield)
+                if value != undef:
+                    pretreated[namefield]=field.pretreat(value)
+            return pretreated
         elif isinstance(obj, ListofEntities):
             return list(obj)
         elif obj == undef:

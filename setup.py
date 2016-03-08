@@ -7,6 +7,7 @@ __here__ = os.path.dirname(os.path.realpath(__file__))
 try:
     from pypandoc import convert
     read_md = lambda f: convert(f, 'rst')
+    read_md('README.md')
 except ImportError:
     print("warning: pypandoc module not found, could not convert Markdown to RST")
     read_md = lambda f: open(f, 'r').read()
@@ -52,7 +53,7 @@ setup(
     install_requires=[
         'configargparse',
         'dateparser',
-        'enum',
+        'enum34',
         'ofxtools',
         'pynab',
         'requests',
