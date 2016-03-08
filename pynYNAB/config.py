@@ -7,14 +7,18 @@ import configargparse
 myAppdir = AppDirs('pynYNAB').user_config_dir
 configfile=os.path.join(myAppdir, 'ynab.conf')
 
-parser = configargparse.getArgumentParser('pynYNAB',default_config_files=[configfile])
-parser.add_argument('--email', metavar='Email', type=str, required=False,
+parser = configargparse.getArgumentParser('pynYNAB',default_config_files=[configfile],add_config_file_help=False)
+group=parser.add_argument_group('command line or config file arguments')
+group.add_argument('--email', metavar='Email', type=str, required=False,
                     help='The Email User ID for nYNAB')
-parser.add_argument('--password', metavar='Password', type=str, required=False,
+group.add_argument('--password', metavar='Password', type=str, required=False,
                     help='The Password for nYNAB')
-parser.add_argument('--level', metavar='LoggingLevel', type=str.lower, required=False,
+group.add_argument('--level', metavar='LoggingLevel', type=str.lower, required=False,
                     choices=['critical','error','warn','warning','info','debug'],
                     help='Logging Level')
+
+group.add_argument('--budgetname', metavar='BudgetName', type=str, required=False,
+                        help='The nYNAB budget to use')
 
 
 def get_logger():

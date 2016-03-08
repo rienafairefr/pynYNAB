@@ -20,8 +20,6 @@ def migrate_main():
     parser.description=inspect.getdoc(migrate_main)
     parser.add_argument('budget', metavar='BudgetPath', type=str,
                         help='The budget .ynab4 directory')
-    parser.add_argument('--budgetname', metavar='BudgetName', type=str,required=False,
-                        help='Migrate to a differently named budget')
     args = parser.parse_known_args()[0]
 
     budget_base_name=os.path.basename(args.budget)

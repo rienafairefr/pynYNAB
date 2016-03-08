@@ -18,8 +18,6 @@ def ofximport_main():
     parser.description = inspect.getdoc(ofximport_main)
     parser.add_argument('ofxfile', metavar='OFXPath', type=str,
                         help='The OFX file to import')
-    parser.add_argument('budgetname', metavar='BudgetName', type=str,
-                        help='The nYNAB budget to use (creates it if it doesn''t exist')
 
     args = parser.parse_known_args()[0]
 

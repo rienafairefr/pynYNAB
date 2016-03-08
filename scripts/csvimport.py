@@ -20,12 +20,10 @@ def csvimport_main():
     parser.description=inspect.getdoc(csvimport_main)
     parser.add_argument('csvfile', metavar='CSVpath', type=str,
                         help='The CSV file to import')
-    parser.add_argument('budgetname', metavar='BudgetName', type=str,
-                        help='The nYNAB budget to use (creates it if it doesn''t exist')
-    parser.add_argument('accountname', metavar='AccountName', type=str, nargs='?',
-                        help='The nYNAB account name  to use')
-    parser.add_argument('--schema', metavar='schemaName', type=str,
+    parser.add_argument('schema', metavar='schemaName', type=str,
                         help='The CSV schema to use (see csv_schemas directory)')
+    parser.add_argument('accountname', metavar='AccountName', type=str,
+                        help='The nYNAB account name  to use')
 
     args = parser.parse_known_args()[0]
 

@@ -12,3 +12,14 @@ with open('README.rst', 'w') as readme:
         for line in process.stdout:
             readme.write('    '+line)
 
+    readme.writelines("""
+Command Line / Config File Arguments
+====================================
+Args that start with '--' (eg. --email) can also be set in the config file
+(ynab.conf). The recognized syntax for setting (key, value) pairs is based
+on the INI and YAML formats (e.g. key=value or foo=TRUE). For full
+documentation of the differences from the standards please refer to the
+ConfigArgParse documentation. If an arg is specified in more than one
+place, then commandline values override config file values.
+""")
+
