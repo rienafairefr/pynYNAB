@@ -1,5 +1,5 @@
-from Entity import Entity, undef
-from schema.Fields import EntityField, AmountField, DateField, AccountTypeField
+from pynYNAB.Entity import Entity, undef
+from pynYNAB.schema.Fields import EntityField, AmountField, DateField, AccountTypeField
 
 
 class Transaction(Entity):

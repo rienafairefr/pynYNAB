@@ -1,10 +1,10 @@
-from Entity import Entity, ListofEntities, obj_from_dict
-from budget import MasterCategory, Setting, MonthlyBudgetCalculation, AccountMapping, Subtransaction, \
+from pynYNAB.Entity import Entity, ListofEntities, obj_from_dict
+from pynYNAB.budget import MasterCategory, Setting, MonthlyBudgetCalculation, AccountMapping, Subtransaction, \
     ScheduledSubtransaction, Subcategory, PayeeLocation, AccountCalculation, MonthlyAccountCalculation, \
     MonthlySubcategoryBudgetCalculation, ScheduledTransaction, Payee, MonthlySubcategoryBudget, PayeeRenameCondition, \
     Account, MonthlyBudget, TransactionGroup, DateField
-from budget import Transaction
-from catalog import UserBudget, UserSetting, BudgetVersion, User, CatalogBudget
+from pynYNAB.budget import Transaction
+from pynYNAB.catalog import UserBudget, UserSetting, BudgetVersion, User, CatalogBudget
 from pynYNAB.schema.Fields import EntityListField
 
 

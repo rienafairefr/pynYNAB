@@ -57,11 +57,14 @@ class Test1(unittest.TestCase):
 
         for typ in types:
             obj = typ()
-            assert (isinstance(obj.AllFields, dict))
+            self.assertIsInstance(obj.AllFields, dict)
             for f in obj.AllFields:
-                assert (isinstance(obj.AllFields[f], EntityField) or isinstance(obj.AllFields[f], EntityListField))
-            assert (checkequal(obj.getdict().keys(), obj.AllFields.keys()))
-            assert (checkequal(obj.getdict().values(), [getattr(obj, f) for f in obj.AllFields.keys()]))
+                self.assertTrue(isinstance(obj.AllFields[f], EntityField) or isinstance(obj.AllFields[f], EntityListField))
+            self.assertTrue(checkequal(obj.getdict().keys(), obj.AllFields.keys()))
+
+            valuesL=list(obj.getdict().values())
+            valuesR=[getattr(obj, f) for f in obj.AllFields.keys()]
+            self.assertEqual(set(valuesL),set(valuesR))
 
     def testupdatechangedentities(self):
         obj = Budget()

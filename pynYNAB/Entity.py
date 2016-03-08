@@ -2,8 +2,7 @@ import json
 
 from enum import Enum
 
-import KeyGenerator
-from config import get_logger
+from pynYNAB import KeyGenerator
 from pynYNAB.schema.Fields import EntityField, EntityListField
 
 def undef():
@@ -28,7 +27,7 @@ class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Entity):
             pretreated={}
-            for namefield, field in obj.AllFields.iteritems():
+            for namefield, field in obj.AllFields.items():
                 value=getattr(obj, namefield)
                 if value != undef:
                     pretreated[namefield]=field.pretreat(value)
@@ -70,7 +69,7 @@ class Entity(object):
 
     @property
     def AllFields(self):
-        return dict(self.Fields.items() + self.CommonFields.items())
+        return dict(list(self.Fields.items()) + list(self.CommonFields.items()))
 
     CommonFields = dict(
         id=EntityField(None)
@@ -79,7 +78,7 @@ class Entity(object):
 
     @property
     def ListFields(self):
-        return {namefield: value for namefield, value in self.AllFields.iteritems() if
+        return {namefield: value for namefield, value in self.AllFields.items() if
                 isinstance(value, EntityListField)}
 
     def __unicode__(self):
@@ -90,7 +89,7 @@ class Entity(object):
 
     def get_changed_entities(self):
         firstrun = {namefield: getattr(self, namefield).get_changed_entities() for namefield in self.ListFields}
-        return {namefield: value for namefield, value in firstrun.iteritems() if value != []}
+        return {namefield: value for namefield, value in firstrun.items() if value != []}
 
     def update_from_changed_entities(self, changed_entities):
         for namefield in self.ListFields:
@@ -173,7 +172,7 @@ class ListofEntities(object):
                 self.changed.append(o)
 
     def __iter__(self):
-        return self._dict_entities.itervalues()
+        return self._dict_entities.values().__iter__()
 
     def __len__(self):
         return len(self._dict_entities)

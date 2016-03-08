@@ -1,8 +1,8 @@
 # coding=utf-8
 
-from Client import nYnabClient
-from config import email, password
-from connection import nYnabConnection
+from pynYNAB.Client import nYnabClient
+from pynYNAB.config import email, password
+from pynYNAB.connection import nYnabConnection
 
 
 if __name__ == "__main__":

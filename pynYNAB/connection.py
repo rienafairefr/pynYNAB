@@ -7,8 +7,8 @@ from time import sleep
 import requests
 from requests.cookies import RequestsCookieJar
 
-from Entity import ComplexEncoder
-from utils import RateLimited
+from pynYNAB.Entity import ComplexEncoder
+from pynYNAB.utils import RateLimited
 
 logger=logging.getLogger('pynYNAB')
 

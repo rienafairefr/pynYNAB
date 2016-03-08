@@ -1,10 +1,10 @@
 from functools import wraps
 
-from budget import Payee, Transaction
-from catalog import BudgetVersion
-from connection import NYnabConnectionError
+from pynYNAB.budget import Payee, Transaction
+from pynYNAB.catalog import BudgetVersion
+from pynYNAB.connection import NYnabConnectionError
 from pynYNAB.utils import chunk
-from roots import Budget, Catalog
+from pynYNAB.roots import Budget, Catalog
 
 
 class BudgetNotFound(Exception):

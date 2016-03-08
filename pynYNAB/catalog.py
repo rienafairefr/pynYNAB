@@ -1,4 +1,4 @@
-from Entity import Entity, undef
+from pynYNAB.Entity import Entity, undef
 from pynYNAB.schema.Fields import EntityField
 
 
