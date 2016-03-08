@@ -9,7 +9,7 @@ from pynYNAB.schema.Fields import EntityListField
 
 
 def knowledge_change(changed_entities):
-    return sum(map(lambda v: len(v), [changed_entitity for dictkey, changed_entitity in changed_entities.iteritems()]))
+    return sum(map(lambda v: len(v), [changed_entitity for dictkey, changed_entitity in changed_entities.items()]))
 
 
 class Root(Entity):
@@ -28,7 +28,7 @@ class Root(Entity):
             getattr(self, namefield).changed = []
         self.knowledge += change
         changed_entities = {}
-        for name, value in syncData['changed_entities'].iteritems():
+        for name, value in syncData['changed_entities'].items():
             if isinstance(value, list):
                 for entityDict in value:
                     obj = obj_from_dict(self.ListFields[name].type, entityDict)

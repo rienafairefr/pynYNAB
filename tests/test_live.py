@@ -20,6 +20,7 @@ class liveTests(unittest.TestCase):
         self.client = None
 
     def reload(self):
+        import pynYNAB.config
         parser=configargparse.getArgumentParser('pynYNAB')
         args=parser.parse_known_args()[0]
         connection = nYnabConnection(args.email, args.password)
@@ -36,8 +37,8 @@ class liveTests(unittest.TestCase):
                     self.account = account
                     fn(self, *args, **kwargs)
                     return
+            self.util_add_account()
             raise ValueError('No available account !')
-
         return wrapped
 
     def needs_transaction(fn):
@@ -48,12 +49,34 @@ class liveTests(unittest.TestCase):
                     self.transaction = transaction
                     fn(self, *args, **kwargs)
                     return
+            self.util_add_transaction()
             raise ValueError('No available transaction !')
 
         return wrapped
 
+    def util_add_account(self):
+        account = Account(
+                account_type=random.choice(list(AccountTypes)),
+                account_name=KeyGenerator.generateuuid()
+            )
+
+        self.client.add_account(account, balance=random.randint(-10, 10), balance_date=datetime.now())
+        self.reload()
+        self.assertIn(account,self.client.budget.be_accounts)
+
+    def util_add_transaction(self):
+        transaction = Transaction(
+            amount=1,
+            cleared='Uncleared',
+            date=datetime.now(),
+            entities_account_id=self.account.id,
+        )
+        self.client.add_transaction(transaction)
+        self.reload()
+        self.assertIn(transaction, self.client.budget.be_transactions)
+
     def test_add_delete_account_alltypes(self):
-        for account_type in AccountTypes.members:
+        for account_type in AccountTypes:
             account_name = KeyGenerator.generateuuid()
             budget = self.client.budget
 
@@ -77,11 +100,11 @@ class liveTests(unittest.TestCase):
 
             self.assertIn(account, self.client.budget.be_accounts)
 
-            self.client.budget.delete_account(account)
+            self.client.delete_account(account)
 
             self.reload()
 
-            result = self.client.budget.be_transactions.get(self.account.id)
+            result = self.client.budget.be_transactions.get(account.id)
 
             self.assertTrue(result is None or result.is_tombstone)
 
@@ -99,10 +122,10 @@ class liveTests(unittest.TestCase):
         self.reload()
 
         self.assertIn(transaction, self.client.budget.be_transactions)
-        self.client.delete_account(self.account)
+        self.client.delete_transaction(transaction)
         self.reload()
 
-        result = self.client.budget.be_transactions.get(self.account.id)
+        result = self.client.budget.be_transactions.get(transaction.id)
         self.assertTrue(result is None or result.is_tombstone)
 
     @needs_account
@@ -179,7 +202,7 @@ class liveTests(unittest.TestCase):
     @needs_account
     @needs_transaction
     def test_split(self):
-        subcat1, subcat2 = tuple(random.sample(self.client.budget.be_subcategories, 2))
+        subcat1, subcat2 = tuple(random.sample(list(self.client.budget.be_subcategories), 2))
         subcatsplit_id = next(subcategory.id for subcategory in self.client.budget.be_subcategories if
                               subcategory.internal_name == 'Category/__Split__')
         self.transaction.entities_subcategory_id = subcatsplit_id

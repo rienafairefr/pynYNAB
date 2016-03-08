@@ -23,7 +23,7 @@ def chunk(iterable, chunk_size):
         chunk = []
         try:
             for _ in range(chunk_size):
-                chunk.append(iterable.next())
+                chunk.append(next(iterable))
             yield chunk
         except StopIteration:
             if chunk:

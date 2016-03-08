@@ -4,6 +4,8 @@ from enum import Enum
 
 from pynYNAB import KeyGenerator
 from pynYNAB.schema.Fields import EntityField, EntityListField
+from pynYNAB.config import get_logger
+
 
 def undef():
     pass
@@ -43,7 +45,7 @@ class ComplexEncoder(json.JSONEncoder):
 def obj_from_dict(obj_type, dictionary):
     treated = {}
     obt = obj_type()
-    for key, value in dictionary.iteritems():
+    for key, value in dictionary.items():
         try:
             field = obt.AllFields[key]
         except KeyError:
