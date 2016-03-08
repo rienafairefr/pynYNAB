@@ -24,7 +24,7 @@ class liveTests(unittest.TestCase):
         parser=configargparse.getArgumentParser('pynYNAB')
         args=parser.parse_known_args()[0]
         connection = nYnabConnection(args.email, args.password)
-        self.client = nYnabClient(connection, budget_name='My Budget')
+        self.client = nYnabClient(connection, budget_name=args.budgetname)
 
     def setUp(self):
         self.reload()
