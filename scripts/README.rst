@@ -1,7 +1,7 @@
 
 csvimport.py
 ------------
-.. code-block:: bash
+.. code-block:: 
 
     usage: csvimport.py [-h] [--email Email] [--password Password]
                         [--level LoggingLevel] [--budgetname BudgetName]
@@ -26,7 +26,7 @@ csvimport.py
 
 migrate.py
 ----------
-.. code-block:: bash
+.. code-block:: 
 
     usage: migrate.py [-h] [--email Email] [--password Password]
                       [--level LoggingLevel] [--budgetname BudgetName]
@@ -49,7 +49,7 @@ migrate.py
 
 ofximport.py
 ------------
-.. code-block:: bash
+.. code-block:: 
 
     usage: ofximport.py [-h] [--email Email] [--password Password]
                         [--level LoggingLevel] [--budgetname BudgetName]
