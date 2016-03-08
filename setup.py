@@ -4,13 +4,15 @@ from setuptools import setup, find_packages
 
 # Get the long description from the relevant file
 __here__ = os.path.dirname(os.path.realpath(__file__))
+readme_filename = os.path.join(os.path.dirname(__file__), 'README.md')
+with open(readme_filename, 'r') as f:
+  readme = f.read()
 try:
-    from pypandoc import convert
-    read_md = lambda f: convert(f, 'rst')
-    read_md('README.md')
-except ImportError:
-    print("warning: pypandoc module not found, could not convert Markdown to RST")
-    read_md = lambda f: open(f, 'r').read()
+    import pypandoc
+    readme = pypandoc.convert(readme, to='rst', format='md')
+except:
+    print("Conversion of long_description from markdown to reStructuredText failed, skipping...")
+    pass
 
 setup(
     name='pynYNAB',
@@ -21,7 +23,7 @@ setup(
     description=('Library for working with the nYNAB private API'
                  'Budget/Transactions Read/Write/Migration tools'),
 
-    long_description=read_md('README.md'),
+    long_description=readme,
 
     url='https://github.com/rienafairefr/nYNABapi',
 
