@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 from appdirs import AppDirs
@@ -11,7 +12,8 @@ parser.add_argument('--email', metavar='Email', type=str, required=False,
                     help='The Email User ID for nYNAB')
 parser.add_argument('--password', metavar='Password', type=str, required=False,
                     help='The Password for nYNAB')
-parser.add_argument('--level', metavar='LoggingLevel', type=str, required=False,
+parser.add_argument('--level', metavar='LoggingLevel', type=str.lower, required=False,
+                    choices=['critical','error','warn','warning','info','debug'],
                     help='Logging Level')
 
 

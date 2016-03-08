@@ -1,22 +1,26 @@
-# nYNABapi
+========
+nYNABapi
+========
 
 a python client for the new YNAB API
 
-# Installation
+Installation
+------------
 
 download the source, then call `python setup.py install`
 
-# Usage
+Usage
+-----
 
 Either code your own script that uses the pynYNAB api, or use the provided scripts, ofximport, YNAB4 migrate, csvimport
 
-# Scripts Documentation
+Scripts Documentation
+---------------------
 
-After install, you should be able to call ofximport and nmigrate scripts, you either pass the email/password
- as command line arguments or modify the ynab.conf file (Which should be created in some place dependent on your OS if 
- the script can't find it).
+.. include:: scripts\README.rst
 
-# API Documentation
+API Documentation
+-----------------
 
 nYNAB is organised around a root object, here it is a nYnabClient object. It is created by giving it a connection object,
 which handles the requests to the server (app.youneedabudget.com and its api endpoint /api/v1/catalog),

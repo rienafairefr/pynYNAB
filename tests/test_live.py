@@ -15,7 +15,7 @@ class liveTests(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(liveTests, self).__init__(*args, **kwargs)
         self.account = None
-        self.budet = None
+        self.budget = None
         self.transaction = None
         self.client = None
 
@@ -74,6 +74,17 @@ class liveTests(unittest.TestCase):
         self.client.add_transaction(transaction)
         self.reload()
         self.assertIn(transaction, self.client.budget.be_transactions)
+
+    def test_add_delete_budget(self):
+        budget_name=KeyGenerator.generateuuid()
+        self.client.create_budget(budget_name)
+        self.reload()
+        matches=[b for b in self.client.catalog.ce_budgets if b.budget_name==budget_name and not b.is_tombstone]
+        self.assertTrue(len(matches) == 1)
+        self.client.delete_budget(budget_name)
+        matches=[b for b in self.client.catalog.ce_budgets if b.budget_name==budget_name and not b.is_tombstone]
+        self.assertTrue(len(matches) == 0)
+        self.reload()
 
     def test_add_delete_account_alltypes(self):
         for account_type in AccountTypes:
