@@ -66,6 +66,11 @@ class Entity(object):
             self.id = self.create_id(*args, **kwargs)
         super(Entity, self).__init__()
 
+    def hash(self):
+        d=self.getdict()
+        del d['id']
+        return hash(frozenset(d.items()))
+
     def __str__(self):
         return str(self.getdict())
 

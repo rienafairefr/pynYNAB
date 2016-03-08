@@ -5,11 +5,10 @@ import configargparse
 import os
 from jsontableschema.model import SchemaModel
 
+from pynYNAB.Client import nYnabClient
 from pynYNAB.budget import Transaction, Payee
 from pynYNAB.config import get_logger
 from pynYNAB.connection import nYnabConnection
-from pynYNAB import nYnabClient
-from pynYNAB.utils import chunk
 
 parser = configargparse.getArgumentParser('pynYNAB')
 parser.description = 'Manually import a CSV into a nYNAB budget  \r\n'
@@ -97,6 +96,8 @@ transactions = []
 
 imported_date=datetime.now().date()
 
+existing_transactions_hashes={tr.hash():tr for tr in client.budget.be_transactions if not tr.is_tombstone}
+
 with codecs.open(args.csvfile, 'r', encoding='utf-8') as inputfile:
     inputfile.readline()
     for row in inputfile.readlines():
@@ -127,8 +128,7 @@ with codecs.open(args.csvfile, 'r', encoding='utf-8') as inputfile:
             memo=''
 
 
-
-        transactions.append(Transaction(
+        transaction=Transaction(
             entities_account_id=entities_account_id,
             amount=amountfun(result),
             date=result.date,
@@ -138,7 +138,9 @@ with codecs.open(args.csvfile, 'r', encoding='utf-8') as inputfile:
             imported_payee=imported_payee,
             memo=memo,
             source="Imported"
-        ))
+        )
+        if transaction.hash() not in existing_transactions_hashes:
+            transactions.append(transaction)
 
 
 client.add_transactions(transactions)
