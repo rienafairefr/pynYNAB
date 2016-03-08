@@ -49,7 +49,7 @@ def obj_from_dict(obj_type, dictionary):
         try:
             field = obt.AllFields[key]
         except KeyError:
-            get_logger().ERROR('Encountered field %s in a dictionary to create an entity of type %s ' % (key, obj_type))
+            get_logger().error('Encountered field %s in a dictionary to create an entity of type %s ' % (key, obj_type))
             raise ValueError()
         if isinstance(field, EntityField):
             treated[key] = field.posttreat(value)

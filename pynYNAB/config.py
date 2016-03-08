@@ -13,7 +13,7 @@ group.add_argument('--email', metavar='Email', type=str, required=False,
                     help='The Email User ID for nYNAB')
 group.add_argument('--password', metavar='Password', type=str, required=False,
                     help='The Password for nYNAB')
-group.add_argument('--level', metavar='LoggingLevel', type=str.lower, required=False,
+group.add_argument('--level', metavar='LoggingLevel', type=str.lower, required=False,default='error',
                     choices=['critical','error','warn','warning','info','debug'],
                     help='Logging Level')
 

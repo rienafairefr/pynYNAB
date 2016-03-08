@@ -28,7 +28,7 @@ def csvimport_main():
     args = parser.parse_known_args()[0]
 
     if not os.path.exists(args.csvfile):
-        get_logger().ERROR('input CSV file does not exist')
+        get_logger().error('input CSV file does not exist')
         exit(-1)
 
     connection = nYnabConnection(args.email, args.password)
@@ -40,7 +40,7 @@ def csvimport_main():
     else:
         schemafile = os.path.join(schemas_dir, args.schema + '.json')
         if not os.path.exists(schemafile):
-            get_logger().ERROR('This schema doesn''t exist in csv_schemas')
+            get_logger().error('This schema doesn''t exist in csv_schemas')
             exit(-1)
     schema = SchemaModel(schemafile, case_insensitive_headers=True)
 
