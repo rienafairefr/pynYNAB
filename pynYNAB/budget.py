@@ -210,7 +210,8 @@ class MonthlySubcategoryBudgetCalculation(Entity):
         spent_previous_month=AmountField(),
         unbudgeted_cash_outflows=AmountField(),
         unbudgeted_credit_outflows=AmountField(),
-        upcoming_transactions=AmountField()
+        upcoming_transactions=AmountField(),
+        positive_cash_outflows=AmountField()
     )
 
 
