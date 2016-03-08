@@ -22,22 +22,6 @@ class Test1(unittest.TestCase):
         jsonroundtrip = json.loads(json.dumps(obj, cls=ComplexEncoder))
         assert (jsonroundtrip == {'id': obj.id, 'greatfield': 2})
 
-    def testListEntityjson(self):
-        class MyEntity(Entity):
-            Fields = dict(
-                accounts=EntityListField(Account),
-                field=EntityField(undef)
-            )
-
-        obj = MyEntity()
-        account = Account()
-        obj.accounts.append(account)
-        result = json.loads(json.dumps(obj, cls=ComplexEncoder))
-        replacedundef = {k: None if v == undef else v for k, v in account.getdict().iteritems()}
-        expected = {'accounts': [replacedundef], 'id': obj.id, 'field':None}
-
-        self.assertEqual(expected, result)
-
     def testimports(self):
         types = [
             Account,
