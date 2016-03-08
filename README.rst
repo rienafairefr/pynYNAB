@@ -17,7 +17,7 @@ Either code your own script that uses the pynYNAB api, or use the provided scrip
 Scripts Documentation
 ---------------------
 
-.. include:: scripts\README.rst
+see appropriate `README`_
 
 API Documentation
 -----------------
@@ -43,3 +43,7 @@ add/delete accounts and transactions as examples.
 Caution with add_transaction, it works even for large amount of transactions (tested up to 3000), but please don't stress test
 the YNAB servers with it... Recently (I think), YNAB implemented throttling on their API, and pynYNAB honors it, by 
 catching request_throttled errors and waiting the time specified in the  Retry-After header
+
+
+
+.. _README: https://github.com/rienafairefr/nYNABapi/blob/master/scripts/README.rst
