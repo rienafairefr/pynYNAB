@@ -22,7 +22,7 @@ def csvimport_main():
                         help='The CSV file to import')
     parser.add_argument('schema', metavar='schemaName', type=str,
                         help='The CSV schema to use (see csv_schemas directory)')
-    parser.add_argument('accountname', metavar='AccountName', type=str,
+    parser.add_argument('accountname', metavar='AccountName', type=str,nargs='?',
                         help='The nYNAB account name  to use')
 
     args = parser.parse_known_args()[0]

@@ -5,14 +5,14 @@ csvimport.py
 
     usage: csvimport.py [-h] [--email Email] [--password Password]
                         [--level LoggingLevel] [--budgetname BudgetName]
-                        CSVpath schemaName AccountName
+                        CSVpath schemaName [AccountName]
     
     Manually import a CSV into a nYNAB budget
     
     positional arguments:
       CSVpath               The CSV file to import
       schemaName            The CSV schema to use (see csv_schemas directory)
-      AccountName           The nYNAB account name to use
+      AccountName           The nYNAB account name to use (default: None)
     
     optional arguments:
       -h, --help            show this help message and exit
