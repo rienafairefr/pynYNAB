@@ -1,6 +1,8 @@
 
 csvimport.py
 ------------
+.. code-block:: bash
+
     usage: csvimport.py [-h] [--email Email] [--password Password]
                         [--level LoggingLevel] [--schema schemaName]
                         CSVpath BudgetName [AccountName]
@@ -29,6 +31,8 @@ csvimport.py
 
 migrate.py
 ----------
+.. code-block:: bash
+
     usage: migrate.py [-h] [--email Email] [--password Password]
                       [--level LoggingLevel] [--budgetname BudgetName]
                       BudgetPath
@@ -55,6 +59,8 @@ migrate.py
 
 ofximport.py
 ------------
+.. code-block:: bash
+
     usage: ofximport.py [-h] [--email Email] [--password Password]
                         [--level LoggingLevel]
                         OFXPath BudgetName
