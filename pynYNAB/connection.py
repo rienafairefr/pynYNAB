@@ -65,6 +65,8 @@ class nYnabConnection(object):
             return js
         else:
             error=js['error']
+            if r.status_code == 500:
+                raise NYnabConnectionError('Uunrecoverable server error, sorry YNAB')
             if error['id'] == 'user_not_found':
                 logger.error('API error, User Not Found')
             elif error['id'] == 'id=user_password_invalid':
