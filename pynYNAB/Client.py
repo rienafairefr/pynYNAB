@@ -2,9 +2,25 @@ from functools import wraps
 
 from pynYNAB.budget import Payee, Transaction
 from pynYNAB.catalog import BudgetVersion
-from pynYNAB.connection import NYnabConnectionError
+from pynYNAB.config import get_logger
+from pynYNAB.connection import NYnabConnectionError, nYnabConnection
 from pynYNAB.utils import chunk
 from pynYNAB.roots import Budget, Catalog
+
+
+def clientfromargs(args, reset=False):
+    connection = nYnabConnection(args.email, args.password)
+    try:
+        client = nYnabClient(connection, budget_name=args.budgetname)
+        if reset:
+            # deletes the budget
+            client.delete_budget(args.budgetname)
+            client.create_budget(args.budgetname)
+            client.select_budget(args.budgetname)
+        return client
+    except BudgetNotFound:
+        print('No budget by this name found in nYNAB')
+        exit(-1)
 
 
 class BudgetNotFound(Exception):
@@ -12,14 +28,17 @@ class BudgetNotFound(Exception):
 
 
 class nYnabClient(object):
-    def __init__(self, nynabconnection, budget_name=None):
+    def __init__(self, nynabconnection, budget_name):
+        if budget_name is None:
+            get_logger().error('No budget name was provided')
+            exit(-1)
+        self.budget_name = budget_name
         self.connection = nynabconnection
         self.budget_name = budget_name
         self.catalog = Catalog()
         self.budget = Budget()
         self.budget_version = BudgetVersion()
-        if self.budget_name is not None:
-            self.sync()
+        self.sync()
 
     def getinitialdata(self):
         try:

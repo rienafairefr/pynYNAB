@@ -5,8 +5,10 @@ from datetime import datetime
 import configargparse
 import os
 
-import sys
 from jsontableschema.model import SchemaModel
+
+from pynYNAB.Client import clientfromargs
+
 
 def csvimport_main():
     """Manually import a CSV into a nYNAB budget"""
@@ -25,15 +27,14 @@ def csvimport_main():
     parser.add_argument('accountname', metavar='AccountName', type=str,nargs='?',
                         help='The nYNAB account name  to use')
 
-    args = parser.parse_known_args()[0]
+    args = parser.parse_args()
 
     if not os.path.exists(args.csvfile):
         get_logger().error('input CSV file does not exist')
         exit(-1)
 
-    connection = nYnabConnection(args.email, args.password)
     schemas_dir = 'csv_schemas'
-    client = nYnabClient(connection, budget_name=args.budgetname)
+    client = clientfromargs(args)
 
     if os.path.exists(args.schema):
         schemafile = args.schema

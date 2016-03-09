@@ -1,12 +1,10 @@
 import inspect
-
-import configargparse
 import re
 
-import sys
 from ofxtools import OFXTree
+import configargparse
 
-from pynYNAB.Client import nYnabClient, BudgetNotFound
+from pynYNAB.Client import nYnabClient, BudgetNotFound, clientfromargs
 from pynYNAB.budget import Transaction
 from pynYNAB.connection import nYnabConnection
 
@@ -19,7 +17,9 @@ def ofximport_main():
     parser.add_argument('ofxfile', metavar='OFXPath', type=str,
                         help='The OFX file to import')
 
-    args = parser.parse_known_args()[0]
+
+    args = parser.parse_args()
+    client = clientfromargs(args)
 
     connection = nYnabConnection(args.email, args.password)
 
@@ -28,11 +28,7 @@ def ofximport_main():
     response = tree.convert()
     stmts = response.statements
 
-    try:
-        client = nYnabClient(connection, budget_name=args.budgetname)
-    except BudgetNotFound:
-        print('No budget by this name found in nYNAB')
-        exit(-1)
+
 
     accounts = client.budget.be_accounts
     reKey = re.compile('.*key\[(?P<key>.*)\]key')

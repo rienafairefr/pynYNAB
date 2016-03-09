@@ -1,17 +1,16 @@
 import inspect
-
 import configargparse
 import os
 import random
 import re
-
 import sys
-from ynab import YNAB
 
-from pynYNAB.Client import nYnabClient, BudgetNotFound
+from ynab import YNAB
+from pynYNAB.Client import nYnabClient, BudgetNotFound, clientfromargs
 from pynYNAB.Entity import AccountTypes
 from pynYNAB.budget import MasterCategory, Subcategory, Account, Payee, Transaction
 from pynYNAB.connection import nYnabConnection
+
 
 def migrate_main():
     """Migrate a YNAB4 budget transaction history to nYNAB, using pyynab"""
@@ -20,7 +19,7 @@ def migrate_main():
     parser.description=inspect.getdoc(migrate_main)
     parser.add_argument('budget', metavar='BudgetPath', type=str,
                         help='The budget .ynab4 directory')
-    args = parser.parse_known_args()[0]
+    args = parser.parse_args()
 
     budget_base_name=os.path.basename(args.budget)
     budget_path=os.path.dirname(args.budget)
@@ -31,16 +30,9 @@ def migrate_main():
 
     thisynab = YNAB(budget_path,budget_name)
 
-    connection = nYnabConnection(args.email, args.password)
-    try:
-        client = nYnabClient(connection, budget_name=budget_name)
-        # remove the existing one
-        client.delete_budget(budget_name)
-    except BudgetNotFound:
-        pass
-    client = nYnabClient(connection)
-    client.create_budget(budget_name)
-    client.select_budget(budget_name)
+    client = clientfromargs(args, reset=True)
+
+
 
     for ynab4_account in thisynab.accounts:
         account=Account(
