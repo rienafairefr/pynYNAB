@@ -8,16 +8,14 @@ import os
 from jsontableschema.model import SchemaModel
 
 from pynYNAB.Client import clientfromargs
+from pynYNAB.budget import Payee, Transaction
+from pynYNAB.config import get_logger
 
+scriptsdir=os.path.dirname(os.path.abspath(__file__))
+schemas_dir = os.path.join(scriptsdir,'csv_schemas')
 
 def csvimport_main():
     """Manually import a CSV into a nYNAB budget"""
-
-    from pynYNAB.Client import nYnabClient
-    from pynYNAB.budget import Transaction, Payee
-    from pynYNAB.config import get_logger
-    from pynYNAB.connection import nYnabConnection
-
     parser = configargparse.getArgumentParser('pynYNAB')
     parser.description=inspect.getdoc(csvimport_main)
     parser.add_argument('csvfile', metavar='CSVpath', type=str,
@@ -33,7 +31,10 @@ def csvimport_main():
         get_logger().error('input CSV file does not exist')
         exit(-1)
 
-    schemas_dir = 'csv_schemas'
+    do_csvimport(args)
+
+
+def do_csvimport(args):
     client = clientfromargs(args)
 
     if os.path.exists(args.schema):
@@ -64,7 +65,6 @@ def csvimport_main():
             get_logger().error('Couldn''t find this account: %s' % accountname)
             exit(-1)
 
-
     def getpayee(payeename):
         try:
             return payees[payeename]
@@ -74,14 +74,12 @@ def csvimport_main():
             client.budget.be_payees.append(payee)
             return payee
 
-
     def getsubcategory(categoryname):
         try:
             return subcategories[categoryname]
         except KeyError:
             get_logger().debug('Couldn''t find this category: %s' % categoryname)
             exit(-1)
-
 
     if 'account' not in schema.headers:
         entities_account_id = getaccount(args.accountname).id
@@ -107,6 +105,8 @@ def csvimport_main():
         inputfile.readline()
         for row in inputfile.readlines():
             row = row.strip().split(',')
+            if row == '':
+                continue
             result = Row(*list(schema.convert_row(*row, fail_fast=True)))
             if 'account' in schema.headers:
                 entities_account_id = getaccount(result.account).id

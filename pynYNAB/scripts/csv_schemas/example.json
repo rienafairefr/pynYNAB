@@ -16,7 +16,7 @@
         },
         {
             "name": "amount",
-            "title": "amount",
+            "title": "Amount",
             "type": "number"
         },
         {
