@@ -55,7 +55,7 @@ class nYnabClient(object):
         self.catalog.sync(self.connection, 'syncCatalogData')
         if self.budget.budget_version_id is None:
             for catalogbudget in self.catalog.ce_budgets:
-                if catalogbudget.budget_name == self.budget_name and not catalogbudget.is_tombstone:
+                if catalogbudget.budget_name == self.budget_name:
                     for budget_version in self.catalog.ce_budget_versions:
                         if budget_version.budget_id == catalogbudget.id:
                             self.budget.budget_version_id = budget_version.id
@@ -128,7 +128,7 @@ class nYnabClient(object):
     @operation
     def delete_budget(self, budget_name):
         for budget in self.catalog.ce_budgets:
-            if budget.budget_name == budget_name and not budget.is_tombstone:
+            if budget.budget_name == budget_name:
                 budget.is_tombstone = True
                 self.catalog.ce_budgets.modify(budget)
 
@@ -136,7 +136,7 @@ class nYnabClient(object):
         self.catalog.sync(self.connection, 'syncCatalogData')
         for budget_version in self.catalog.ce_budget_versions:
             budget = self.catalog.ce_budgets.get(budget_version.budget_id)
-            if budget.budget_name == budget_name and not budget.is_tombstone:
+            if budget.budget_name == budget_name:
                 self.budget.budget_version_id = budget_version.id
                 self.sync()
                 break

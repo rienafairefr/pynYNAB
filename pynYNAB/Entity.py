@@ -137,6 +137,8 @@ class ListofEntities(object):
         if changed_entities is None:
             return
         for entity in changed_entities:
+            if hasattr(entity,'is_tombstone') and entity.is_tombstone:
+                continue
             try:
                 self._dict_entities[entity.id].update_from_changed_entities(entity)
             except KeyError:
@@ -166,9 +168,8 @@ class ListofEntities(object):
         if o.id in self._dict_entities:
             del self._dict_entities[o.id]
         if track:
-            if not o.is_tombstone:
-                o.is_tombstone = True
-                self.changed.append(o)
+            o.is_tombstone = True
+            self.changed.append(o)
 
     def modify(self, o, track=True):
         if not isinstance(o, self.typeItems):
