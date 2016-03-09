@@ -2,7 +2,6 @@ import configargparse
 import random
 import unittest
 from datetime import datetime
-from functools import wraps
 
 from pynYNAB import KeyGenerator
 from pynYNAB.Entity import AccountTypes

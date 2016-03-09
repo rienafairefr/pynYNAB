@@ -1,14 +1,12 @@
 import os
-import random
 from datetime import datetime
 
 import configargparse
 
-from pynYNAB.Entity import AccountTypes, ComplexEncoder
-from pynYNAB.budget import Account, Transaction, Payee
+from pynYNAB.Entity import ComplexEncoder
+from pynYNAB.budget import Transaction
 from pynYNAB.scripts.csvimport import do_csvimport
 from tests.common_Live import commonLive
-from tests.test_live import liveTests
 import json
 
 class Test_CSV(commonLive):

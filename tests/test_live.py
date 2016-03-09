@@ -17,6 +17,7 @@ class liveTests(commonLive):
         matches=[b for b in self.client.catalog.ce_budgets if b.budget_name==budget_name]
         self.assertTrue(len(matches) == 1)
         self.client.delete_budget(budget_name)
+        self.reload()
         matches=[b for b in self.client.catalog.ce_budgets if b.budget_name==budget_name]
         self.assertTrue(len(matches) == 0)
         self.reload()
