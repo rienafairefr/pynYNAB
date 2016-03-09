@@ -54,7 +54,6 @@ setup(
 
     install_requires=[
         'configargparse',
-        'dateparser',
         'enum34',
         'ofxtools',
         'pynab',
