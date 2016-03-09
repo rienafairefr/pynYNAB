@@ -6,6 +6,7 @@ import configargparse
 
 from pynYNAB.Client import nYnabClient, BudgetNotFound, clientfromargs
 from pynYNAB.budget import Transaction
+from pynYNAB.config import test_common_args
 from pynYNAB.connection import nYnabConnection
 
 
@@ -19,6 +20,7 @@ def ofximport_main():
 
 
     args = parser.parse_args()
+    test_common_args(args)
     client = clientfromargs(args)
 
     connection = nYnabConnection(args.email, args.password)

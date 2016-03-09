@@ -1,42 +1,33 @@
 import random
-import unittest
 from datetime import datetime, timedelta
 from functools import wraps
-import configargparse
 
 from pynYNAB import KeyGenerator
-from pynYNAB.Client import nYnabClient
 from pynYNAB.Entity import AccountTypes
 from pynYNAB.budget import Transaction, Account, Subtransaction
-from pynYNAB.connection import nYnabConnection
+
+from tests.common_Live import commonLive
 
 
-class liveTests(unittest.TestCase):
-    def __init__(self, *args, **kwargs):
-        super(liveTests, self).__init__(*args, **kwargs)
-        self.account = None
-        self.budget = None
-        self.transaction = None
-        self.client = None
-
-    def reload(self):
-        import pynYNAB.config
-        parser=configargparse.getArgumentParser('pynYNAB')
-        args=parser.parse_known_args()[0]
-        connection = nYnabConnection(args.email, args.password)
-        self.client = nYnabClient(connection, budget_name=args.budgetname)
-
-    def setUp(self):
+class liveTests(commonLive):
+    def test_add_delete_budget(self):
+        budget_name=KeyGenerator.generateuuid()
+        self.client.create_budget(budget_name)
+        self.reload()
+        matches=[b for b in self.client.catalog.ce_budgets if b.budget_name==budget_name]
+        self.assertTrue(len(matches) == 1)
+        self.client.delete_budget(budget_name)
+        matches=[b for b in self.client.catalog.ce_budgets if b.budget_name==budget_name]
+        self.assertTrue(len(matches) == 0)
         self.reload()
 
     def needs_account(fn):
         @wraps(fn)
         def wrapped(self, *args, **kwargs):
             for account in self.client.budget.be_accounts:
-                if not account.is_tombstone:
-                    self.account = account
-                    fn(self, *args, **kwargs)
-                    return
+                self.account = account
+                fn(self, *args, **kwargs)
+                return
             self.util_add_account()
             raise ValueError('No available account !')
         return wrapped
@@ -45,7 +36,7 @@ class liveTests(unittest.TestCase):
         @wraps(fn)
         def wrapped(self, *args, **kwargs):
             for transaction in self.client.budget.be_transactions:
-                if transaction.entities_account_id == self.account.id and not transaction.is_tombstone:
+                if transaction.entities_account_id == self.account.id:
                     self.transaction = transaction
                     fn(self, *args, **kwargs)
                     return
@@ -53,38 +44,6 @@ class liveTests(unittest.TestCase):
             raise ValueError('No available transaction !')
 
         return wrapped
-
-    def util_add_account(self):
-        account = Account(
-                account_type=random.choice(list(AccountTypes)),
-                account_name=KeyGenerator.generateuuid()
-            )
-
-        self.client.add_account(account, balance=random.randint(-10, 10), balance_date=datetime.now())
-        self.reload()
-        self.assertIn(account,self.client.budget.be_accounts)
-
-    def util_add_transaction(self):
-        transaction = Transaction(
-            amount=1,
-            cleared='Uncleared',
-            date=datetime.now(),
-            entities_account_id=self.account.id,
-        )
-        self.client.add_transaction(transaction)
-        self.reload()
-        self.assertIn(transaction, self.client.budget.be_transactions)
-
-    def test_add_delete_budget(self):
-        budget_name=KeyGenerator.generateuuid()
-        self.client.create_budget(budget_name)
-        self.reload()
-        matches=[b for b in self.client.catalog.ce_budgets if b.budget_name==budget_name and not b.is_tombstone]
-        self.assertTrue(len(matches) == 1)
-        self.client.delete_budget(budget_name)
-        matches=[b for b in self.client.catalog.ce_budgets if b.budget_name==budget_name and not b.is_tombstone]
-        self.assertTrue(len(matches) == 0)
-        self.reload()
 
     def test_add_delete_account_alltypes(self):
         for account_type in AccountTypes:
@@ -117,7 +76,7 @@ class liveTests(unittest.TestCase):
 
             result = self.client.budget.be_transactions.get(account.id)
 
-            self.assertTrue(result is None or result.is_tombstone)
+            self.assertTrue(result is None)
 
     @needs_account
     def test_add_deletetransaction(self):
@@ -137,7 +96,7 @@ class liveTests(unittest.TestCase):
         self.reload()
 
         result = self.client.budget.be_transactions.get(transaction.id)
-        self.assertTrue(result is None or result.is_tombstone)
+        self.assertTrue(result is None)
 
     @needs_account
     def test_add_deletetransactions(self):
@@ -177,7 +136,7 @@ class liveTests(unittest.TestCase):
 
         for transaction in transactions:
             resulttransaction = self.client.budget.be_transactions.get(transaction.id)
-            self.assertTrue(resulttransaction is None or resulttransaction.is_tombstone == True)
+            self.assertTrue(resulttransaction is None)
 
 
     @needs_account

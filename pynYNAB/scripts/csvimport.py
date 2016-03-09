@@ -9,7 +9,7 @@ from jsontableschema.model import SchemaModel
 
 from pynYNAB.Client import clientfromargs
 from pynYNAB.budget import Payee, Transaction
-from pynYNAB.config import get_logger
+from pynYNAB.config import get_logger, test_common_args
 
 scriptsdir=os.path.dirname(os.path.abspath(__file__))
 schemas_dir = os.path.join(scriptsdir,'csv_schemas')
@@ -26,6 +26,7 @@ def csvimport_main():
                         help='The nYNAB account name  to use')
 
     args = parser.parse_args()
+    test_common_args(args)
 
     if not os.path.exists(args.csvfile):
         get_logger().error('input CSV file does not exist')
@@ -42,12 +43,12 @@ def do_csvimport(args):
     else:
         schemafile = os.path.join(schemas_dir, args.schema + '.json')
         if not os.path.exists(schemafile):
-            get_logger().error('This schema doesn''t exist in csv_schemas')
+            get_logger(args).error('This schema doesn''t exist in csv_schemas')
             exit(-1)
     schema = SchemaModel(schemafile, case_insensitive_headers=True)
 
     if 'account' not in schema.headers and args.accountname is None:
-        get_logger().error('This schema does not have an account column and no account name was provided')
+        get_logger(args).error('This schema does not have an account column and no account name was provided')
         exit(-1)
 
     accounts = {x.account_name: x for x in client.budget.be_accounts}
@@ -62,14 +63,14 @@ def do_csvimport(args):
         try:
             return accounts[accountname]
         except KeyError:
-            get_logger().error('Couldn''t find this account: %s' % accountname)
+            get_logger(args).error('Couldn''t find this account: %s' % accountname)
             exit(-1)
 
     def getpayee(payeename):
         try:
             return payees[payeename]
         except KeyError:
-            get_logger().debug('Couldn''t find this payee: %s' % payeename)
+            get_logger(args).debug('Couldn''t find this payee: %s' % payeename)
             payee=Payee(name=payeename)
             client.budget.be_payees.append(payee)
             return payee
@@ -78,7 +79,7 @@ def do_csvimport(args):
         try:
             return subcategories[categoryname]
         except KeyError:
-            get_logger().debug('Couldn''t find this category: %s' % categoryname)
+            get_logger(args).debug('Couldn''t find this category: %s' % categoryname)
             exit(-1)
 
     if 'account' not in schema.headers:
@@ -89,25 +90,25 @@ def do_csvimport(args):
     elif 'amount' in schema.headers:
         def amountfun(result): return result.amount
     else:
-        get_logger().error('This schema doesn''t provide an amount column or (inflow,outflow) columns')
+        get_logger(args).error('This schema doesn''t provide an amount column or (inflow,outflow) columns')
         exit(-1)
 
-    Row = namedtuple('CSVrow', field_names=schema.headers)
+    csvrow = namedtuple('CSVrow', field_names=schema.headers)
     transactions = []
-
-
 
     imported_date=datetime.now().date()
 
-    existing_transactions_hashes={tr.hash():tr for tr in client.budget.be_transactions if not tr.is_tombstone}
+    existing_transactions_hashes={tr.hash():tr for tr in client.budget.be_transactions}
 
+    get_logger(args).debug('OK starting the import from %s '%os.path.abspath(args.csvfile))
     with codecs.open(args.csvfile, 'r', encoding='utf-8') as inputfile:
         inputfile.readline()
         for row in inputfile.readlines():
-            row = row.strip().split(',')
-            if row == '':
+            get_logger(args).debug('read line %s' % row)
+            if row.strip() == '':
                 continue
-            result = Row(*list(schema.convert_row(*row, fail_fast=True)))
+            row = row.strip().split(',')
+            result = csvrow(*list(schema.convert_row(*row, fail_fast=True)))
             if 'account' in schema.headers:
                 entities_account_id = getaccount(result.account).id
             if 'inflow' in schema.headers and 'outflow' in schema.headers:
@@ -115,7 +116,7 @@ def do_csvimport(args):
             elif 'amount' in schema.headers:
                 amout = result.amount
             else:
-                get_logger().error('Couldn''t find this account: %s' % args.accountname)
+                get_logger(args).error('Couldn''t find this account: %s' % args.accountname)
                 exit(-1)
 
             if 'category' in schema.headers:
@@ -145,7 +146,11 @@ def do_csvimport(args):
                 source="Imported"
             )
             if transaction.hash() not in existing_transactions_hashes:
+                get_logger(args).debug('Appending transaction %s '%transaction.getdict())
                 transactions.append(transaction)
+            else:
+                get_logger(args).debug('Duplicate transaction found %s '%transaction.getdict())
+
 
 
     client.add_transactions(transactions)

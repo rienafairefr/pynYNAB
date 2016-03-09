@@ -20,7 +20,7 @@ csvimport.py
     command line or config file arguments:
       --email Email         The Email User ID for nYNAB (default: None)
       --password Password   The Password for nYNAB (default: None)
-      --level LoggingLevel  Logging Level (default: None)
+      --level LoggingLevel  Logging Level (default: error)
       --budgetname BudgetName
                             The nYNAB budget to use (default: None)
 
@@ -43,7 +43,7 @@ migrate.py
     command line or config file arguments:
       --email Email         The Email User ID for nYNAB (default: None)
       --password Password   The Password for nYNAB (default: None)
-      --level LoggingLevel  Logging Level (default: None)
+      --level LoggingLevel  Logging Level (default: error)
       --budgetname BudgetName
                             The nYNAB budget to use (default: None)
 
@@ -66,7 +66,7 @@ ofximport.py
     command line or config file arguments:
       --email Email         The Email User ID for nYNAB (default: None)
       --password Password   The Password for nYNAB (default: None)
-      --level LoggingLevel  Logging Level (default: None)
+      --level LoggingLevel  Logging Level (default: error)
       --budgetname BudgetName
                             The nYNAB budget to use (default: None)
 
