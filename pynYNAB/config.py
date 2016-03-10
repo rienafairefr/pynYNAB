@@ -27,7 +27,7 @@ def get_logger(args = None):
     logger = logging.getLogger('pynYNAB')
     logging.basicConfig()
     logger.setLevel(logginglevel)
-    return logging
+    return logger
 
 
 def test_common_args(args):
