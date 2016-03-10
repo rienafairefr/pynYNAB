@@ -15,6 +15,7 @@ scriptsdir=os.path.dirname(os.path.abspath(__file__))
 schemas_dir = os.path.join(scriptsdir,'csv_schemas')
 
 def csvimport_main():
+    print('pynYNAB CSV import')
     """Manually import a CSV into a nYNAB budget"""
     parser = configargparse.getArgumentParser('pynYNAB')
     parser.description=inspect.getdoc(csvimport_main)
@@ -38,6 +39,7 @@ def csvimport_main():
 def do_csvimport(args):
     client = clientfromargs(args)
 
+    get_logger(args).debug('selected schema %s' % (args.schema,))
     if os.path.exists(args.schema):
         schemafile = args.schema
     else:
@@ -46,6 +48,7 @@ def do_csvimport(args):
             get_logger(args).error('This schema doesn''t exist in csv_schemas')
             exit(-1)
     schema = SchemaModel(schemafile, case_insensitive_headers=True)
+    get_logger(args).debug('schema headers %s' % schema.headers)
 
     if 'account' not in schema.headers and args.accountname is None:
         get_logger(args).error('This schema does not have an account column and no account name was provided')
@@ -61,6 +64,7 @@ def do_csvimport(args):
 
     def getaccount(accountname):
         try:
+            get_logger(args).debug('searching for account %s' % accountname)
             return accounts[accountname]
         except KeyError:
             get_logger(args).error('Couldn''t find this account: %s' % accountname)
@@ -68,6 +72,7 @@ def do_csvimport(args):
 
     def getpayee(payeename):
         try:
+            get_logger(args).debug('searching for payee %s' % payeename)
             return payees[payeename]
         except KeyError:
             get_logger(args).debug('Couldn''t find this payee: %s' % payeename)
@@ -77,6 +82,7 @@ def do_csvimport(args):
 
     def getsubcategory(categoryname):
         try:
+            get_logger(args).debug('searching for subcategory %s' % categoryname)
             return subcategories[categoryname]
         except KeyError:
             get_logger(args).debug('Couldn''t find this category: %s' % categoryname)

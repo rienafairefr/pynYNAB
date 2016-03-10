@@ -14,6 +14,7 @@ from pynYNAB.connection import nYnabConnection
 
 
 def migrate_main():
+    print('migrate YNAB4 to pynYNAB')
     """Migrate a YNAB4 budget transaction history to nYNAB, using pyynab"""
 
     parser = configargparse.getArgumentParser('pynYNAB')

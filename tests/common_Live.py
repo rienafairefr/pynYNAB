@@ -54,12 +54,10 @@ class commonLive(unittest.TestCase):
         if name in accounts:
             account = accounts[name]
             self.client.delete_account(account)
+
             self.reload()
 
-            accounts = {a.account_name: a for a in self.client.budget.be_accounts if
-                        a.account_name == name}
-
-            self.assertTrue(name not in accounts)
+            self.assertTrue(account not in self.client.budget.be_accounts)
 
         account = Account(
             account_type=AccountTypes.Checking,

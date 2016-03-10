@@ -1,16 +1,16 @@
 import inspect
 import re
-
+from datetime import datetime
 from ofxtools import OFXTree
 import configargparse
 
-from pynYNAB.Client import nYnabClient, BudgetNotFound, clientfromargs
+from pynYNAB.Client import clientfromargs
 from pynYNAB.budget import Transaction
 from pynYNAB.config import test_common_args
-from pynYNAB.connection import nYnabConnection
 
 
 def ofximport_main():
+    print('pynYNAB OFX import')
     """Manually import an OFX into a nYNAB budget"""
 
     parser = configargparse.getArgumentParser('pynYNAB')
@@ -18,19 +18,17 @@ def ofximport_main():
     parser.add_argument('ofxfile', metavar='OFXPath', type=str,
                         help='The OFX file to import')
 
-
     args = parser.parse_args()
     test_common_args(args)
-    client = clientfromargs(args)
+    do_ofximport(args)
 
-    connection = nYnabConnection(args.email, args.password)
+def do_ofximport(args):
+    client = clientfromargs(args)
 
     tree = OFXTree()
     tree.parse(args.ofxfile)
     response = tree.convert()
     stmts = response.statements
-
-
 
     accounts = client.budget.be_accounts
     reKey = re.compile('.*key\[(?P<key>.*)\]key')
@@ -38,7 +36,7 @@ def ofximport_main():
                       account.note is not None}
 
     for stmt in stmts:
-        key = stmt.account.bankid + ' ' + stmt.account.branchid + ' ' + stmt.account.bankid
+        key = stmt.account.bankid + ' ' + stmt.account.branchid + ' ' + stmt.account.acctid
         if key not in keystoaccounts:
             if len(accounts) == 0:
                 print('No accounts available in this budget')
@@ -68,6 +66,7 @@ def ofximport_main():
             client.sync()
 
         account = keystoaccounts[key]
+        imported_date=datetime.now().date()
 
         for ofx_transaction in stmt.transactions:
             payee_name = ofx_transaction.name if ofx_transaction.payee is None else ofx_transaction.payee
@@ -75,10 +74,14 @@ def ofximport_main():
             # use ftid so we don't import duplicates
             if not any(ofx_transaction.fitid in transaction.memo for transaction in client.budget.be_transactions if
                        transaction.memo is not None):
+
                 transaction = Transaction(
                     date=ofx_transaction.dtposted,
-                    memo=ofx_transaction.memo + ofx_transaction.fitid,
+                    memo=ofx_transaction.memo + '    '+ofx_transaction.fitid,
                     imported_payee=payee_name,
+                    imported_date=imported_date,
+                    source="Imported",
+                    check_number=ofx_transaction.checknum,
                     amount=float(ofx_transaction.trnamt),
                     entities_account_id=account.id
                 )
