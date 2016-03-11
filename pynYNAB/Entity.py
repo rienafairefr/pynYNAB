@@ -5,6 +5,7 @@ from enum import Enum
 from pynYNAB import KeyGenerator
 from pynYNAB.schema.Fields import EntityField, EntityListField
 from pynYNAB.config import get_logger
+from pynYNAB.utils import equal_dicts
 
 
 def undef():
@@ -57,6 +58,9 @@ def obj_from_dict(obj_type, dictionary):
     return obj_type(**treated)
 
 
+ignored_fields_for_hash = ['id']
+
+
 class Entity(object):
     def __init__(self, *args, **kwargs):
         for namefield in self.AllFields:
@@ -67,9 +71,7 @@ class Entity(object):
         super(Entity, self).__init__()
 
     def hash(self):
-        d=self.getdict()
-        del d['id']
-        return hash(frozenset(d.items()))
+        return hash(frozenset({k: v for k, v in self.getdict().items() if k not in ignored_fields_for_hash}.items()))
 
     def __str__(self):
         return str(self.getdict())
@@ -105,6 +107,9 @@ class Entity(object):
     def update_from_dict(self, d):
         self.__dict__.update(d)
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def __eq__(self, other):
         if isinstance(other, Entity):
             return self.getdict() == other.getdict()
@@ -120,9 +125,13 @@ class ListofEntities(object):
         super(ListofEntities, self).__init__()
         from collections import OrderedDict
         self._dict_entities = OrderedDict()
+        self._dict_entities_hash = {}
         self.typeItems = typ
         self.type_instance = typ()
         self.changed = []
+
+    def _update_hashes(self):
+        self._dict_entities_hash = {v.hash(): v for k, v in self._dict_entities.items()}
 
     def __str__(self):
         return self._dict_entities.values().__str__()
@@ -137,12 +146,13 @@ class ListofEntities(object):
         if changed_entities is None:
             return
         for entity in changed_entities:
-            if hasattr(entity,'is_tombstone') and entity.is_tombstone:
+            if hasattr(entity, 'is_tombstone') and entity.is_tombstone:
                 continue
             try:
                 self._dict_entities[entity.id].update_from_changed_entities(entity)
             except KeyError:
                 self._dict_entities[entity.id] = entity
+        self._update_hashes()
 
     def get(self, entity_id):
         return self._dict_entities.get(entity_id)
@@ -152,6 +162,7 @@ class ListofEntities(object):
             raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
         for o in objects:
             self._dict_entities[o.id] = o
+            self._dict_entities_hash[o.hash()] = o
         if track:
             self.changed.extend(objects)
 
@@ -159,6 +170,7 @@ class ListofEntities(object):
         if not isinstance(o, self.typeItems):
             raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
         self._dict_entities[o.id] = o
+        self._dict_entities_hash[o.hash()] = o
         if track:
             self.changed.append(o)
 
@@ -167,6 +179,7 @@ class ListofEntities(object):
             raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
         if o.id in self._dict_entities:
             del self._dict_entities[o.id]
+            del self._dict_entities_hash[o.hash()]
         if track:
             o.is_tombstone = True
             self.changed.append(o)
@@ -175,7 +188,9 @@ class ListofEntities(object):
         if not isinstance(o, self.typeItems):
             raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
         if o.id in self._dict_entities:
+            del self._dict_entities_hash[self._dict_entities[o.id].hash()]
             self._dict_entities[o.id] = o
+            self._dict_entities_hash[o.hash()] = o
             if track:
                 self.changed.append(o)
 
@@ -184,6 +199,12 @@ class ListofEntities(object):
 
     def __len__(self):
         return len(self._dict_entities)
+
+    def containsduplicate(self, item):
+        if not isinstance(item, self.typeItems):
+            return False
+        else:
+            return item.hash() in self._dict_entities_hash
 
     def __contains__(self, item):
         if not isinstance(item, self.typeItems):

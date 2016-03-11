@@ -8,7 +8,7 @@ from pynYNAB.budget import Account, AccountCalculation, AccountMapping, MasterCa
     ScheduledTransaction, Setting, Subtransaction, TransactionGroup
 from pynYNAB.catalog import BudgetVersion, CatalogBudget, User, UserBudget, UserSetting
 from pynYNAB.roots import Budget, Catalog
-from pynYNAB.schema.Fields import EntityField, EntityListField
+from pynYNAB.schema.Fields import EntityField, EntityListField, DateField
 
 
 class Test1(unittest.TestCase):
@@ -21,6 +21,34 @@ class Test1(unittest.TestCase):
         obj = MyEntity()
         jsonroundtrip = json.loads(json.dumps(obj, cls=ComplexEncoder))
         assert (jsonroundtrip == {'id': obj.id, 'greatfield': 2})
+
+    def testequality(self):
+        tr1 = Transaction()
+        tr2 = Transaction()
+        self.assertNotEqual(tr1, tr2)
+
+        tr1 = Transaction(entities_account_id=1)
+        tr2 = Transaction(entities_account_id=2)
+        self.assertNotEqual(tr1, tr2)
+
+    def testentityIn(self):
+        tr1 = Transaction()
+        transactions = ListofEntities(Transaction)
+        transactions.append(tr1)
+        self.assertIn(tr1, transactions)
+
+    def testentityIn2(self):
+        tr1 = Transaction()
+        tr2 = Transaction()
+        transactions = ListofEntities(Transaction)
+        transactions.append(tr1)
+        self.assertNotIn(tr2, transactions)
+
+    def test_hash(self):
+        tr1 = Transaction()
+        result = tr1.hash()
+        self.assertIsInstance(result, int)
+
 
     def testimports(self):
         types = [

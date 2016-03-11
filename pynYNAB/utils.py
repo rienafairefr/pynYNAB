@@ -29,3 +29,9 @@ def chunk(iterable, chunk_size):
             if chunk:
                 yield chunk
             break
+
+# http://stackoverflow.com/q/10480806/1685379
+def equal_dicts(a, b, ignore_keys):
+    ka = set(a).difference(ignore_keys)
+    kb = set(b).difference(ignore_keys)
+    return ka == kb and all(a[k] == b[k] for k in ka)

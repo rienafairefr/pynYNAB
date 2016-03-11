@@ -46,6 +46,62 @@ class liveTests(commonLive):
 
         return wrapped
 
+    def test_add_delete_account(self):
+        account_type=AccountTypes.Checking
+        account_name = KeyGenerator.generateuuid()
+        budget = self.client.budget
+
+        for account in budget.be_accounts:
+            if account.account_name == account_name:
+                return
+        if len(budget.be_accounts) > 0:
+            sortable_index = max(account.sortable_index for account in budget.be_accounts)
+        else:
+            sortable_index = 0
+
+        account = Account(
+            account_type=account_type,
+            account_name=account_name,
+            sortable_index=sortable_index,
+        )
+
+        self.client.add_account(account, balance=random.randint(-10, 10), balance_date=datetime.now())
+
+        self.reload()
+
+        self.assertIn(account, self.client.budget.be_accounts)
+
+        self.client.delete_account(account)
+
+        self.reload()
+
+        result = self.client.budget.be_transactions.get(account.id)
+
+        self.assertTrue(result is None)
+
+    def test_add_transaction_amount_alltypes(self):
+        amount0=10
+        for account_type in AccountTypes:
+            account=Account(
+                account_type=account_type,
+                account_name=KeyGenerator.generateuuid()
+            )
+            self.client.add_account(account, balance=0, balance_date=datetime.now())
+            tr=Transaction(
+                entities_account_id=account.id,
+                amount=amount0,
+                cleared='Uncleared',
+                date=datetime.now(),
+            )
+            self.client.add_transaction(tr)
+            self.reload()
+            self.client.delete_account(account)
+            print(account.account_type)
+            print((self.client.budget.be_transactions.get(tr.id).amount,self.client.budget.be_transactions.get(tr.id).cash_amount,self.client.budget.be_transactions.get(tr.id).credit_amount))
+            self.assertEqual(self.client.budget.be_transactions.get(tr.id).amount,amount0)
+            self.assertEqual(self.client.budget.be_transactions.get(tr.id).cash_amount,amount0)
+            self.assertEqual(self.client.budget.be_transactions.get(tr.id).credit_amount,0)
+
     def test_add_delete_account_alltypes(self):
         for account_type in AccountTypes:
             account_name = KeyGenerator.generateuuid()
