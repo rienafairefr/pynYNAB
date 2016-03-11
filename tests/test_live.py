@@ -92,6 +92,7 @@ class liveTests(commonLive):
                 amount=amount0,
                 cleared='Uncleared',
                 date=datetime.now(),
+                source="Imported"
             )
             self.client.add_transaction(tr)
             self.reload()

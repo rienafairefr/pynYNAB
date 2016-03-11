@@ -40,14 +40,14 @@ class TestCsv(commonLive):
         with open(args.csvfile, mode='w') as f:
             f.writelines(content)
 
-        transaction=self.getTr(datetime(year=2016, month=2, day=1).date(), 'Super Pants Inc.', -20, 'Buying pants', 'Cash')
+        transaction=self.getTr(datetime(year=2016, month=2, day=1).date(), 'Super Pants Inc.', -20, 'Buying pants', 'Credit')
 
         for i in range(2):
             do_csvimport(args)
             self.reload()
             identical=[tr2 for tr2 in self.client.budget.be_transactions if transaction.hash() == tr2.hash()]
             print('Transactions with same hash: %s'%len(identical))
-            self.assertTrue( len(identical)== 1)
+            self.assertTrue(len(identical) == 1)
 
 
     def test_duplicateForced(self):

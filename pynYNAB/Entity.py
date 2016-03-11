@@ -58,7 +58,7 @@ def obj_from_dict(obj_type, dictionary):
     return obj_type(**treated)
 
 
-ignored_fields_for_hash = ['id']
+ignored_fields_for_hash = ['id', 'credit_amount', 'cash_amount']
 
 
 class Entity(object):
