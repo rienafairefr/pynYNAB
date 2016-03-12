@@ -125,6 +125,31 @@ class nYnabClient(object):
     def delete_transaction(self, transaction):
         self.budget.be_transactions.delete(transaction)
 
+    def select_account_ui(self,create=False):
+        accounts=list(self.budget.be_accounts)
+
+        if create:
+            createItem=Struct(account_name='###CREATE')
+            accounts.append(createItem)
+
+        for iaccount, account in accounts.items().enumerate():
+            print('#%d %s' % (iaccount, account.account_name))
+
+        if create:
+            print('#%d %s' % (len(accounts), '###CREATE'))
+            accounts.append(None)
+
+        while True:
+            accountnumber = input('Which account? ')
+            try:
+                accountnumber = int(accountnumber)
+                if 0 <= accountnumber <= len(accounts) - 1:
+                    break
+            except ValueError:
+                pass
+            print('Please enter a number between %d and %d' % (0, len(accounts) - 1))
+            return accounts[accountnumber]
+
     @operation
     def delete_budget(self, budget_name):
         for budget in self.catalog.ce_budgets:
