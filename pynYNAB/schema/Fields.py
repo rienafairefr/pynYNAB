@@ -43,6 +43,9 @@ class AmountField(EntityField):
         return float(x) / 1000 if x is not None else x
 
 
+class PropertyField(EntityField):
+    pass
+
 class DateField(EntityField):
     def pretreat(self, x):
         return x.strftime('%Y-%m-%d') if x is not None else x
@@ -53,6 +56,27 @@ class DateField(EntityField):
         except ValueError:
             pass
 
+
+class DatesField(EntityField):
+    d = DateField(None)
+
+    def hash(self,value):
+        return hash(frozenset(value))
+
+    def pretreat(self, x):
+        try:
+            return [self.d.pretreat(i) for i in x]
+        except AttributeError:
+            from pynYNAB.Entity import AccountTypes
+            if x in AccountTypes:
+                return x
+
+    def posttreat(self, x):
+        try:
+            return [self.d.posttreat(i) for i in x]
+        except:
+            # nYNAB servers can accept an account with account_type not set to a valid value apparently
+            return None
 
 class AccountTypeField(EntityField):
     def pretreat(self, x):

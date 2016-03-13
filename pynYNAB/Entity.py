@@ -1,9 +1,10 @@
+import copy
 import json
 
 from enum import Enum
 
 from pynYNAB import KeyGenerator
-from pynYNAB.schema.Fields import EntityField, EntityListField
+from pynYNAB.schema.Fields import EntityField, EntityListField, PropertyField
 from pynYNAB.config import get_logger
 from pynYNAB.utils import equal_dicts
 
@@ -13,6 +14,7 @@ def undef():
 
 
 class AccountTypes(Enum):
+    undef = 'undef'
     Checking = 'Checking'
     Savings = 'Savings'
     CreditCard = 'CreditCard'
@@ -24,6 +26,22 @@ class AccountTypes(Enum):
     Mortgage = 'Mortgage'
     OtherAsset = 'OtherAsset'
     OtherLiability = 'OtherLiability'
+
+on_budget_dict = dict(
+    undef=None,
+    Checking=True,
+    Savings=True,
+    CreditCard=True,
+    Cash=True,
+    LineOfCredit=True,
+    Paypal=True,
+    MerchantAccount=True,
+    InvestmentAccount=False,
+    Mortgage=False,
+    OtherAsset=False,
+    OtherLiability=False,
+)
+on_budget_dict[None]=None
 
 
 class ComplexEncoder(json.JSONEncoder):
@@ -60,12 +78,45 @@ def obj_from_dict(obj_type, dictionary):
 
 ignored_fields_for_hash = ['id', 'credit_amount', 'cash_amount']
 
+# adapted from http://stackoverflow.com/a/2954373/1685379
+def addprop(inst, name, method, setter=None, cleaner=None ):
+    cls = type(inst)
+    if not hasattr(cls,'__perinstance'):
+        cls = type(cls.__name__, (cls,), {})
+        cls.__perinstance = True
+        inst.__class__ = cls
+    p=property(method)
+    setattr(cls, name, p)
+    if setter is not None:
+        setattr(cls, name,p.setter(setter))
+    if cleaner is not None:
+        setattr(cls, 'clean_'+name,cleaner)
+    return p
 
 class Entity(object):
     def __init__(self, *args, **kwargs):
-        for namefield in self.AllFields:
-            value = kwargs.get(namefield) if kwargs.get(namefield) is not None else self.AllFields[namefield]()
-            setattr(self, namefield, value)
+        for namefield,field in self.AllFields.items():
+            if isinstance(field,PropertyField):
+                fieldc=copy.deepcopy(field)
+
+                def getter(selfi):
+                    if hasattr(selfi,'__prop_'+namefield):
+                        return getattr(selfi,'__prop_'+namefield)
+                    else:
+                        return fieldc()(selfi)
+
+                def setter(selfi, valuei):
+                    setattr(selfi,'__prop_'+namefield,valuei)
+
+                def cleaner(selfi):
+                    delattr(selfi,'__prop_'+namefield)
+
+                p=addprop(self,namefield,getter,setter,cleaner)
+                if kwargs.get(namefield):
+                    getattr(self.__class__,namefield).__set__(self,kwargs.get(namefield))
+            else:
+                value = kwargs.get(namefield) if kwargs.get(namefield) is not None else field()
+                setattr(self, namefield, value)
         if self.id is None:
             self.id = self.create_id(*args, **kwargs)
         super(Entity, self).__init__()
@@ -179,6 +230,7 @@ class ListofEntities(object):
             raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
         if o.id in self._dict_entities:
             del self._dict_entities[o.id]
+        if o.hash() in self._dict_entities_hash:
             del self._dict_entities_hash[o.hash()]
         if track:
             o.is_tombstone = True
@@ -188,7 +240,9 @@ class ListofEntities(object):
         if not isinstance(o, self.typeItems):
             raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
         if o.id in self._dict_entities:
-            del self._dict_entities_hash[self._dict_entities[o.id].hash()]
+            h=self._dict_entities[o.id].hash()
+            if h in self._dict_entities_hash:
+                del self._dict_entities_hash[h]
             self._dict_entities[o.id] = o
             self._dict_entities_hash[o.hash()] = o
             if track:

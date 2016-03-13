@@ -1,5 +1,6 @@
-from pynYNAB.Entity import Entity, undef
-from pynYNAB.schema.Fields import EntityField, AmountField, DateField, AccountTypeField
+from pynYNAB.Entity import Entity, undef, on_budget_dict, AccountTypes
+from pynYNAB.schema.Fields import EntityField, AmountField, DateField, AccountTypeField, EntityListField, DatesField, \
+    PropertyField
 
 
 class Transaction(Entity):
@@ -227,7 +228,7 @@ class ScheduledTransaction(Entity):
         is_tombstone=EntityField(False),
         memo=EntityField(None),
         transfer_account_id=EntityField(None),
-        upcoming_instances=EntityField(None)
+        upcoming_instances=DatesField([])
     )
 
 
@@ -276,10 +277,14 @@ class PayeeRenameCondition(Entity):
     )
 
 
+def on_budget_default(self):
+    return on_budget_dict[self.account_type.value]
+
+
 class Account(Entity):
     Fields = dict(
         account_name=EntityField(None),
-        account_type=AccountTypeField(None),
+        account_type=AccountTypeField(AccountTypes.undef),
         direct_connect_account_id=EntityField(undef),
         direct_connect_enabled=EntityField(False),
         direct_connect_institution_id=EntityField(undef),
@@ -291,6 +296,6 @@ class Account(Entity):
         last_reconciled_balance=EntityField(None),
         last_reconciled_date=DateField(None),
         note=EntityField(None),
-        on_budget=EntityField(True),
-        sortable_index=EntityField(0)
+        sortable_index=EntityField(0),
+        on_budget=PropertyField(on_budget_default)
     )

@@ -1,14 +1,14 @@
 import json
 import unittest
 
-from pynYNAB.Entity import Entity, ComplexEncoder, ListofEntities, undef
+from pynYNAB.Entity import Entity, ComplexEncoder, ListofEntities, undef, AccountTypes, addprop
 from pynYNAB.budget import Account, AccountCalculation, AccountMapping, MasterCategory, Transaction, Subcategory, \
     MonthlyAccountCalculation, MonthlyBudget, MonthlySubcategoryBudget, MonthlyBudgetCalculation, \
     MonthlySubcategoryBudgetCalculation, PayeeLocation, Payee, PayeeRenameCondition, ScheduledSubtransaction, \
     ScheduledTransaction, Setting, Subtransaction, TransactionGroup
 from pynYNAB.catalog import BudgetVersion, CatalogBudget, User, UserBudget, UserSetting
 from pynYNAB.roots import Budget, Catalog
-from pynYNAB.schema.Fields import EntityField, EntityListField, DateField
+from pynYNAB.schema.Fields import EntityField, EntityListField, DateField, PropertyField
 
 
 class Test1(unittest.TestCase):
@@ -50,6 +50,66 @@ class Test1(unittest.TestCase):
         self.assertIsInstance(result, int)
 
 
+    def testprop(self):
+
+        namefield='p'
+        default= lambda self:self.y
+        def pgetter(self):
+            if hasattr(self,'__prop_'+namefield):
+                print('special')
+                return getattr(self,'__prop_'+namefield)
+            else:
+                return default(self)
+
+        def psetter(self,value):
+            setattr(self,'__prop_'+namefield,value)
+
+        class myClass(object):
+            y = 1
+
+        obj1=myClass()
+        addprop(obj1,namefield,pgetter,psetter)
+
+        self.assertEqual(obj1.p,1)
+        obj1.y=3
+        self.assertEqual(obj1.p,3)
+        obj1.p=5
+        self.assertEqual(obj1.p,5)
+        obj1.y=7
+        self.assertNotEqual(obj1.p,7)
+
+    def test_lambdaprop(self):
+        class MockEntity(Entity):
+            Fields=dict(
+                input=EntityField(True),
+                override=PropertyField(lambda x: x.input)
+            )
+        # override behaves like a @property attribute:
+
+        entity1=MockEntity()
+        self.assertEqual(entity1.override,entity1.input)
+        entity1.input=False
+        self.assertEqual(entity1.override,entity1.input)
+        entity1.input=12
+        self.assertEqual(entity1.override,entity1.input)
+
+        # unless set directly:
+
+        entity1.override=42
+        self.assertEqual(entity1.override,42)
+        # then it behaves like a normal attribute:
+        entity1.input=False
+        self.assertEqual(entity1.override,42)
+
+        # we can clear and come back to @property behavior
+        entity1.clean_override()
+
+        self.assertEqual(entity1.override,entity1.input)
+        entity1.input=False
+        self.assertEqual(entity1.override,entity1.input)
+        entity1.input=12
+        self.assertEqual(entity1.override,entity1.input)
+
     def testimports(self):
         types = [
             Account,
@@ -90,9 +150,16 @@ class Test1(unittest.TestCase):
                 self.assertTrue(isinstance(obj.AllFields[f], EntityField) or isinstance(obj.AllFields[f], EntityListField))
             self.assertTrue(checkequal(obj.getdict().keys(), obj.AllFields.keys()))
 
-            valuesL=list(obj.getdict().values())
-            valuesR=[getattr(obj, f) for f in obj.AllFields.keys()]
-            self.assertEqual(set(valuesL),set(valuesR))
+            valuesleft=list(obj.getdict().values())
+            valuesright=[getattr(obj, f) for f in obj.AllFields.keys()]
+
+            unhashableleft = [v for v in valuesleft if v.__hash__ is None]
+            hashableleft = [v for v in valuesleft if v.__hash__ is not None]
+
+            unhashableright = [v for v in valuesright if v.__hash__ is None]
+            hashableright = [v for v in valuesright if v.__hash__ is not None]
+            self.assertEqual(set(hashableleft),set(hashableright))
+            self.assertEqual(unhashableleft,unhashableright)
 
     def testupdatechangedentities(self):
         obj = Budget()
