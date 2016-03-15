@@ -121,8 +121,15 @@ class Entity(object):
             self.id = self.create_id(*args, **kwargs)
         super(Entity, self).__init__()
 
+    def __hash__(self):
+        return self.hash()
+
     def hash(self):
-        return hash(frozenset({k: v for k, v in self.getdict().items() if k not in ignored_fields_for_hash}.items()))
+        t=tuple((k,v) for k, v in self.getdict().items() if k not in ignored_fields_for_hash)
+        try:
+            return hash(frozenset(t))
+        except TypeError:
+            pass
 
     def __str__(self):
         return str(self.getdict())
