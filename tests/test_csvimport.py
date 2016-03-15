@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 
 import configargparse
+import errno
 
 from pynYNAB.Entity import ComplexEncoder
 from pynYNAB.budget import Transaction
@@ -37,7 +38,12 @@ class TestCsv(commonLive):
         content = """Date,Payee,Amount,Memo,Account
 2016-02-01,Super Pants Inc.,-20,Buying pants,Credit
 """
-        os.makedirs(os.path.dirname(args.csvfile),exist_ok=True)
+        try:
+            os.makedirs(os.path.dirname(args.csvfile))
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
         with open(args.csvfile, mode='w') as f:
             f.writelines(content)
 
