@@ -25,7 +25,7 @@ def csvimport_main():
                         help='The CSV schema to use (see csv_schemas directory)')
     parser.add_argument('accountname', metavar='AccountName', type=str,nargs='?',
                         help='The nYNAB account name  to use')
-    parser.add_argument('-import-duplicates', metavar='importduplicates', action='store_true',
+    parser.add_argument('-import-duplicates', action='store_true',
                         help='Forces the import even if a duplicate (same date, account, amount, memo, payee) is found')
 
     args = parser.parse_args()
@@ -151,7 +151,7 @@ def do_csvimport(args):
                 memo=memo,
                 source="Imported"
             )
-            if args.importduplicates or (not client.budget.be_transactions.containsduplicate(transaction)):
+            if args.import_duplicates or (not client.budget.be_transactions.containsduplicate(transaction)):
                 get_logger(args).debug('Appending transaction %s '%transaction.getdict())
                 transactions.append(transaction)
             else:
