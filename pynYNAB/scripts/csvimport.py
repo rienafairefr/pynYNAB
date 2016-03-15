@@ -5,6 +5,7 @@ from datetime import datetime
 import configargparse
 import os
 import csv
+import sys
 
 from jsontableschema.model import SchemaModel
 
@@ -110,7 +111,8 @@ def do_csvimport(args):
     get_logger(args).debug('OK starting the import from %s '%os.path.abspath(args.csvfile))
     with open(args.csvfile, 'r') as inputfile:
         for row in csv.reader(inputfile):
-            row = [unicode(cell, 'utf-8') for cell in row]
+            if sys.version[0] == '2':
+                row = [cell.decode('utf-8') for cell in row]
             get_logger(args).debug('read line %s' % row)
             result = csvrow(*list(schema.convert_row(*row, fail_fast=True)))
             if 'account' in schema.headers:
