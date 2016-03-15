@@ -128,16 +128,17 @@ class nYnabClient(object):
     def select_account_ui(self,create=False):
         accounts=list(self.budget.be_accounts)
 
+        iaccount=0
         if create:
-            createItem=Struct(account_name='###CREATE')
-            accounts.append(createItem)
+            print('#0 ###CREATE')
+            iaccount=1
 
-        for iaccount, account in accounts.items().enumerate():
+        for  account in accounts:
             print('#%d %s' % (iaccount, account.account_name))
-
+            iaccount += 1
         if create:
-            print('#%d %s' % (len(accounts), '###CREATE'))
-            accounts.append(None)
+            accounts=[None]+accounts
+
 
         while True:
             accountnumber = input('Which account? ')

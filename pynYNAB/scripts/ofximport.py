@@ -1,11 +1,10 @@
 import inspect
-import re
 from datetime import datetime
 from ofxtools import OFXTree
 import configargparse
 
 from pynYNAB.Client import clientfromargs
-from pynYNAB.budget import Transaction
+from pynYNAB.budget import Transaction, Payee
 from pynYNAB.config import test_common_args
 
 
@@ -31,9 +30,6 @@ def do_ofximport(args):
     stmts = response.statements
 
     accounts = client.budget.be_accounts
-    reKey = re.compile('.*key\[(?P<key>.*)\]key')
-    keystoaccounts = {reKey.match(account.note).group('key'): account for account in accounts if
-                      account.note is not None}
     accountvsnotes={account.note:account for account in accounts if account.note is not None}
 
     for stmt in stmts:
@@ -63,15 +59,24 @@ def do_ofximport(args):
 
                     for ofx_transaction in stmt.transactions:
                         payee_name = ofx_transaction.name if ofx_transaction.payee is None else ofx_transaction.payee
+                        try:
+                            payee = next(p for p in client.budget.be_payees if p.name == payee_name)
+                        except StopIteration:
+                            payee=Payee(
+                                name=payee_name
+                            )
+                            client.budget.be_payees.append(payee)
+                            client.sync()
 
                         # use ftid so we don't import duplicates
                         if not any(ofx_transaction.fitid in transaction.memo for transaction in client.budget.be_transactions if
-                                   transaction.memo is not None):
+                                   transaction.memo is not None and transaction.entities_account_id == account.id):
 
                             transaction = Transaction(
                                 date=ofx_transaction.dtposted,
                                 memo=ofx_transaction.memo + '    '+ofx_transaction.fitid,
                                 imported_payee=payee_name,
+                                entities_payee_id=payee.id,
                                 imported_date=imported_date,
                                 source="Imported",
                                 check_number=ofx_transaction.checknum,
