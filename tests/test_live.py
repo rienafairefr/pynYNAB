@@ -79,68 +79,6 @@ class liveTests(commonLive):
 
         self.assertTrue(result is None)
 
-    def test_add_transaction_amount_alltypes(self):
-        amount0=10
-        for account_type in AccountTypes:
-            if account_type==AccountTypes.undef:
-                continue
-            account=Account(
-                account_type=account_type,
-                account_name=KeyGenerator.generateuuid()
-            )
-            print(account.account_type)
-            self.client.add_account(account, balance=0, balance_date=datetime.now())
-            tr=Transaction(
-                entities_account_id=account.id,
-                amount=amount0,
-                cleared='Uncleared',
-                date=datetime.now(),
-                source="Imported"
-            )
-            self.client.add_transaction(tr)
-            self.reload()
-            self.client.delete_account(account)
-
-            print((self.client.budget.be_transactions.get(tr.id).amount,self.client.budget.be_transactions.get(tr.id).cash_amount,self.client.budget.be_transactions.get(tr.id).credit_amount))
-            self.assertEqual(self.client.budget.be_transactions.get(tr.id).amount,amount0)
-            self.assertEqual(self.client.budget.be_transactions.get(tr.id).cash_amount,amount0)
-            self.assertEqual(self.client.budget.be_transactions.get(tr.id).credit_amount,0)
-
-    def test_add_delete_account_alltypes(self):
-        for account_type in AccountTypes:
-            if account_type == AccountTypes.undef:
-                continue
-            account_name = KeyGenerator.generateuuid()
-            budget = self.client.budget
-
-            for account in budget.be_accounts:
-                if account.account_name == account_name:
-                    return
-            if len(budget.be_accounts) > 0:
-                sortable_index = max(account.sortable_index for account in budget.be_accounts)
-            else:
-                sortable_index = 0
-
-            account = Account(
-                account_type=account_type,
-                account_name=account_name,
-                sortable_index=sortable_index,
-            )
-
-            self.client.add_account(account, balance=random.randint(-10, 10), balance_date=datetime.now())
-
-            self.reload()
-
-            self.assertIn(account, self.client.budget.be_accounts)
-
-            self.client.delete_account(account)
-
-            self.reload()
-
-            result = self.client.budget.be_transactions.get(account.id)
-
-            self.assertTrue(result is None)
-
     @needs_account
     def test_add_deletetransaction(self):
         from datetime import datetime
@@ -176,16 +114,14 @@ class liveTests(commonLive):
                 cleared='Uncleared',
                 date=datetime.now() + 8 * timedelta(days=365),
                 entities_account_id=self.account.id,
-            )]
-
-        n = 3
-        for i in range(len(transactions) - n):
-            transactions.append(Transaction(
+            ), Transaction(
                 amount=random.randint(-10, 10),
                 cleared='Uncleared',
                 date=datetime.now(),
                 entities_account_id=self.account.id,
-            ))
+            )
+        ]
+
         self.client.add_transactions(transactions)
         print('Time for request: ' + str(self.client.connection.lastrequest_elapsed.total_seconds()) + ' s')
 

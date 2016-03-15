@@ -7,7 +7,7 @@ import errno
 from pynYNAB.Entity import ComplexEncoder
 from pynYNAB.budget import Transaction
 from pynYNAB.scripts.csvimport import do_csvimport
-from tests.common_Live import commonLive
+from common_Live import commonLive
 import json
 
 
@@ -63,7 +63,7 @@ class TestCsv(commonLive):
         args.schema = 'example'
         args.csvfile = os.path.join('data', 'test.csv')
         args.accountname = None
-        args.importduplicates = True
+        args.import_duplicates = True
         args.level = 'debug'
 
         content = """Date,Payee,Amount,Memo,Account
@@ -86,7 +86,7 @@ class TestCsv(commonLive):
         args.schema = 'example'
         args.csvfile = os.path.join('data', 'test.csv')
         args.accountname = None
-        args.importduplicates=False
+        args.import_duplicates=False
         args.level = 'debug'
 
         content = """Date,Payee,Amount,Memo,Account
