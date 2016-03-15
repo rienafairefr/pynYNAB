@@ -6,3 +6,4 @@ dist/
 pynYNAB.egg-info/
 .tox/
 tests/data/test.csv
+data/
