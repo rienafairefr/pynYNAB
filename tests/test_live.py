@@ -82,10 +82,13 @@ class liveTests(commonLive):
     def test_add_transaction_amount_alltypes(self):
         amount0=10
         for account_type in AccountTypes:
+            if account_type==AccountTypes.undef:
+                continue
             account=Account(
                 account_type=account_type,
                 account_name=KeyGenerator.generateuuid()
             )
+            print(account.account_type)
             self.client.add_account(account, balance=0, balance_date=datetime.now())
             tr=Transaction(
                 entities_account_id=account.id,
@@ -97,7 +100,7 @@ class liveTests(commonLive):
             self.client.add_transaction(tr)
             self.reload()
             self.client.delete_account(account)
-            print(account.account_type)
+
             print((self.client.budget.be_transactions.get(tr.id).amount,self.client.budget.be_transactions.get(tr.id).cash_amount,self.client.budget.be_transactions.get(tr.id).credit_amount))
             self.assertEqual(self.client.budget.be_transactions.get(tr.id).amount,amount0)
             self.assertEqual(self.client.budget.be_transactions.get(tr.id).cash_amount,amount0)
@@ -105,6 +108,8 @@ class liveTests(commonLive):
 
     def test_add_delete_account_alltypes(self):
         for account_type in AccountTypes:
+            if account_type == AccountTypes.undef:
+                continue
             account_name = KeyGenerator.generateuuid()
             budget = self.client.budget
 

@@ -1,9 +1,7 @@
 import os
 from datetime import datetime
-import unittest
 
 import configargparse
-from ofxtools import OFXTree
 import json
 
 from pynYNAB.Client import clientfromargs
@@ -108,13 +106,15 @@ NEWFILEUID:NONE
                 imported_date=imported_date
             )
         Transactions = [
-            getTr(datetime(year=2013, month=3, day=12).date(),'CHEQUE',-491.09,'CHEQUE',account),
+            getTr(datetime(year=2013, month=3, day=12).date(),'CHEQUE',-491.09,'CHEQUE    13071099780237330004',account),
         ]
 
         do_ofximport(args)
         self.reload()
-        transactionshashes= {tr.hash():tr for tr in self.client.budget.be_transactions}
         for tr in Transactions:
+            print('Should have been imported:')
             print(json.dumps(tr,cls=ComplexEncoder))
+            print('Found in the register:')
             print(json.dumps([tr2 for tr2 in self.client.budget.be_transactions if tr2.amount==tr.amount],cls=ComplexEncoder))
-            self.assertIn(tr.hash(),transactionshashes)
+            self.assertTrue(self.client.budget.be_transactions.containsduplicate(tr),
+                            msg='couldnt find a transaction with the same hash after ofx import')

@@ -79,6 +79,7 @@ class TestCsv(commonLive):
         args.schema = 'example'
         args.csvfile = os.path.join('data', 'test.csv')
         args.accountname = None
+        args.importduplicates=False
         args.level = 'debug'
 
         content = """Date,Payee,Amount,Memo,Account
