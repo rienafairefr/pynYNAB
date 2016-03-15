@@ -31,12 +31,13 @@ class TestCsv(commonLive):
         args.schema = 'example'
         args.csvfile = os.path.join('data', 'test.csv')
         args.accountname = None
-        args.importduplicates = False
+        args.import_duplicates = False
         args.level = 'debug'
 
         content = """Date,Payee,Amount,Memo,Account
 2016-02-01,Super Pants Inc.,-20,Buying pants,Credit
 """
+        os.makedirs(os.path.dirname(args.csvfile),exist_ok=True)
         with open(args.csvfile, mode='w') as f:
             f.writelines(content)
 
