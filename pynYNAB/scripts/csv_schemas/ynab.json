@@ -29,7 +29,7 @@
         {
             "name": "outflow",
             "title": "Outflow",
-            "type": "string",
+            "type": "number",
             "constraints": {
               "minimum":0
             }
