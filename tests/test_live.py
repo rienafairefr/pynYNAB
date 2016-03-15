@@ -6,7 +6,7 @@ from pynYNAB import KeyGenerator
 from pynYNAB.Entity import AccountTypes
 from pynYNAB.budget import Transaction, Account, Subtransaction
 
-from tests.common_Live import commonLive
+from common_Live import commonLive
 
 
 class liveTests(commonLive):

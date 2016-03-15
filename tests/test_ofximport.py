@@ -8,7 +8,7 @@ from pynYNAB.Client import clientfromargs
 from pynYNAB.Entity import ComplexEncoder
 from pynYNAB.budget import Transaction
 from pynYNAB.scripts.ofximport import do_ofximport
-from tests.common_Live import commonLive
+from common_Live import commonLive
 
 
 class TestOFX(commonLive):
