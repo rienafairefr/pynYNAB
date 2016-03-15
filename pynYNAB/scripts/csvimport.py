@@ -4,6 +4,7 @@ from collections import namedtuple
 from datetime import datetime
 import configargparse
 import os
+import csv
 
 from jsontableschema.model import SchemaModel
 
@@ -107,13 +108,10 @@ def do_csvimport(args):
     imported_date=datetime.now().date()
 
     get_logger(args).debug('OK starting the import from %s '%os.path.abspath(args.csvfile))
-    with codecs.open(args.csvfile, 'r', encoding='utf-8') as inputfile:
-        inputfile.readline()
-        for row in inputfile.readlines():
+    with open(args.csvfile, 'r') as inputfile:
+        for row in csv.reader(inputfile):
+            row = [unicode(cell, 'utf-8') for cell in row]
             get_logger(args).debug('read line %s' % row)
-            if row.strip() == '':
-                continue
-            row = row.strip().split(',')
             result = csvrow(*list(schema.convert_row(*row, fail_fast=True)))
             if 'account' in schema.headers:
                 entities_account_id = getaccount(result.account).id
