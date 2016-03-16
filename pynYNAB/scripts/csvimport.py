@@ -1,10 +1,13 @@
 import codecs
 import inspect
+import json
 from collections import namedtuple
 from datetime import datetime
 import configargparse
 import os
 
+import jsontableschema
+from jsontableschema.exceptions import InvalidSchemaError
 from jsontableschema.model import SchemaModel
 
 from pynYNAB.Client import clientfromargs
@@ -38,22 +41,34 @@ def csvimport_main():
     do_csvimport(args)
 
 
-def do_csvimport(args):
-    client = clientfromargs(args)
+def do_csvimport(args,client=None):
+    if client is None:
+        client = clientfromargs(args)
+    logger=get_logger(args)
 
-    get_logger(args).debug('selected schema %s' % (args.schema,))
+    logger.debug('selected schema %s' % (args.schema,))
     if os.path.exists(args.schema):
         schemafile = args.schema
     else:
         schemafile = os.path.join(schemas_dir, args.schema + '.json')
         if not os.path.exists(schemafile):
-            get_logger(args).error('This schema doesn''t exist in csv_schemas')
+            logger.error('This schema doesn''t exist in csv_schemas')
             exit(-1)
-    schema = SchemaModel(schemafile, case_insensitive_headers=True)
-    get_logger(args).debug('schema headers %s' % schema.headers)
+    try:
+        schema = SchemaModel(schemafile, case_insensitive_headers=True)
+        with open(schemafile,'r') as sf:
+            schemacontent = json.load(sf)
+            try:
+                nheaders = schemacontent['nheaders']
+            except KeyError:
+                nheaders = 1
+    except InvalidSchemaError:
+        logger.error('Invalid CSV schema')
+        raise
+    logger.debug('schema headers %s' % schema.headers)
 
     if 'account' not in schema.headers and args.accountname is None:
-        get_logger(args).error('This schema does not have an account column and no account name was provided')
+        logger.error('This schema does not have an account column and no account name was provided')
         exit(-1)
 
     accounts = {x.account_name: x for x in client.budget.be_accounts}
@@ -66,25 +81,25 @@ def do_csvimport(args):
 
     def getaccount(accountname):
         try:
-            get_logger(args).debug('searching for account %s' % accountname)
+            logger.debug('searching for account %s' % accountname)
             return accounts[accountname]
         except KeyError:
-            get_logger(args).error('Couldn''t find this account: %s' % accountname)
+            logger.error('Couldn''t find this account: %s' % accountname)
             exit(-1)
 
     def getpayee(payeename):
         try:
-            get_logger(args).debug('searching for payee %s' % payeename)
+            logger.debug('searching for payee %s' % payeename)
             return payees[payeename]
         except KeyError:
-            get_logger(args).debug('Couldn''t find this payee: %s' % payeename)
+            logger.debug('Couldn''t find this payee: %s' % payeename)
             payee=Payee(name=payeename)
             client.budget.be_payees.append(payee)
             return payee
 
     def getsubcategory(categoryname):
         try:
-            get_logger(args).debug('searching for subcategory %s' % categoryname)
+            logger.debug('searching for subcategory %s' % categoryname)
             return subcategories[categoryname]
         except KeyError:
             get_logger(args).debug('Couldn''t find this category: %s' % categoryname)
@@ -98,7 +113,7 @@ def do_csvimport(args):
     elif 'amount' in schema.headers:
         def amountfun(result): return result.amount
     else:
-        get_logger(args).error('This schema doesn''t provide an amount column or (inflow,outflow) columns')
+        logger.error('This schema doesn''t provide an amount column or (inflow,outflow) columns')
         exit(-1)
 
     csvrow = namedtuple('CSVrow', field_names=schema.headers)

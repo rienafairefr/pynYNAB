@@ -21,8 +21,9 @@ def ofximport_main():
     test_common_args(args)
     do_ofximport(args)
 
-def do_ofximport(args):
-    client = clientfromargs(args)
+def do_ofximport(args, client = None):
+    if client is None:
+        client = clientfromargs(args)
 
     tree = OFXTree()
     tree.parse(args.ofxfile)
