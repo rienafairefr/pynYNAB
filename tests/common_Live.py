@@ -19,7 +19,6 @@ class commonLive(unittest.TestCase):
         self.client = None
 
     def reload(self):
-        import pynYNAB.config
         parser = configargparse.getArgumentParser('pynYNAB')
         args = parser.parse_known_args()[0]
         self.client = clientfromargs(args)
@@ -34,8 +33,6 @@ class commonLive(unittest.TestCase):
         )
 
         self.client.add_account(account, balance=random.randint(-10, 10), balance_date=datetime.now())
-        self.reload()
-        self.assertIn(account, self.client.budget.be_accounts)
 
     def util_add_transaction(self):
         transaction = Transaction(
@@ -45,8 +42,6 @@ class commonLive(unittest.TestCase):
             entities_account_id=self.account.id,
         )
         self.client.add_transaction(transaction)
-        self.reload()
-        self.assertIn(transaction, self.client.budget.be_transactions)
 
     def util_get_empty_account_by_name_if_doesnt_exist(self, name):
         accounts = {a.account_name: a for a in self.client.budget.be_accounts if
@@ -54,10 +49,6 @@ class commonLive(unittest.TestCase):
         if name in accounts:
             account = accounts[name]
             self.client.delete_account(account)
-
-            self.reload()
-
-            self.assertTrue(account not in self.client.budget.be_accounts)
 
         account = Account(
             account_type=AccountTypes.Checking,
@@ -80,6 +71,4 @@ class commonLive(unittest.TestCase):
 
         self.client.budget.be_payees.append(payee)
         self.client.sync()
-        self.reload()
-        self.assertIn(payee, self.client.budget.be_payees)
         return payee
