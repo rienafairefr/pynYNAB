@@ -1,9 +1,8 @@
 .idea/
 *.pyc
-
 build/
 dist/
 pynYNAB.egg-info/
 .tox/
-tests/data/test.csv
-data/
+tests/data/
+
