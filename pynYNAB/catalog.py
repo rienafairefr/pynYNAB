@@ -31,7 +31,8 @@ class User(Entity):
             username=EntityField(None),
             trial_expires_on=EntityField(None),
             is_tombstone=EntityField(False),
-            email=EntityField(None)
+            email=EntityField(None),
+            feature_flags=EntityField(None)
         )
 
 
