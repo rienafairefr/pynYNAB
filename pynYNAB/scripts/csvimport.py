@@ -140,7 +140,7 @@ def do_csvimport(args,client=None):
                 get_logger(args).error('Couldn''t find this account: %s' % args.accountname)
                 exit(-1)
 
-            if 'category' in schema.headers:
+            if result.category and 'category' in schema.headers:
                 entities_subcategory_id = getsubcategory(result.category).id
             else:
                 entities_subcategory_id = None
