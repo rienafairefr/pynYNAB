@@ -111,9 +111,9 @@ def do_csvimport(args,client=None):
         entities_account_id = getaccount(args.accountname).id
 
     if 'inflow' in schema.headers and 'outflow' in schema.headers:
-        def amountfun(result): return result.inflow - result.outflow
+        pass
     elif 'amount' in schema.headers:
-        def amountfun(result): return result.amount
+        pass
     else:
         logger.error('This schema doesn''t provide an amount column or (inflow,outflow) columns')
         exit(-1)
@@ -135,7 +135,7 @@ def do_csvimport(args,client=None):
             if 'inflow' in schema.headers and 'outflow' in schema.headers:
                 amount = result.inflow - result.outflow
             elif 'amount' in schema.headers:
-                amout = result.amount
+                amount = result.amount
             else:
                 get_logger(args).error('Couldn''t find this account: %s' % args.accountname)
                 exit(-1)
@@ -157,7 +157,7 @@ def do_csvimport(args,client=None):
 
             transaction=Transaction(
                 entities_account_id=entities_account_id,
-                amount=amountfun(result),
+                amount=amount,
                 date=result.date,
                 entities_payee_id=entities_payee_id,
                 entities_subcategory_id=entities_subcategory_id,
