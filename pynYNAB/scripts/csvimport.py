@@ -125,6 +125,7 @@ def do_csvimport(args,client=None):
 
     get_logger(args).debug('OK starting the import from %s '%os.path.abspath(args.csvfile))
     with open(args.csvfile, 'r') as inputfile:
+        header = inputfile.readline()
         for row in csv.reader(inputfile):
             if sys.version[0] == '2':
                 row = [cell.decode('utf-8') for cell in row]
