@@ -295,6 +295,8 @@ class Account(Entity):
         last_imported_error_code=EntityField(undef),
         last_reconciled_balance=EntityField(None),
         last_reconciled_date=DateField(None),
+        direct_connect_last_error_code=EntityField(None),
+        direct_connect_last_imported_at=DateField(None),
         note=EntityField(None),
         sortable_index=EntityField(0),
         on_budget=PropertyField(on_budget_default)
