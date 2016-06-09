@@ -45,6 +45,7 @@ class BudgetVersion(Entity):
             budget_id=EntityField(None),
             is_tombstone=EntityField(False),
             version_name=EntityField(None),
+            source=EntityField(None),
         )
 
 
