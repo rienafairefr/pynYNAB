@@ -24,6 +24,7 @@ class Transaction(Entity):
         matched_transaction_id=EntityField(None),
         memo=EntityField(None),
         source=EntityField(None),
+        subcategory_credit_amount_preceding=EntityField(None),
         transfer_account_id=EntityField(None),
         transfer_subtransaction_id=EntityField(None),
         transfer_transaction_id=EntityField(None),
@@ -103,6 +104,7 @@ class Subtransaction(Entity):
         is_tombstone=EntityField(False),
         memo=EntityField(None),
         sortable_index=EntityField(0),
+        subcategory_credit_amount_preceding=EntityField(None),
         transfer_account_id=EntityField(None),
         transfer_transaction_id=EntityField(None)
     )
@@ -186,6 +188,7 @@ class MonthlyAccountCalculation(Entity):
 
 class MonthlySubcategoryBudgetCalculation(Entity):
     Fields = dict(
+        additional_to_be_budgeted=EntityField(None),
         all_spending=AmountField(),
         all_spending_since_last_payment=AmountField(),
         balance=AmountField(),
@@ -201,6 +204,7 @@ class MonthlySubcategoryBudgetCalculation(Entity):
         goal_expected_completion=EntityField(None),
         goal_overall_funded=AmountField(),
         goal_overall_left=AmountField(),
+        goal_percentage_complete=EntityField(None),
         goal_target=EntityField(None),
         goal_under_funded=EntityField(None),
         is_tombstone=EntityField(False),
@@ -212,6 +216,7 @@ class MonthlySubcategoryBudgetCalculation(Entity):
         unbudgeted_cash_outflows=AmountField(),
         unbudgeted_credit_outflows=AmountField(),
         upcoming_transactions=AmountField(),
+        upcoming_transactions_count=EntityField(None),
         positive_cash_outflows=AmountField()
     )
 
