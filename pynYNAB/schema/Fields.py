@@ -11,10 +11,13 @@ class EntityField(object):
         return x
 
     def __init__(self, default):
-        self.default = default
+        self.default=default
 
     def __call__(self, *args, **kwargs):
-        return self.default
+        if callable(self.default):
+            return self.default()
+        else:
+            return self.default
 
 
 class EntityListField(object):
@@ -44,7 +47,11 @@ class AmountField(EntityField):
 
 
 class PropertyField(EntityField):
-    pass
+    def __init__(self, lambdafun):
+        self.lambdafun = lambdafun
+
+    def __call__(self, *args, **kwargs):
+        return self.lambdafun
 
 class DateField(EntityField):
     def pretreat(self, x):

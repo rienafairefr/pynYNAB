@@ -5,7 +5,7 @@ import configargparse
 
 from pynYNAB.Client import clientfromargs
 from pynYNAB.budget import Transaction, Payee
-from pynYNAB.config import test_common_args
+from pynYNAB.scripts.config import test_common_args
 
 
 def ofximport_main():

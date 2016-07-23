@@ -7,7 +7,7 @@ import errno
 from pynYNAB.Entity import ComplexEncoder
 from pynYNAB.budget import Transaction
 from pynYNAB.scripts.csvimport import do_csvimport
-from common_Live import commonLive
+from tests.common_Live import commonLive, needs_account
 import json
 
 
@@ -26,6 +26,7 @@ class TestCsv(commonLive):
             imported_date=imported_date
         )
 
+    @needs_account('Credit')
     def test_duplicate(self):
         parser = configargparse.getArgumentParser('pynYNAB')
         args = parser.parse_known_args()[0]
@@ -56,7 +57,7 @@ class TestCsv(commonLive):
             print('Transactions with same hash: %s'%len(identical))
             self.assertTrue(len(identical) == 1)
 
-
+    @needs_account('Cash')
     def test_duplicateForced(self):
         parser = configargparse.getArgumentParser('pynYNAB')
         args = parser.parse_known_args()[0]
@@ -80,6 +81,7 @@ class TestCsv(commonLive):
         self.reload()
         self.assertTrue(len([tr2 for tr2 in self.client.budget.be_transactions if transaction.hash() == tr2.hash()]) == 2)
 
+    @needs_account({'Cash','Checking Account','Savings'})
     def test_import(self):
         parser = configargparse.getArgumentParser('pynYNAB')
         args = parser.parse_known_args()[0]

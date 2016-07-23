@@ -4,5 +4,5 @@ build/
 dist/
 pynYNAB.egg-info/
 .tox/
-tests/data/
+tests/
 
