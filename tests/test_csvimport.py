@@ -7,7 +7,8 @@ from datetime import datetime
 from pynYNAB.Entity import ComplexEncoder
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.csvimport import do_csvimport
-from tests.common_Live import commonLive, needs_account
+from tests.common_Live import commonLive
+from tests.test_live import needs_account
 
 
 class TestCsv(commonLive):

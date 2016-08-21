@@ -39,7 +39,7 @@ pynYNAB.KeyGenerator module
 pynYNAB.budget module
 ---------------------
 
-.. automodule:: pynYNAB.budget
+.. automodule:: pynYNAB.schema
     :members:
     :undoc-members:
     :show-inheritance:

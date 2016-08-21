@@ -9,6 +9,8 @@ from pynYNAB.Entity import AccountTypes
 from pynYNAB.schema.budget import Account, Payee
 from pynYNAB.schema.budget import Transaction
 
+from pynYNAB.scripts.config import parser
+
 
 class commonLive(unittest.TestCase):
     def __init__(self, *args, **kwargs):
@@ -19,7 +21,7 @@ class commonLive(unittest.TestCase):
         self.client = None
 
     def reload(self):
-        #parser = configargparse.getArgumentParser('pynYNAB')
+        # parser = configargparse.getArgumentParser('pynYNAB')
         args = parser.parse_known_args()[0]
         self.client = clientfromargs(args)
 
@@ -35,6 +37,31 @@ class commonLive(unittest.TestCase):
         )
 
         self.client.add_account(account, balance=random.randint(-10, 10), balance_date=datetime.now())
+
+    def needs_account(self,fn):
+        @wraps(fn)
+        def wrapped(self, *args, **kwargs):
+            for account in self.client.budget.be_accounts:
+                self.account = account
+                fn(self, *args, **kwargs)
+                return
+            self.util_add_account()
+            raise ValueError('No available account !')
+
+        return wrapped
+
+    def needs_transaction(self,fn):
+        @wraps(fn)
+        def wrapped(self, *args, **kwargs):
+            for transaction in self.client.budget.be_transactions:
+                if transaction.entities_account_id == self.account.id:
+                    self.transaction = transaction
+                    fn(self, *args, **kwargs)
+                    return
+            self.util_add_transaction()
+            raise ValueError('No available transaction !')
+
+        return wrapped
 
     def util_add_transaction(self):
         transaction = Transaction(
@@ -74,3 +101,27 @@ class commonLive(unittest.TestCase):
         self.client.budget.be_payees.append(payee)
         self.client.sync()
         return payee
+
+    def needs_account(fn):
+        @wraps(fn)
+        def wrapped(self, *args, **kwargs):
+            for account in self.client.budget.be_accounts:
+                self.account = account
+                fn(self, *args, **kwargs)
+                return
+            self.util_add_account()
+            raise ValueError('No available account !')
+        return wrapped
+
+    def needs_transaction(fn):
+        @wraps(fn)
+        def wrapped(self, *args, **kwargs):
+            for transaction in self.client.budget.be_transactions:
+                if transaction.entities_account_id == self.account.id:
+                    self.transaction = transaction
+                    fn(self, *args, **kwargs)
+                    return
+            self.util_add_transaction()
+            raise ValueError('No available transaction !')
+
+        return wrapped

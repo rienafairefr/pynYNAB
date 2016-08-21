@@ -21,30 +21,6 @@ class liveTests(commonLive):
         self.assertTrue(len(matches) == 0)
         self.reload()
 
-    def needs_account(fn):
-        @wraps(fn)
-        def wrapped(self, *args, **kwargs):
-            for account in self.client.budget.be_accounts:
-                self.account = account
-                fn(self, *args, **kwargs)
-                return
-            self.util_add_account()
-            raise ValueError('No available account !')
-        return wrapped
-
-    def needs_transaction(fn):
-        @wraps(fn)
-        def wrapped(self, *args, **kwargs):
-            for transaction in self.client.budget.be_transactions:
-                if transaction.entities_account_id == self.account.id:
-                    self.transaction = transaction
-                    fn(self, *args, **kwargs)
-                    return
-            self.util_add_transaction()
-            raise ValueError('No available transaction !')
-
-        return wrapped
-
     def test_add_delete_account(self):
         account_type=AccountTypes.Checking
         account_name = KeyGenerator.generateuuid()

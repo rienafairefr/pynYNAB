@@ -13,7 +13,7 @@ from jsontableschema.exceptions import InvalidSchemaError
 from jsontableschema.model import SchemaModel
 
 from pynYNAB.Client import clientfromargs
-from pynYNAB.budget import Payee, Transaction
+from pynYNAB.schema.budget import Payee, Transaction
 from pynYNAB.scripts.config import get_logger, test_common_args
 
 scriptsdir=os.path.dirname(os.path.abspath(__file__))

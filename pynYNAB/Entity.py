@@ -108,6 +108,7 @@ class Entity(object):
         self.AllFields = {}
 
         for namefield in dir(self):
+            if namefield.startswith('__'): continue
             field = getattr(self, namefield)
             if isinstance(field, PropertyField):
                 fieldc = copy.deepcopy(field)
