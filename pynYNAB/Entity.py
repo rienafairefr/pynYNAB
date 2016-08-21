@@ -1,13 +1,13 @@
 import copy
 import json
+import logging
 
 from enum import Enum
 
 from pynYNAB import KeyGenerator
 from pynYNAB.schema.Fields import EntityField, EntityListField, PropertyField
-from pynYNAB.config import get_logger
-from pynYNAB.utils import equal_dicts
 
+logger = logging.getLogger('pynYNAB')
 
 def undef():
     pass
@@ -27,6 +27,7 @@ class AccountTypes(Enum):
     OtherAsset = 'OtherAsset'
     OtherLiability = 'OtherLiability'
 
+
 on_budget_dict = dict(
     undef=None,
     Checking=True,
@@ -41,17 +42,17 @@ on_budget_dict = dict(
     OtherAsset=False,
     OtherLiability=False,
 )
-on_budget_dict[None]=None
+on_budget_dict[None] = None
 
 
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Entity):
-            pretreated={}
+            pretreated = {}
             for namefield, field in obj.AllFields.items():
-                value=getattr(obj, namefield)
+                value = getattr(obj, namefield)
                 if value != undef:
-                    pretreated[namefield]=field.pretreat(value)
+                    pretreated[namefield] = field.pretreat(value)
             return pretreated
         elif isinstance(obj, ListofEntities):
             return list(obj)
@@ -61,6 +62,10 @@ class ComplexEncoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, obj)
 
 
+class UnknowEntityFieldValueError(Exception):
+    pass
+
+
 def obj_from_dict(obj_type, dictionary):
     treated = {}
     obt = obj_type()
@@ -68,8 +73,9 @@ def obj_from_dict(obj_type, dictionary):
         try:
             field = obt.AllFields[key]
         except KeyError:
-            get_logger().error('Encountered field %s in a dictionary to create an entity of type %s ' % (key, obj_type))
-            raise ValueError()
+            msg = 'Encountered field %s in a dictionary to create an entity of type %s, value %s ' % (key, obj_type,dictionary[key])
+            logger.error(msg)
+            raise UnknowEntityFieldValueError(msg)
         if isinstance(field, EntityField):
             treated[key] = field.posttreat(value)
 
@@ -78,54 +84,68 @@ def obj_from_dict(obj_type, dictionary):
 
 ignored_fields_for_hash = ['id', 'credit_amount', 'cash_amount']
 
+
 # adapted from http://stackoverflow.com/a/2954373/1685379
-def addprop(inst, name, method, setter=None, cleaner=None ):
+def addprop(inst, name, method, setter=None, cleaner=None):
     cls = type(inst)
-    if not hasattr(cls,'__perinstance'):
+    if not hasattr(cls, '__perinstance'):
         cls = type(cls.__name__, (cls,), {})
         cls.__perinstance = True
         inst.__class__ = cls
-    p=property(method)
+    p = property(method)
     setattr(cls, name, p)
     if setter is not None:
-        setattr(cls, name,p.setter(setter))
+        setattr(cls, name, p.setter(setter))
     if cleaner is not None:
-        setattr(cls, 'clean_'+name,cleaner)
+        setattr(cls, 'clean_' + name, cleaner)
     return p
+
 
 class Entity(object):
     def __init__(self, *args, **kwargs):
-        for namefield,field in self.AllFields.items():
-            if isinstance(field,PropertyField):
-                fieldc=copy.deepcopy(field)
+        self.ListFields = {}
+        self.Fields = {}
+        self.AllFields = {}
+
+        for namefield in dir(self):
+            field = getattr(self, namefield)
+            if isinstance(field, PropertyField):
+                fieldc = copy.deepcopy(field)
 
                 def getter(selfi):
-                    if hasattr(selfi,'__prop_'+namefield):
-                        return getattr(selfi,'__prop_'+namefield)
+                    if hasattr(selfi, '__prop_' + namefield):
+                        return getattr(selfi, '__prop_' + namefield)
                     else:
                         return fieldc()(selfi)
 
                 def setter(selfi, valuei):
-                    setattr(selfi,'__prop_'+namefield,valuei)
+                    setattr(selfi, '__prop_' + namefield, valuei)
 
                 def cleaner(selfi):
-                    delattr(selfi,'__prop_'+namefield)
+                    delattr(selfi, '__prop_' + namefield)
 
-                p=addprop(self,namefield,getter,setter,cleaner)
+                p = addprop(self, namefield, getter, setter, cleaner)
                 if kwargs.get(namefield):
-                    getattr(self.__class__,namefield).__set__(self,kwargs.get(namefield))
+                    setattr(self.__class__, namefield, kwargs.get(namefield))
+            elif isinstance(field, EntityField):
+                self.Fields[namefield] = field
+            elif isinstance(field, EntityListField):
+                self.ListFields[namefield] = field
             else:
-                value = kwargs.get(namefield) if kwargs.get(namefield) is not None else field()
-                setattr(self, namefield, value)
-        if self.id is None:
-            self.id = self.create_id(*args, **kwargs)
+                continue
+            self.AllFields[namefield] = field
+            if isinstance(field, PropertyField): continue
+            value = kwargs.get(namefield) if kwargs.get(namefield) is not None else field()
+            setattr(self, namefield, value)
         super(Entity, self).__init__()
+
+    id = EntityField(KeyGenerator.generateuuid)
 
     def __hash__(self):
         return self.hash()
 
     def hash(self):
-        t=tuple((k,v) for k, v in self.getdict().items() if k not in ignored_fields_for_hash)
+        t = tuple((k, v) for k, v in self.getdict().items() if k not in ignored_fields_for_hash)
         try:
             return hash(frozenset(t))
         except TypeError:
@@ -133,20 +153,6 @@ class Entity(object):
 
     def __str__(self):
         return str(self.getdict())
-
-    @property
-    def AllFields(self):
-        return dict(list(self.Fields.items()) + list(self.CommonFields.items()))
-
-    CommonFields = dict(
-        id=EntityField(None)
-    )
-    Fields = {}
-
-    @property
-    def ListFields(self):
-        return {namefield: value for namefield, value in self.AllFields.items() if
-                isinstance(value, EntityListField)}
 
     def __unicode__(self):
         return self.__str__()
@@ -174,11 +180,8 @@ class Entity(object):
         else:
             return False
 
-    def create_id(self, *args, **kwargs):
-        return KeyGenerator.generateuuid()
 
-
-class ListofEntities(object):
+class ListofEntities(list):
     def __init__(self, typ):
         super(ListofEntities, self).__init__()
         from collections import OrderedDict
@@ -247,7 +250,7 @@ class ListofEntities(object):
         if not isinstance(o, self.typeItems):
             raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
         if o.id in self._dict_entities:
-            h=self._dict_entities[o.id].hash()
+            h = self._dict_entities[o.id].hash()
             if h in self._dict_entities_hash:
                 del self._dict_entities_hash[h]
             self._dict_entities[o.id] = o

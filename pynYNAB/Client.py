@@ -1,11 +1,13 @@
+import logging
 from functools import wraps
 
-from pynYNAB.budget import Payee, Transaction
-from pynYNAB.catalog import BudgetVersion
-from pynYNAB.config import get_logger
 from pynYNAB.connection import NYnabConnectionError, nYnabConnection
-from pynYNAB.utils import chunk
 from pynYNAB.roots import Budget, Catalog
+from pynYNAB.schema.budget import Payee, Transaction
+from pynYNAB.schema.catalog import BudgetVersion
+from pynYNAB.utils import chunk
+
+logger = logging.getLogger('pynYNAB')
 
 
 def clientfromargs(args, reset=False):
@@ -19,7 +21,7 @@ def clientfromargs(args, reset=False):
             client.select_budget(args.budgetname)
         return client
     except BudgetNotFound:
-        print('No budget by this name found in nYNAB')
+        print('No budget by the name %s found in nYNAB'%args.budgetname)
         exit(-1)
 
 
@@ -30,7 +32,7 @@ class BudgetNotFound(Exception):
 class nYnabClient(object):
     def __init__(self, nynabconnection, budget_name):
         if budget_name is None:
-            get_logger().error('No budget name was provided')
+            logger.error('No budget name was provided')
             exit(-1)
         self.budget_name = budget_name
         self.connection = nynabconnection

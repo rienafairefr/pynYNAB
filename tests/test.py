@@ -2,13 +2,13 @@ import json
 import unittest
 
 from pynYNAB.Entity import Entity, ComplexEncoder, ListofEntities, undef, AccountTypes, addprop
-from pynYNAB.budget import Account, AccountCalculation, AccountMapping, MasterCategory, Transaction, Subcategory, \
+from pynYNAB.roots import Budget, Catalog
+from pynYNAB.schema.Fields import EntityField, EntityListField, DateField, PropertyField
+from pynYNAB.schema.budget import Account, AccountCalculation, AccountMapping, MasterCategory, Transaction, Subcategory, \
     MonthlyAccountCalculation, MonthlyBudget, MonthlySubcategoryBudget, MonthlyBudgetCalculation, \
     MonthlySubcategoryBudgetCalculation, PayeeLocation, Payee, PayeeRenameCondition, ScheduledSubtransaction, \
     ScheduledTransaction, Setting, Subtransaction, TransactionGroup
-from pynYNAB.catalog import BudgetVersion, CatalogBudget, User, UserBudget, UserSetting
-from pynYNAB.roots import Budget, Catalog
-from pynYNAB.schema.Fields import EntityField, EntityListField, DateField, PropertyField
+from pynYNAB.schema.catalog import BudgetVersion, CatalogBudget, User, UserBudget, UserSetting
 
 
 class Test1(unittest.TestCase):
@@ -16,7 +16,7 @@ class Test1(unittest.TestCase):
 
     def testEntityjson(self):
         class MyEntity(Entity):
-            Fields = {'greatfield': EntityField(2)}
+            greatfield = EntityField(2)
 
         obj = MyEntity()
         jsonroundtrip = json.loads(json.dumps(obj, cls=ComplexEncoder))
@@ -80,10 +80,8 @@ class Test1(unittest.TestCase):
 
     def test_lambdaprop(self):
         class MockEntity(Entity):
-            Fields=dict(
-                input=EntityField(True),
-                override=PropertyField(lambda x: x.input)
-            )
+            input = EntityField(True),
+            override = PropertyField(lambda x: x.input)
         # override behaves like a @property attribute:
 
         entity1=MockEntity()
@@ -221,10 +219,6 @@ class Test1(unittest.TestCase):
         obj2 = Budget()
         obj2.be_accounts.__str__()
         obj2.be_accounts.__unicode__()
-
-    def testpropertyFields(self):
-        obj = Entity()
-        self.assertEqual(obj.Fields, {})
 
     def jsondefault(self):
         encoded = json.dumps('test', cls=ComplexEncoder)

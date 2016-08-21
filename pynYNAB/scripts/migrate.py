@@ -1,16 +1,16 @@
-import inspect
 import configargparse
+import inspect
 import os
 import random
 import re
 import sys
-
+from pynYNAB.config import test_common_args
 from ynab import YNAB
+
 from pynYNAB.Client import nYnabClient, BudgetNotFound, clientfromargs
 from pynYNAB.Entity import AccountTypes
-from pynYNAB.budget import MasterCategory, Subcategory, Account, Payee, Transaction
-from pynYNAB.config import test_common_args
 from pynYNAB.connection import nYnabConnection
+from pynYNAB.schema.budget import MasterCategory, Subcategory, Account, Payee, Transaction
 
 
 def migrate_main():

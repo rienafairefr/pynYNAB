@@ -4,10 +4,10 @@ import unittest
 from datetime import datetime
 
 from pynYNAB import KeyGenerator
-from pynYNAB.Entity import AccountTypes
-from pynYNAB.budget import Account, Payee
 from pynYNAB.Client import clientfromargs
-from pynYNAB.budget import Transaction
+from pynYNAB.Entity import AccountTypes
+from pynYNAB.schema.budget import Account, Payee
+from pynYNAB.schema.budget import Transaction
 
 
 class commonLive(unittest.TestCase):
@@ -19,17 +19,19 @@ class commonLive(unittest.TestCase):
         self.client = None
 
     def reload(self):
-        parser = configargparse.getArgumentParser('pynYNAB')
+        #parser = configargparse.getArgumentParser('pynYNAB')
         args = parser.parse_known_args()[0]
         self.client = clientfromargs(args)
 
     def setUp(self):
         self.reload()
 
-    def util_add_account(self):
+    def util_add_account(self,account_name=None):
+        if account_name is None:
+            account_name = KeyGenerator.generateuuid()
         account = Account(
             account_type=random.choice(list(AccountTypes)),
-            account_name=KeyGenerator.generateuuid()
+            account_name= account_name
         )
 
         self.client.add_account(account, balance=random.randint(-10, 10), balance_date=datetime.now())

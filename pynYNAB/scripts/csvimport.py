@@ -14,7 +14,7 @@ from jsontableschema.model import SchemaModel
 
 from pynYNAB.Client import clientfromargs
 from pynYNAB.budget import Payee, Transaction
-from pynYNAB.config import get_logger, test_common_args
+from pynYNAB.scripts.config import get_logger, test_common_args
 
 scriptsdir=os.path.dirname(os.path.abspath(__file__))
 schemas_dir = os.path.join(scriptsdir,'csv_schemas')
@@ -129,6 +129,8 @@ def do_csvimport(args,client=None):
         for row in csv.reader(inputfile):
             if sys.version[0] == '2':
                 row = [cell.decode('utf-8') for cell in row]
+            if all(map(lambda x:x.strip()=='',row)):
+                continue
             get_logger(args).debug('read line %s' % row)
             result = csvrow(*list(schema.convert_row(*row, fail_fast=True)))
             if 'account' in schema.headers:

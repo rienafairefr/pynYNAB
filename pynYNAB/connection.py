@@ -9,7 +9,7 @@ from requests.cookies import RequestsCookieJar
 
 from pynYNAB.Entity import ComplexEncoder
 from pynYNAB.utils import RateLimited
-from pynYNAB.config import get_logger
+
 
 class NYnabConnectionError(Exception):
     pass
@@ -38,7 +38,7 @@ class nYnabConnection(object):
         self.sessionToken = None
         self.id = str(uuid.uuid3(uuid.NAMESPACE_DNS, 'rienafairefr.pynYNAB'))
         self.lastrequest_elapsed=None
-        self.logger = get_logger()
+        self.logger = logging.getLogger('pynYnab')
         self._init_session()
 
     @RateLimited(maxpersecond=5)
@@ -77,7 +77,7 @@ class nYnabConnection(object):
                  sleep(float(retyrafter))
                  return self.dorequest(request_dic,opname)
             else:
-                raise NYnabConnectionError('Unknown Error was returned from the API')
+                raise NYnabConnectionError('Unknown Error \"%s\" was returned from the API'%error['id'])
 
 
 

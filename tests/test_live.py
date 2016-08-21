@@ -2,11 +2,10 @@ import random
 from datetime import datetime, timedelta
 from functools import wraps
 
+from common_Live import commonLive
 from pynYNAB import KeyGenerator
 from pynYNAB.Entity import AccountTypes
-from pynYNAB.budget import Transaction, Account, Subtransaction
-
-from common_Live import commonLive
+from pynYNAB.schema.budget import Transaction, Account, Subtransaction
 
 
 class liveTests(commonLive):
