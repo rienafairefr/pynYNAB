@@ -81,7 +81,9 @@ class TestCsv(commonLive):
         self.reload()
         self.assertTrue(len([tr2 for tr2 in self.client.budget.be_transactions if transaction.hash() == tr2.hash()]) == 2)
 
-    @needs_account({'Cash','Checking Account','Savings'})
+    @needs_account('Cash')
+    @needs_account('Checking Account')
+    @needs_account('Savings')
     def test_import(self):
         parser = configargparse.getArgumentParser('pynYNAB')
         args = parser.parse_known_args()[0]

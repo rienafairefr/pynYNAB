@@ -6,6 +6,7 @@ from common_Live import commonLive
 from pynYNAB import KeyGenerator
 from pynYNAB.Entity import AccountTypes
 from pynYNAB.schema.budget import Transaction, Account, Subtransaction
+from tests.common_Live import needs_account,needs_transaction
 
 
 class liveTests(commonLive):
@@ -54,7 +55,7 @@ class liveTests(commonLive):
 
         self.assertTrue(result is None)
 
-    @needs_account
+    @needs_account()
     def test_add_deletetransaction(self):
         from datetime import datetime
         transaction = Transaction(
@@ -74,7 +75,7 @@ class liveTests(commonLive):
         result = self.client.budget.be_transactions.get(transaction.id)
         self.assertTrue(result is None)
 
-    @needs_account
+    @needs_account()
     def test_add_deletetransactions(self):
         from datetime import datetime
 
@@ -113,7 +114,7 @@ class liveTests(commonLive):
             self.assertTrue(resulttransaction is None)
 
 
-    @needs_account
+    @needs_account()
     def test_add_splittransactions(self):
         subcatsplit_id = next(subcategory.id for subcategory in self.client.budget.be_subcategories if
                               subcategory.internal_name == 'Category/__Split__')
@@ -143,7 +144,7 @@ class liveTests(commonLive):
         self.assertIn(sub1, self.client.budget.be_subtransactions)
         self.assertIn(sub2, self.client.budget.be_subtransactions)
 
-    @needs_account
+    @needs_account()
     @needs_transaction
     def test_split(self):
         subcat1, subcat2 = tuple(random.sample(list(self.client.budget.be_subcategories), 2))
