@@ -23,7 +23,7 @@ class Transaction(Entity):
     matched_transaction_id=EntityField(None)
     memo=EntityField(None)
     source=EntityField(None)
-    subcategory_credit_amount_preceding=EntityField(None)
+    subcategory_credit_amount_preceding=EntityField(0)
     transfer_account_id=EntityField(None)
     transfer_subtransaction_id=EntityField(None)
     transfer_transaction_id=EntityField(None)
@@ -93,7 +93,7 @@ class Subtransaction(Entity):
     is_tombstone=EntityField(False)
     memo=EntityField(None)
     sortable_index=EntityField(0)
-    subcategory_credit_amount_preceding=EntityField(None)
+    subcategory_credit_amount_preceding=EntityField(0)
     transfer_account_id=EntityField(None)
     transfer_transaction_id=EntityField(None)
 
