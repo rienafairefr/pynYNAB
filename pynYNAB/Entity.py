@@ -153,7 +153,10 @@ class Entity(object):
             pass
 
     def __str__(self):
-        return str(self.getdict())
+        return self.getdict().__str__()
+
+    def __repr__(self):
+        return self.getdict().__repr__()
 
     def __unicode__(self):
         return self.__str__()
@@ -196,7 +199,10 @@ class ListofEntities(list):
         self._dict_entities_hash = {v.hash(): v for k, v in self._dict_entities.items()}
 
     def __str__(self):
-        return self._dict_entities.values().__str__()
+        return self._dict_entities.__str__()
+
+    def __repr__(self):
+        return self._dict_entities.__repr__()
 
     def __unicode__(self):
         return self.__str__()
