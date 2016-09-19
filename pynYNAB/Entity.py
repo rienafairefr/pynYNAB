@@ -82,7 +82,7 @@ def obj_from_dict(obj_type, dictionary):
     return obj_type(**treated)
 
 
-ignored_fields_for_hash = ['id', 'credit_amount', 'cash_amount']
+ignored_fields_for_hash = ['id', 'credit_amount', 'cash_amount', 'feature_flags']
 
 
 # adapted from http://stackoverflow.com/a/2954373/1685379
@@ -143,9 +143,9 @@ class Entity(object):
     id = EntityField(KeyGenerator.generateuuid)
 
     def __hash__(self):
-        return self.hash()
+        return self._hash()
 
-    def hash(self):
+    def _hash(self):
         t = tuple((k, v) for k, v in self.getdict().items() if k not in ignored_fields_for_hash)
         try:
             return hash(frozenset(t))
@@ -196,7 +196,10 @@ class ListofEntities(list):
         self.changed = []
 
     def _update_hashes(self):
-        self._dict_entities_hash = {v.hash(): v for k, v in self._dict_entities.items()}
+        self._dict_entities_hash = {hash(v): v for k, v in self._dict_entities.items()}
+
+    def __hash__(self):
+        return hash(frozenset(self._dict_entities))
 
     def __str__(self):
         return self._dict_entities.__str__()
@@ -230,7 +233,7 @@ class ListofEntities(list):
             raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
         for o in objects:
             self._dict_entities[o.id] = o
-            self._dict_entities_hash[o.hash()] = o
+            self._dict_entities_hash[hash(o)] = o
         if track:
             self.changed.extend(objects)
 
@@ -238,7 +241,7 @@ class ListofEntities(list):
         if not isinstance(o, self.typeItems):
             raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
         self._dict_entities[o.id] = o
-        self._dict_entities_hash[o.hash()] = o
+        self._dict_entities_hash[hash(o)] = o
         if track:
             self.changed.append(o)
 
@@ -247,8 +250,8 @@ class ListofEntities(list):
             raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
         if o.id in self._dict_entities:
             del self._dict_entities[o.id]
-        if o.hash() in self._dict_entities_hash:
-            del self._dict_entities_hash[o.hash()]
+        if hash(o) in self._dict_entities_hash:
+            del self._dict_entities_hash[hash(o)]
         if track:
             o.is_tombstone = True
             self.changed.append(o)
@@ -257,11 +260,11 @@ class ListofEntities(list):
         if not isinstance(o, self.typeItems):
             raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
         if o.id in self._dict_entities:
-            h = self._dict_entities[o.id].hash()
+            h = hash(self._dict_entities[o.id])
             if h in self._dict_entities_hash:
                 del self._dict_entities_hash[h]
             self._dict_entities[o.id] = o
-            self._dict_entities_hash[o.hash()] = o
+            self._dict_entities_hash[hash(o)] = o
             if track:
                 self.changed.append(o)
 
@@ -275,7 +278,7 @@ class ListofEntities(list):
         if not isinstance(item, self.typeItems):
             return False
         else:
-            return item.hash() in self._dict_entities_hash
+            return hash(item) in self._dict_entities_hash
 
     def __contains__(self, item):
         if not isinstance(item, self.typeItems):

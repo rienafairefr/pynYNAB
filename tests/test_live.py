@@ -2,10 +2,10 @@ import random
 from datetime import datetime, timedelta
 from functools import wraps
 
-from common_Live import commonLive
+from tests.common_Live import commonLive
 from pynYNAB import KeyGenerator
 from pynYNAB.Entity import AccountTypes
-from pynYNAB.schema.budget import Transaction, Account, Subtransaction
+from pynYNAB.schema.budget import Transaction, Account, Subtransaction, Payee
 from tests.common_Live import needs_account,needs_transaction
 
 
@@ -74,6 +74,42 @@ class liveTests(commonLive):
 
         result = self.client.budget.be_transactions.get(transaction.id)
         self.assertTrue(result is None)
+
+    @needs_account('account1')
+    @needs_account('account2')
+    def test_add_transfer(self):
+        account1 = next(account for account in self.client.budget.be_accounts if account.account_name == 'account1')
+        account2 = next(account for account in self.client.budget.be_accounts if account.account_name == 'account2')
+
+        try:
+            payee_2= next(payee for payee in self.client.budget.be_payees if payee.entities_account_id==account2.id)
+        except StopIteration:
+            payee_2=Payee(entities_account_id=account2.id)
+            self.client.budget.be_payees.append(payee_2)
+        try:
+            payee_1= next(payee for payee in self.client.budget.be_payees if payee.entities_account_id==account1.id)
+        except StopIteration:
+            payee_1=Payee(entities_account_id=account1.id)
+            self.client.budget.be_payees.append(payee_1)
+
+        transaction1=Transaction(
+            amount=random.randint(-10, 10),
+            date=datetime.now(),
+            entities_account_id=account1.id,
+            entities_payee_id=payee_2.id
+        )
+        transaction2 = Transaction(
+            amount=-transaction1.amount,
+            date=datetime.now(),
+            entities_account_id=account2.id,
+            entities_payee_id=payee_1.id
+        )
+        self.client.budget.be_transactions.append(transaction1)
+        self.client.budget.be_transactions.append(transaction2)
+        self.client.sync()
+        self.reload()
+        self.assertIn(transaction1 , self.client.budget.be_transactions)
+        self.assertIn(transaction2 , self.client.budget.be_transactions)
 
     @needs_account()
     def test_add_deletetransactions(self):

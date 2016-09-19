@@ -54,7 +54,7 @@ class nYnabConnection(object):
         # Available operations :
 
         params = { u'operation_name': opname,'request_data': json.dumps(request_dic, cls=ComplexEncoder),}
-        self.logger.debug('POST-ing ... %s ' % params)
+        self.logger.debug('%s  ... %s ' % (opname,params))
         r = self.session.post(self.urlCatalog, params, verify=False)
         self.lastrequest_elapsed=r.elapsed
         js = r.json()
