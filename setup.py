@@ -54,7 +54,6 @@ setup(
 
     install_requires=[
         'configargparse',
-        'enum34',
         'ofxtools',
         'pynab',
         'requests',
