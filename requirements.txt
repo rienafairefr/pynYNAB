@@ -1,0 +1,6 @@
+ofxtools
+configargparse
+appdirs
+requests
+jsontableschema
+aenum
