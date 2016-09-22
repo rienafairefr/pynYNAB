@@ -2,7 +2,7 @@ import copy
 import json
 import logging
 
-from enum import Enum
+from aenum import Enum
 
 from pynYNAB import KeyGenerator
 from pynYNAB.schema.Fields import EntityField, EntityListField, PropertyField
