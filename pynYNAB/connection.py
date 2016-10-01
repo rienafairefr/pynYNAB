@@ -28,6 +28,8 @@ class nYnabConnection(object):
 
         firstlogin = self.dorequest({"email": self.email, "password": self.password, "remember_me": True,
                                      "device_info": {"id": self.id}}, 'loginUser')
+        if firstlogin is None:
+            raise NYnabConnectionError('Couldnt connect with the provided email and password')
         self.sessionToken = firstlogin["session_token"]
         self.session.headers['X-Session-Token'] = self.sessionToken
 

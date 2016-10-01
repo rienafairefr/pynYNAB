@@ -6,6 +6,7 @@ from pynYNAB.schema.budget import MasterCategory, Setting, MonthlyBudgetCalculat
     Account, MonthlyBudget, TransactionGroup, DateField
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.schema.catalog import UserBudget, UserSetting, BudgetVersion, User, CatalogBudget
+from pynYNAB.scripts.config import get_logger
 
 
 def knowledge_change(changed_entities):
@@ -15,18 +16,23 @@ def knowledge_change(changed_entities):
 class Root(Entity):
     def __init__(self):
 
-        self.knowledge = 0
-        self.current_knowledge = 0
+        self.logger = get_logger()
+        self.current_device_knowledge = 0
         self.device_knowledge_of_server = 0
-        self.server_knowledge_of_device = 0
         super(Root, self).__init__()
 
     def sync(self, connection, opname):
-        change, request_data = self.get_request_data()
+        self.logger.debug('Starting sync')
+        self.logger.debug('current_device_knowledge %s'%self.current_device_knowledge)
+        self.logger.debug('device_knowledge_of_server %s' % self.device_knowledge_of_server)
+        request_data = self.get_request_data()
+        self.logger.debug('request_data starting_device_knowledge %s' % request_data['starting_device_knowledge'])
+        self.logger.debug('request_data ending_device_knowledge %s' % request_data['ending_device_knowledge'])
+        self.logger.debug('request_data device_knowledge_of_server %s' % request_data['device_knowledge_of_server'])
+        self.logger.debug(request_data)
         syncData = connection.dorequest(request_data, opname)
         for namefield in self.ListFields:
             getattr(self, namefield).changed = []
-        self.knowledge += change
         changed_entities = {}
         for name, value in syncData['changed_entities'].items():
             if isinstance(value, list):
@@ -39,20 +45,38 @@ class Root(Entity):
             else:
                 changed_entities[name] = self.AllFields[name].posttreat(value)
 
+
+        server_knowledge_of_device=syncData['server_knowledge_of_device']
+        self.logger.debug('from server server_knowledge_of_device %s'%server_knowledge_of_device)
+        current_server_knowledge=syncData['current_server_knowledge']
+        self.logger.debug('from server current_server_knowledge %s' % current_server_knowledge)
+
+        change = current_server_knowledge - self.device_knowledge_of_server
+        if change>0:
+            self.logger.debug('Server knowledge has gone up by ' + str(change) + '. We should be getting back some entities from the server')
+        if self.current_device_knowledge < server_knowledge_of_device:
+            if self.current_device_knowledge!=0:
+                self.logger.error('The server knows more about this device than we know about ourselves')
+            self.current_device_knowledge = server_knowledge_of_device
         self.update_from_changed_entities(changed_entities)
-        self.server_knowledge_of_device = syncData['server_knowledge_of_device']
-        # To handle cases where the local knwoledge got out of sync
-        if self.server_knowledge_of_device > self.knowledge:
-            self.knowledge = self.server_knowledge_of_device
-        self.device_knowledge_of_server = syncData['current_server_knowledge']
+
+        self.device_knowledge_of_server = current_server_knowledge
+
+        self.logger.debug('Ending sync')
+        self.logger.debug('current_device_knowledge %s' % self.current_device_knowledge)
+        self.logger.debug('device_knowledge_of_server %s' % self.device_knowledge_of_server)
+        pass
 
     def get_request_data(self):
         changed_entities = self.get_changed_entities()
-        change = knowledge_change(changed_entities)
-        return (change, {"starting_device_knowledge": self.knowledge,
-                         "ending_device_knowledge": self.knowledge + change,
-                         "device_knowledge_of_server": self.device_knowledge_of_server,
-                         "changed_entities": changed_entities})
+        dictionary = {"starting_device_knowledge": self.current_device_knowledge,
+                      "device_knowledge_of_server": self.device_knowledge_of_server,
+                      "changed_entities": changed_entities}
+        if any(changed_entities):
+            dictionary['ending_device_knowledge'] = self.current_device_knowledge + 1
+        else:
+            dictionary['ending_device_knowledge'] = self.current_device_knowledge
+        return dictionary
 
 
 class Budget(Root):
@@ -82,10 +106,10 @@ class Budget(Root):
     first_month=DateField(None)
 
     def get_request_data(self):
-        k, request_data = super(Budget, self).get_request_data()
+        request_data = super(Budget, self).get_request_data()
         request_data['budget_version_id'] = self.budget_version_id
         request_data['calculated_entities_included'] = False
-        return k, request_data
+        return request_data
 
     def get_changed_entities(self):
         changed_entities = super(Budget, self).get_changed_entities()
