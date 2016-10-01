@@ -160,7 +160,7 @@ class MonthlyAccountCalculation(Entity):
     transaction_count=EntityField(None)
     uncleared_balance=AmountField()
     warning_count=EntityField(None)
-    rolling_balance=EntityField(None)
+    rolling_balance=AmountField()
 
 
 class MonthlySubcategoryBudgetCalculation(Entity):
