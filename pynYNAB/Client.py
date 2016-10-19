@@ -5,6 +5,7 @@ from pynYNAB.connection import NYnabConnectionError, nYnabConnection
 from pynYNAB.roots import Budget, Catalog
 from pynYNAB.schema.budget import Payee, Transaction
 from pynYNAB.schema.catalog import BudgetVersion
+from pynYNAB.scripts.config import get_logger
 from pynYNAB.utils import chunk
 
 logger = logging.getLogger('pynYNAB')
@@ -31,6 +32,7 @@ class BudgetNotFound(Exception):
 
 class nYnabClient(object):
     def __init__(self, nynabconnection, budget_name):
+        self.logger = get_logger()
         if budget_name is None:
             logger.error('No budget name was provided')
             exit(-1)
@@ -54,6 +56,7 @@ class nYnabClient(object):
 
     def sync(self):
         # ending-starting represents the number of modifications that have been done to the data ?
+        self.logger.debug('Catalog sync')
         self.catalog.sync(self.connection, 'syncCatalogData')
         if self.budget.budget_version_id is None:
             for catalogbudget in self.catalog.ce_budgets:
@@ -64,6 +67,7 @@ class nYnabClient(object):
         if self.budget.budget_version_id is None and self.budget_name is not None:
             raise BudgetNotFound()
         else:
+            self.logger.debug('Budget sync')
             self.budget.sync(self.connection, 'syncBudgetData')
 
     def operation(fn):
@@ -161,11 +165,13 @@ class nYnabClient(object):
                 self.catalog.ce_budgets.modify(budget)
 
     def select_budget(self, budget_name):
+        self.logger.debug('Catalog sync')
         self.catalog.sync(self.connection, 'syncCatalogData')
         for budget_version in self.catalog.ce_budget_versions:
             budget = self.catalog.ce_budgets.get(budget_version.budget_id)
             if budget.budget_name == budget_name:
                 self.budget.budget_version_id = budget_version.id
+                self.logger.debug('Budget sync')
                 self.sync()
                 break
 

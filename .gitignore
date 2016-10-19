@@ -6,3 +6,5 @@ pynYNAB.egg-info/
 .tox/
 tests/
 
+ynab.conf
+.coverage

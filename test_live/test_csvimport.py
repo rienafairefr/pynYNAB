@@ -1,14 +1,15 @@
-import configargparse
-import errno
 import json
 import os
 from datetime import datetime
+from tempfile import gettempdir
+
+import configargparse
 
 from pynYNAB.Entity import ComplexEncoder
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.csvimport import do_csvimport
-from tests.common_Live import commonLive
-from tests.test_live import needs_account
+from test_live.common_Live import commonLive
+from test_live.test_live import needs_account
 
 
 class TestCsv(commonLive):
@@ -31,20 +32,14 @@ class TestCsv(commonLive):
         parser = configargparse.getArgumentParser('pynYNAB')
         args = parser.parse_known_args()[0]
         args.schema = 'example'
-        args.csvfile = os.path.join('data', 'test.csv')
+        args.csvfile = os.path.join(gettempdir(),'data.csv')
         args.accountname = None
         args.import_duplicates = False
-        args.level = 'debug'
+        args.logginglevel = 'debug'
 
         content = """Date,Payee,Amount,Memo,Account
 2016-02-01,Super Pants Inc.,-20,Buying pants,Credit
 """
-        try:
-            os.makedirs(os.path.dirname(args.csvfile))
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-
         with open(args.csvfile, mode='w') as f:
             f.writelines(content)
 
@@ -53,7 +48,7 @@ class TestCsv(commonLive):
         for i in range(2):
             do_csvimport(args)
             self.reload()
-            identical=[tr2 for tr2 in self.client.budget.be_transactions if transaction.hash() == tr2.hash()]
+            identical=[tr2 for tr2 in self.client.budget.be_transactions if transaction._hash() == tr2._hash()]
             print('Transactions with same hash: %s'%len(identical))
             self.assertTrue(len(identical) == 1)
 
@@ -62,10 +57,10 @@ class TestCsv(commonLive):
         parser = configargparse.getArgumentParser('pynYNAB')
         args = parser.parse_known_args()[0]
         args.schema = 'example'
-        args.csvfile = os.path.join('data', 'test.csv')
+        args.csvfile = os.path.join(gettempdir(),'data.csv')
         args.accountname = None
         args.import_duplicates = True
-        args.level = 'debug'
+        args.logginglevel = 'debug'
 
         content = """Date,Payee,Amount,Memo,Account
 2016-02-01,Super Pants Inc.,-20,Buying pants,Cash
@@ -79,7 +74,7 @@ class TestCsv(commonLive):
         self.reload()
         do_csvimport(args)
         self.reload()
-        self.assertTrue(len([tr2 for tr2 in self.client.budget.be_transactions if transaction.hash() == tr2.hash()]) == 2)
+        self.assertTrue(len([tr2 for tr2 in self.client.budget.be_transactions if transaction._hash() == tr2._hash()]) == 2)
 
     @needs_account('Cash')
     @needs_account('Checking Account')
@@ -88,10 +83,10 @@ class TestCsv(commonLive):
         parser = configargparse.getArgumentParser('pynYNAB')
         args = parser.parse_known_args()[0]
         args.schema = 'example'
-        args.csvfile = os.path.join('data', 'test.csv')
+        args.csvfile = os.path.join(gettempdir(),'data.csv')
         args.accountname = None
         args.import_duplicates=False
-        args.level = 'debug'
+        args.logginglevel = 'debug'
 
         content = """Date,Payee,Amount,Memo,Account
 2016-02-01,Super Pants Inc.,-20,Buying pants,Cash
