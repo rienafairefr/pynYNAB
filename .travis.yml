@@ -3,6 +3,8 @@ python:
 - 2.7
 - 3.4
 install:
+- PACKAGE_VERSION=`python setup.py --version`
+- TAG_NAME=v$PACKAGE_VERSION
 - pip install .
 - pip install -r requirements.txt
 - pip install coveralls
@@ -12,9 +14,14 @@ script:
   else
     coverage run -m unittest discover tests/ ;
   fi'
+- ( if [ -n "$TRAVIS_TAG" ]; then if [ $TAG_NAME != $TRAVIS_TAG ]; then echo "This tag is for the wrong version. Got \"$TRAVIS_TAG\" expected \"$TAG_NAME\"."; exit 1; fi; fi; )
 after_success:
 - pip install coveralls
 - coveralls
+before_deploy:
+# create the documentation
+- ( cd docs ; make html )
+- pip install wheel
 deploy:
   provider: pypi
   user: rienafairefr
