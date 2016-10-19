@@ -7,11 +7,12 @@ install:
 - pip install -r requirements.txt
 - pip install coveralls
 script:
-- if [ "$TRAVIS_EVENT_TYPE" == "cron" ]; then
-    python -m unittest discover test_sync
+- if [[ "$TRAVIS_EVENT_TYPE" = "cron" ]]
+  then
+    python -m unittest discover test_sync;
   else
     coverage run -m unittest discover tests/
-  fi;
+  fi
 after_success:
 - pip install coveralls
 - coveralls

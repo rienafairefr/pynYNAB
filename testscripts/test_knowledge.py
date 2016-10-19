@@ -1,8 +1,8 @@
-from test_live.test_live import liveTests
+from pynYNAB.Client import clientfromargs
+from pynYNAB.scripts.config import parser
 
-test_fixture = liveTests()
-test_fixture.setUp()
+# used to ping the nYNAB API to check that the sync works
 
-test_fixture.test_add_delete_account()
-test_fixture.test_add_delete_budget()
-test_fixture.test_add_deletetransaction()
+args = parser.parse_known_args()[0]
+client = clientfromargs(args)
+client.sync()
