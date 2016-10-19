@@ -20,7 +20,6 @@ after_success:
 - coveralls
 before_deploy:
 # create the documentation
-- ( cd docs ; make html )
 - pip install wheel
 deploy:
   provider: pypi
