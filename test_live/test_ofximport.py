@@ -1,21 +1,23 @@
-import configargparse
 import json
 import os
+import tempfile
 from datetime import datetime
 
-from common_Live import commonLive
+import configargparse
+
 from pynYNAB.Client import clientfromargs
 from pynYNAB.Entity import ComplexEncoder
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.ofximport import do_ofximport
+from test_live.common_Live import commonLive
 
 
 class TestOFX(commonLive):
     def testiimport(self):
         parser = configargparse.getArgumentParser('pynYNAB')
         args=parser.parse_known_args()[0]
-        args.ofxfile = os.path.join('data', 'test.ofx')
-        args.level= 'debug'
+        args.ofxfile = os.path.join(tempfile.gettempdir(),'data.ofx')
+        args.logginglevel= 'debug'
 
         self.client=clientfromargs(args)
 
@@ -79,7 +81,7 @@ NEWFILEUID:NONE
 </STMTTRNRS>
 </BANKMSGSRSV1>
 </OFX>"""
-        with open(args.ofxfile, mode='w') as f:
+        with open(args.ofxfile,'w') as f:
             f.writelines(content)
         imported_date=datetime.now().date()
 

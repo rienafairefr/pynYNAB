@@ -46,7 +46,7 @@ class Test1(unittest.TestCase):
 
     def test_hash(self):
         tr1 = Transaction()
-        result = tr1.hash()
+        result = tr1._hash()
         self.assertIsInstance(result, int)
 
 
@@ -56,7 +56,6 @@ class Test1(unittest.TestCase):
         default= lambda self:self.y
         def pgetter(self):
             if hasattr(self,'__prop_'+namefield):
-                print('special')
                 return getattr(self,'__prop_'+namefield)
             else:
                 return default(self)

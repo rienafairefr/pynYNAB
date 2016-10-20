@@ -278,7 +278,7 @@ class ListofEntities(list):
         if not isinstance(item, self.typeItems):
             return False
         else:
-            return hash(item) in self._dict_entities_hash
+            return item._hash() in self._dict_entities_hash
 
     def __contains__(self, item):
         if not isinstance(item, self.typeItems):
