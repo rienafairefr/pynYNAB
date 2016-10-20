@@ -8,11 +8,15 @@ install:
 - pip install .
 - pip install -r requirements.txt
 - pip install coveralls
+before_install:
+- export TRAVIS_COMMIT_MESSAGE=$(git log --format=%B -n 1 $TRAVIS_COMMIT)
+- echo "$TRAVIS_COMMIT_MESSAGE"
 script:
-- 'if [[ "$TRAVIS_EVENT_TYPE" = "cron" ]]; then
-    python -m unittest discover test_sync ;
-  else
-    coverage run -m unittest discover tests/ ;
+- 'export NYNAB_LOGGINGLEVEL=debug;
+  coverage run -m unittest discover tests;
+  if [[ "$TRAVIS_EVENT_TYPE" = "cron" || "$TRAVIS_COMMIT_MESSAGE" == *"[ci-cron]"* ]]; then
+    python -m unittest discover test_sync;
+
   fi'
 - ( if [ -n "$TRAVIS_TAG" ]; then if [ $TAG_NAME != $TRAVIS_TAG ]; then echo "This tag is for the wrong version. Got \"$TRAVIS_TAG\" expected \"$TAG_NAME\"."; exit 1; fi; fi; )
 after_success:
