@@ -47,15 +47,15 @@ class Root(Entity):
 
 
         server_knowledge_of_device=syncData['server_knowledge_of_device']
-        self.logger.debug('from server server_knowledge_of_device %s'%server_knowledge_of_device)
+        self.logger.debug('received from server: server_knowledge_of_device %s'%server_knowledge_of_device)
         current_server_knowledge=syncData['current_server_knowledge']
-        self.logger.debug('from server current_server_knowledge %s' % current_server_knowledge)
+        self.logger.debug('received from server: current_server_knowledge %s' % current_server_knowledge)
 
         change = current_server_knowledge - self.device_knowledge_of_server
         if change>0:
             self.logger.debug('Server knowledge has gone up by ' + str(change) + '. We should be getting back some entities from the server')
         if self.current_device_knowledge < server_knowledge_of_device:
-            if self.current_device_knowledge!=0:
+            if self.current_device_knowledge != 0:
                 self.logger.error('The server knows more about this device than we know about ourselves')
             self.current_device_knowledge = server_knowledge_of_device
         self.update_from_changed_entities(changed_entities)
