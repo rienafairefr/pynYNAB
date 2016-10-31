@@ -14,69 +14,7 @@ def knowledge_change(changed_entities):
 
 
 class Root(Entity):
-    def __init__(self):
-
-        self.logger = get_logger()
-        self.current_device_knowledge = 0
-        self.device_knowledge_of_server = 0
-        super(Root, self).__init__()
-
-    def sync(self, connection, opname):
-        self.logger.debug('Starting sync')
-        self.logger.debug('current_device_knowledge %s'%self.current_device_knowledge)
-        self.logger.debug('device_knowledge_of_server %s' % self.device_knowledge_of_server)
-        request_data = self.get_request_data()
-        self.logger.debug('request_data starting_device_knowledge %s' % request_data['starting_device_knowledge'])
-        self.logger.debug('request_data ending_device_knowledge %s' % request_data['ending_device_knowledge'])
-        self.logger.debug('request_data device_knowledge_of_server %s' % request_data['device_knowledge_of_server'])
-        self.logger.debug(request_data)
-        syncData = connection.dorequest(request_data, opname)
-        for namefield in self.ListFields:
-            getattr(self, namefield).changed = []
-        changed_entities = {}
-        for name, value in syncData['changed_entities'].items():
-            if isinstance(value, list):
-                for entityDict in value:
-                    obj = obj_from_dict(self.ListFields[name].type, entityDict)
-                    try:
-                        changed_entities[name].append(obj)
-                    except KeyError:
-                        changed_entities[name] = [obj]
-            else:
-                changed_entities[name] = self.AllFields[name].posttreat(value)
-
-
-        server_knowledge_of_device=syncData['server_knowledge_of_device']
-        self.logger.debug('received from server: server_knowledge_of_device %s'%server_knowledge_of_device)
-        current_server_knowledge=syncData['current_server_knowledge']
-        self.logger.debug('received from server: current_server_knowledge %s' % current_server_knowledge)
-
-        change = current_server_knowledge - self.device_knowledge_of_server
-        if change>0:
-            self.logger.debug('Server knowledge has gone up by ' + str(change) + '. We should be getting back some entities from the server')
-        if self.current_device_knowledge < server_knowledge_of_device:
-            if self.current_device_knowledge != 0:
-                self.logger.error('The server knows more about this device than we know about ourselves')
-            self.current_device_knowledge = server_knowledge_of_device
-        self.update_from_changed_entities(changed_entities)
-
-        self.device_knowledge_of_server = current_server_knowledge
-
-        self.logger.debug('Ending sync')
-        self.logger.debug('current_device_knowledge %s' % self.current_device_knowledge)
-        self.logger.debug('device_knowledge_of_server %s' % self.device_knowledge_of_server)
-        pass
-
-    def get_request_data(self):
-        changed_entities = self.get_changed_entities()
-        dictionary = {"starting_device_knowledge": self.current_device_knowledge,
-                      "device_knowledge_of_server": self.device_knowledge_of_server,
-                      "changed_entities": changed_entities}
-        if any(changed_entities):
-            dictionary['ending_device_knowledge'] = self.current_device_knowledge + 1
-        else:
-            dictionary['ending_device_knowledge'] = self.current_device_knowledge
-        return dictionary
+    pass
 
 
 class Budget(Root):
