@@ -16,7 +16,7 @@ except:
 
 setup(
     name='pynYNAB',
-    version='0.2',
+    version='0.3',
     # Note: change 'master' to the tag name when release a new verion
     download_url='https://github.com/rienafairefr/nYNABapi/tarball/master',
 

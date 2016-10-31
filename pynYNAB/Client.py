@@ -13,18 +13,7 @@ logger = logging.getLogger('pynYNAB')
 
 
 def clientfromargs(args, reset=False):
-    connection = nYnabConnection(args.email, args.password)
-    try:
-        client = nYnabClient(connection, budget_name=args.budgetname)
-        if reset:
-            # deletes the budget
-            client.delete_budget(args.budgetname)
-            client.create_budget(args.budgetname)
-            client.select_budget(args.budgetname)
-        return client
-    except BudgetNotFound:
-        print('No budget by the name %s found in nYNAB' % args.budgetname)
-        exit(-1)
+    return nYnabClient.from_obj(args,reset)
 
 
 class BudgetNotFound(Exception):
@@ -51,6 +40,21 @@ class nYnabClient(object):
 
         self.first = True
         self.sync()
+
+    @staticmethod
+    def from_obj(args, reset=False):
+        connection = nYnabConnection(args.email, args.password)
+        try:
+            client = nYnabClient(connection, budget_name=args.budgetname)
+            if reset:
+                # deletes the budget
+                client.delete_budget(args.budgetname)
+                client.create_budget(args.budgetname)
+                client.select_budget(args.budgetname)
+            return client
+        except BudgetNotFound:
+            print('No budget by the name %s found in nYNAB' % args.budgetname)
+            exit(-1)
 
     def getinitialdata(self):
         try:
