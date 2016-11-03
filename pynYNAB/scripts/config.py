@@ -17,10 +17,6 @@ parser.add_argument('--email', metavar='Email', type=str, required=False,
                     help='The Email User ID for nYNAB')
 parser.add_argument('--password', metavar='Password', type=str, required=False,
                     help='The Password for nYNAB')
-parser.add_argument('--logginglevel', metavar='LoggingLevel', type=str.lower, required=False,default='error',
-                    choices=['critical','error','warn','warning','info','debug'],
-                    help='Logging Level')
-
 parser.add_argument('--budgetname', metavar='BudgetName', type=str, required=False,
                         help='The nYNAB budget to use')
 
