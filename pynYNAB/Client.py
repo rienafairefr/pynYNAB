@@ -3,14 +3,11 @@ from functools import wraps
 
 from pynYNAB.Entity import obj_from_dict
 from pynYNAB.connection import NYnabConnectionError, nYnabConnection
+from pynYNAB.log import logger
 from pynYNAB.roots import Budget, Catalog
 from pynYNAB.schema.budget import Payee, Transaction
 from pynYNAB.schema.catalog import BudgetVersion
-from pynYNAB.scripts.config import get_logger
 from pynYNAB.utils import chunk
-
-logger = logging.getLogger('pynYNAB')
-
 
 def clientfromargs(args, reset=False):
     return nYnabClient.from_obj(args,reset)
@@ -24,7 +21,6 @@ class nYnabClient(object):
     def __init__(self, nynabconnection, budget_name):
         self.delta_device_knowledge = 0
         self.budget_version_id = None
-        self.logger = get_logger()
         if budget_name is None:
             logger.error('No budget name was provided')
             exit(-1)
@@ -68,7 +64,7 @@ class nYnabClient(object):
 
     def sync(self):
         # ending-starting represents the number of modifications that have been done to the data ?
-        self.logger.debug('Catalog sync')
+        logger.debug('Catalog sync')
         if self.first:
             self.first = False
             self.sync_obj(self.catalog, 'syncCatalogData', knowledge=False)
@@ -134,16 +130,16 @@ class nYnabClient(object):
 
         change = current_server_knowledge - self.device_knowledge_of_server[opname]
         if change > 0:
-            self.logger.debug('Server knowledge has gone up by ' + str(
+            logger.debug('Server knowledge has gone up by ' + str(
                 change) + '. We should be getting back some entities from the server')
         if self.current_device_knowledge[opname] < server_knowledge_of_device:
             if self.current_device_knowledge[opname] != 0:
-                self.logger.error('The server knows more about this device than we know about ourselves')
+                logger.error('The server knows more about this device than we know about ourselves')
             self.current_device_knowledge[opname] = server_knowledge_of_device
         self.device_knowledge_of_server[opname] = current_server_knowledge
 
-        self.logger.debug('current_device_knowledge %s' % self.current_device_knowledge[opname])
-        self.logger.debug('device_knowledge_of_server %s' % self.device_knowledge_of_server[opname])
+        logger.debug('current_device_knowledge %s' % self.current_device_knowledge[opname])
+        logger.debug('device_knowledge_of_server %s' % self.device_knowledge_of_server[opname])
 
     def operation(fn):
         @wraps(fn)
@@ -239,13 +235,13 @@ class nYnabClient(object):
                 self.catalog.ce_budgets.modify(budget)
 
     def select_budget(self, budget_name):
-        self.logger.debug('Catalog sync')
+        logger.debug('Catalog sync')
         self.catalog.sync(self.connection, 'syncCatalogData')
         for budget_version in self.catalog.ce_budget_versions:
             budget = self.catalog.ce_budgets.get(budget_version.budget_id)
             if budget.budget_name == budget_name:
                 self.budget.budget_version_id = budget_version.id
-                self.logger.debug('Budget sync')
+                logger.debug('Budget sync')
                 self.sync()
                 break
 

@@ -1,4 +1,3 @@
-import codecs
 import inspect
 import json
 from collections import namedtuple
@@ -8,13 +7,13 @@ import os
 import csv
 import sys
 
-import jsontableschema
 from jsontableschema.exceptions import InvalidSchemaError
 from jsontableschema.model import SchemaModel
 
 from pynYNAB.Client import clientfromargs
+from pynYNAB.log import logger
 from pynYNAB.schema.budget import Payee, Transaction
-from pynYNAB.scripts.config import get_logger, test_common_args
+from pynYNAB.scripts.config import test_common_args
 
 scriptsdir=os.path.dirname(os.path.abspath(__file__))
 schemas_dir = os.path.join(scriptsdir,'csv_schemas')
@@ -37,7 +36,7 @@ def csvimport_main():
     test_common_args(args)
 
     if not os.path.exists(args.csvfile):
-        get_logger().error('input CSV file does not exist')
+        logger.error('input CSV file does not exist')
         exit(-1)
 
     do_csvimport(args)
@@ -46,7 +45,6 @@ def csvimport_main():
 def do_csvimport(args,client=None):
     if client is None:
         client = clientfromargs(args)
-    logger=get_logger(args)
 
     logger.debug('selected schema %s' % (args.schema,))
     if os.path.exists(args.schema):
@@ -104,7 +102,7 @@ def do_csvimport(args,client=None):
             logger.debug('searching for subcategory %s' % categoryname)
             return subcategories[categoryname]
         except KeyError:
-            get_logger(args).debug('Couldn''t find this category: %s' % categoryname)
+            logger.debug('Couldn''t find this category: %s' % categoryname)
             exit(-1)
 
     if 'account' not in schema.headers:
@@ -123,7 +121,7 @@ def do_csvimport(args,client=None):
 
     imported_date=datetime.now().date()
 
-    get_logger(args).debug('OK starting the import from %s '%os.path.abspath(args.csvfile))
+    logger.debug('OK starting the import from %s '%os.path.abspath(args.csvfile))
     with open(args.csvfile, 'r') as inputfile:
         header = inputfile.readline()
         for row in csv.reader(inputfile):
@@ -131,7 +129,7 @@ def do_csvimport(args,client=None):
                 row = [cell.decode('utf-8') for cell in row]
             if all(map(lambda x:x.strip()=='',row)):
                 continue
-            get_logger(args).debug('read line %s' % row)
+            logger.debug('read line %s' % row)
             result = csvrow(*list(schema.convert_row(*row, fail_fast=True)))
             if 'account' in schema.headers:
                 entities_account_id = getaccount(result.account).id
@@ -140,7 +138,7 @@ def do_csvimport(args,client=None):
             elif 'amount' in schema.headers:
                 amount = result.amount
             else:
-                get_logger(args).error('Couldn''t find this account: %s' % args.accountname)
+                logger.error('Couldn''t find this account: %s' % args.accountname)
                 exit(-1)
 
             if 'category' in schema.headers and result.category:
@@ -170,10 +168,10 @@ def do_csvimport(args,client=None):
                 source="Imported"
             )
             if args.import_duplicates or (not client.budget.be_transactions.containsduplicate(transaction)):
-                get_logger(args).debug('Appending transaction %s '%transaction.getdict())
+                logger.debug('Appending transaction %s '%transaction.getdict())
                 transactions.append(transaction)
             else:
-                get_logger(args).debug('Duplicate transaction found %s '%transaction.getdict())
+                logger.debug('Duplicate transaction found %s '%transaction.getdict())
 
 
 

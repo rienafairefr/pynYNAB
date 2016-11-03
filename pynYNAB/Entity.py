@@ -5,9 +5,9 @@ import logging
 from aenum import Enum
 
 from pynYNAB import KeyGenerator
+from pynYNAB.log import logger
 from pynYNAB.schema.Fields import EntityField, EntityListField, PropertyField
 
-logger = logging.getLogger('pynYNAB')
 
 def undef():
     pass

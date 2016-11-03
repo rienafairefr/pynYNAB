@@ -1,4 +1,4 @@
-from pynYNAB.Entity import Entity, ListofEntities, obj_from_dict
+from pynYNAB.Entity import Entity, ListofEntities
 from pynYNAB.schema.Fields import EntityListField
 from pynYNAB.schema.budget import MasterCategory, Setting, MonthlyBudgetCalculation, AccountMapping, Subtransaction, \
     ScheduledSubtransaction, Subcategory, PayeeLocation, AccountCalculation, MonthlyAccountCalculation, \
@@ -6,7 +6,6 @@ from pynYNAB.schema.budget import MasterCategory, Setting, MonthlyBudgetCalculat
     Account, MonthlyBudget, TransactionGroup, DateField
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.schema.catalog import UserBudget, UserSetting, BudgetVersion, User, CatalogBudget
-from pynYNAB.scripts.config import get_logger
 
 
 def knowledge_change(changed_entities):
