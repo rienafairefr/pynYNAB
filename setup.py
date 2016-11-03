@@ -59,7 +59,8 @@ setup(
         'requests',
         'jsontableschema',
         'unicodecsv',
-        'appdirs'
+        'appdirs',
+        'six>=1.5'
     ],
 
     package_data={

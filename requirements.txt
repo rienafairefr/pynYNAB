@@ -4,3 +4,4 @@ appdirs
 requests
 jsontableschema
 aenum
+six>=1.5
