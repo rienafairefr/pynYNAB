@@ -1,4 +1,8 @@
-from pynYNAB.Entity import Entity, ListofEntities, obj_from_dict
+from sqlalchemy import Column
+from sqlalchemy import Date
+from sqlalchemy.orm import relationship
+
+from pynYNAB.Entity import Entity, ListofEntities, obj_from_dict, Base
 from pynYNAB.schema.Fields import EntityListField
 from pynYNAB.schema.budget import MasterCategory, Setting, MonthlyBudgetCalculation, AccountMapping, Subtransaction, \
     ScheduledSubtransaction, Subcategory, PayeeLocation, AccountCalculation, MonthlyAccountCalculation, \
@@ -17,31 +21,31 @@ class Root(Entity):
     pass
 
 
-class Budget(Root):
+class Budget(Base,Root):
     def __init__(self):
         super(Budget, self).__init__()
         self.budget_version_id = None
 
-    be_transactions=EntityListField(Transaction)
-    be_master_categories=EntityListField(MasterCategory)
-    be_settings=EntityListField(Setting)
-    be_monthly_budget_calculations=EntityListField(MonthlyBudgetCalculation)
-    be_account_mappings=EntityListField(AccountMapping)
-    be_subtransactions=EntityListField(Subtransaction)
-    be_scheduled_subtransactions=EntityListField(ScheduledSubtransaction)
-    be_monthly_budgets=EntityListField(MonthlyBudget)
-    be_subcategories=EntityListField(Subcategory)
-    be_payee_locations=EntityListField(PayeeLocation)
-    be_account_calculations=EntityListField(AccountCalculation)
-    be_monthly_account_calculations=EntityListField(MonthlyAccountCalculation)
-    be_monthly_subcategory_budget_calculations=EntityListField(MonthlySubcategoryBudgetCalculation)
-    be_scheduled_transactions=EntityListField(ScheduledTransaction)
-    be_payees=EntityListField(Payee)
-    be_monthly_subcategory_budgets=EntityListField(MonthlySubcategoryBudget)
-    be_payee_rename_conditions=EntityListField(PayeeRenameCondition)
-    be_accounts=EntityListField(Account)
-    last_month=DateField(None)
-    first_month=DateField(None)
+    be_transactions=relationship('Transaction')
+    be_master_categories=relationship('MasterCategory')
+    be_settings=relationship('Setting')
+    be_monthly_budget_calculations=relationship('MonthlyBudgetCalculation')
+    be_account_mappings=relationship('AccountMapping')
+    be_subtransactions=relationship('Subtransaction')
+    be_scheduled_subtransactions=relationship('ScheduledSubtransaction')
+    be_monthly_budgets=relationship('MonthlyBudget')
+    be_subcategories=relationship('Subcategory')
+    be_payee_locations=relationship('PayeeLocation')
+    be_account_calculations=relationship('AccountCalculation')
+    be_monthly_account_calculations=relationship('MonthlyAccountCalculation')
+    be_monthly_subcategory_budget_calculations=relationship('MonthlySubcategoryBudgetCalculation')
+    be_scheduled_transactions=relationship('ScheduledTransaction')
+    be_payees=relationship('Payee')
+    be_monthly_subcategory_budgets=relationship('MonthlySubcategoryBudget')
+    be_payee_rename_conditions=relationship('PayeeRenameCondition')
+    be_accounts=relationship('Account')
+    last_month=Column(Date)
+    first_month=Column(Date)
 
     def get_request_data(self):
         request_data = super(Budget, self).get_request_data()
@@ -70,9 +74,9 @@ class Budget(Root):
         return changed_entities
 
 
-class Catalog(Root):
-    ce_user_budgets=EntityListField(UserBudget)
-    ce_user_settings=EntityListField(UserSetting)
-    ce_budget_versions=EntityListField(BudgetVersion)
-    ce_users=EntityListField(User)
-    ce_budgets=EntityListField(CatalogBudget)
+class Catalog(Base,Root):
+    ce_user_budgets=relationship('UserBudget')
+    ce_user_settings=relationship('UserSetting')
+    ce_budget_versions=relationship('BudgetVersion')
+    ce_users=relationship('User')
+    ce_budgets=relationship('CatalogBudget')

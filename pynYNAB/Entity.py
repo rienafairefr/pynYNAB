@@ -3,11 +3,16 @@ import json
 import logging
 
 from aenum import Enum
+from sqlalchemy import Column
+from sqlalchemy import String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declared_attr
 
 from pynYNAB import KeyGenerator
 from pynYNAB.schema.Fields import EntityField, EntityListField, PropertyField
 
 logger = logging.getLogger('pynYNAB')
+from sqlalchemy import inspect
 
 def undef():
     pass
@@ -73,7 +78,8 @@ def obj_from_dict(obj_type, dictionary):
         try:
             field = obt.AllFields[key]
         except KeyError:
-            msg = 'Encountered field %s in a dictionary to create an entity of type %s, value %s ' % (key, obj_type,dictionary[key])
+            msg = 'Encountered field %s in a dictionary to create an entity of type %s, value %s ' % (
+            key, obj_type, dictionary[key])
             logger.error(msg)
             raise UnknowEntityFieldValueError(msg)
         if isinstance(field, EntityField):
@@ -101,7 +107,26 @@ def addprop(inst, name, method, setter=None, cleaner=None):
     return p
 
 
+
+
+UUIDType = String(36)
+
+
 class Entity(object):
+    @declared_attr
+    def __tablename__(cls):
+        return cls.__name__.lower()
+
+    id = Column(UUIDType, primary_key=True)
+
+    @property
+    def ListFields(self):
+        relations = inspect(self.__class__).relationships
+        return {k:relations[k].mapper.class_ for k in relations.keys()}
+
+Base = declarative_base(cls=Entity)
+
+class EntityCls(object):
     def __init__(self, *args, **kwargs):
         self.ListFields = {}
         self.Fields = {}

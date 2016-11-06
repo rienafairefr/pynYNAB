@@ -1,7 +1,10 @@
 import logging
 from functools import wraps
 
-from pynYNAB.Entity import obj_from_dict
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from pynYNAB.Entity import obj_from_dict, Base
 from pynYNAB.connection import NYnabConnectionError, nYnabConnection
 from pynYNAB.roots import Budget, Catalog
 from pynYNAB.schema.budget import Payee, Transaction
@@ -37,6 +40,11 @@ class nYnabClient(object):
 
         self.current_device_knowledge = {}
         self.device_knowledge_of_server = {}
+
+        engine = create_engine('sqlite://')
+
+        Base.metadata.create_all(engine)
+        self.Session = sessionmaker(bind=engine)
 
         self.first = True
         self.sync()
