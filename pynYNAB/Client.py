@@ -1,7 +1,9 @@
 import logging
+from contextlib import contextmanager
 from functools import wraps
 
 from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 
 from pynYNAB.Entity import obj_from_dict, Base
@@ -21,6 +23,7 @@ def clientfromargs(args, reset=False):
 
 class BudgetNotFound(Exception):
     pass
+
 
 
 class nYnabClient(object):
@@ -45,6 +48,11 @@ class nYnabClient(object):
 
         Base.metadata.create_all(engine)
         self.Session = sessionmaker(bind=engine)
+
+        session=self.Session()
+        session.add(self.catalog)
+        session.add(self.budget)
+        session.commit()
 
         self.first = True
         self.sync()
@@ -101,20 +109,29 @@ class nYnabClient(object):
             self.sync_obj(self.budget, 'syncBudgetData',extra=dict(calculated_entities_included=False,budget_version_id=self.budget_version_id))
 
     def update_from_sync_data(self,obj,sync_data):
+        session=self.Session()
         for namefield in obj.ListFields:
             getattr(obj, namefield).changed = []
-        changed_entities = {}
         for name, value in sync_data['changed_entities'].items():
             if isinstance(value, list):
+                list_of_entities = getattr(obj, name)
                 for entityDict in value:
-                    new_obj = obj_from_dict(obj.ListFields[name].type, entityDict)
-                    try:
-                        changed_entities[name].append(new_obj)
-                    except KeyError:
-                        changed_entities[name] = [new_obj]
-            else:
-                changed_entities[name] = obj.AllFields[name].posttreat(value)
-        obj.update_from_changed_entities(changed_entities)
+                    new_obj = session.query(obj.ListFields[name]).get(entityDict['id'])
+                    if new_obj is not None:
+                        if 'is_tombstone' in entityDict and entityDict['is_tombstone']:
+                            session.delete(new_obj)
+                        else:
+                            if new_obj not in list_of_entities:
+                                list_of_entities.append(new_obj)
+                            else:
+                                new_obj.__dict__.update(entityDict)
+                    else:
+                        new_obj = obj.ListFields[name](**entityDict)
+                        session.add(new_obj)
+                        list_of_entities.append(obj)
+                    session.flush()
+
+        session.commit()
 
     def sync_obj(self, obj, opname,knowledge=True,extra=None):
         if extra is None:

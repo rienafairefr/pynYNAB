@@ -4,12 +4,12 @@ import logging
 
 from aenum import Enum
 from sqlalchemy import Column
-from sqlalchemy import String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.declarative import declared_attr
 
 from pynYNAB import KeyGenerator
 from pynYNAB.schema.Fields import EntityField, EntityListField, PropertyField
+from pynYNAB.schema.types import GUID
 
 logger = logging.getLogger('pynYNAB')
 from sqlalchemy import inspect
@@ -107,17 +107,12 @@ def addprop(inst, name, method, setter=None, cleaner=None):
     return p
 
 
-
-
-UUIDType = String(36)
-
-
 class Entity(object):
     @declared_attr
     def __tablename__(cls):
         return cls.__name__.lower()
 
-    id = Column(UUIDType, primary_key=True)
+    id = Column(GUID, primary_key=True, default=KeyGenerator.generateuuid)
 
     @property
     def ListFields(self):
