@@ -123,7 +123,7 @@ class nYnabClient(object):
         request_data = dict(starting_device_knowledge=self.current_device_knowledge[opname],
                                 ending_device_knowledge=self.current_device_knowledge[opname],
                                 device_knowledge_of_server=self.device_knowledge_of_server[opname],
-                                changed_entities={})
+                                changed_entities=changed_entities)
         request_data.update(extra)
 
         sync_data = self.connection.dorequest(request_data, opname)
