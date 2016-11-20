@@ -31,7 +31,7 @@ class EntityListField(object):
         self.type = typearg
 
     def __call__(self, *args, **kwargs):
-        from pynYNAB.Entity import ListofEntities
+        from pynYNAB.schema.Entity import ListofEntities
         return ListofEntities(self.type)
 
 
@@ -74,7 +74,7 @@ class DatesField(EntityField):
         try:
             return [self.d.pretreat(i) for i in x]
         except AttributeError:
-            from pynYNAB.Entity import AccountTypes
+            from pynYNAB.schema.Entity import AccountTypes
             if x in AccountTypes:
                 return x
 
@@ -90,12 +90,12 @@ class AccountTypeField(EntityField):
         try:
             return x.name
         except AttributeError:
-            from pynYNAB.Entity import AccountTypes
+            from pynYNAB.schema.Entity import AccountTypes
             if x in AccountTypes:
                 return x
 
     def posttreat(self, x):
-        from pynYNAB.Entity import AccountTypes
+        from pynYNAB.schema.Entity import AccountTypes
         try:
             return getattr(AccountTypes, x)
         except:

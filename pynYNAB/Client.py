@@ -1,16 +1,16 @@
 import logging
-from contextlib import contextmanager
+from datetime import datetime
 from functools import wraps
 
+from sqlalchemy import Date
 from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 
-from pynYNAB.Entity import obj_from_dict, Base
 from pynYNAB.connection import NYnabConnectionError, nYnabConnection
-from pynYNAB.roots import Budget, Catalog
-from pynYNAB.schema.budget import Payee, Transaction
-from pynYNAB.schema.catalog import BudgetVersion
+from pynYNAB.schema.Entity import Base
+from pynYNAB.schema.budget import Payee, Transaction, Budget
+from pynYNAB.schema.catalog import BudgetVersion, Catalog
+from pynYNAB.schema.types import NYNAB_GUID, AmountType
 from pynYNAB.scripts.config import get_logger
 from pynYNAB.utils import chunk
 
@@ -18,12 +18,11 @@ logger = logging.getLogger('pynYNAB')
 
 
 def clientfromargs(args, reset=False):
-    return nYnabClient.from_obj(args,reset)
+    return nYnabClient.from_obj(args, reset)
 
 
 class BudgetNotFound(Exception):
     pass
-
 
 
 class nYnabClient(object):
@@ -44,15 +43,15 @@ class nYnabClient(object):
         self.current_device_knowledge = {}
         self.device_knowledge_of_server = {}
 
-        engine = create_engine('sqlite://')
+        engine = create_engine('sqlite://',echo=True)
 
         Base.metadata.create_all(engine)
         self.Session = sessionmaker(bind=engine)
 
-        session=self.Session()
-        session.add(self.catalog)
-        session.add(self.budget)
-        session.commit()
+        self.session = self.Session()
+        self.session.add(self.catalog)
+        self.session.add(self.budget)
+        self.session.commit()
 
         self.first = True
         self.sync()
@@ -93,7 +92,8 @@ class nYnabClient(object):
                     for budget_version in self.catalog.ce_budget_versions:
                         if budget_version.budget_id == catalogbudget.id:
                             self.budget_version_id = budget_version.id
-            self.sync_obj(self.budget, 'syncBudgetData', knowledge=False,extra=dict(calculated_entities_included=False,budget_version_id=self.budget_version_id))
+            self.sync_obj(self.budget, 'syncBudgetData', knowledge=False,
+                          extra=dict(calculated_entities_included=False, budget_version_id=self.budget_version_id))
         if self.budget_version_id is None and self.budget_name is not None:
             raise BudgetNotFound()
         else:
@@ -105,35 +105,45 @@ class nYnabClient(object):
             else:
                 self.delta_device_knowledge = 0
 
-            self.sync_obj(self.catalog, 'syncCatalogData',extra=dict(user_id="fbec95c7-9fd2-415e-9365-7c4a8e613a49"))
-            self.sync_obj(self.budget, 'syncBudgetData',extra=dict(calculated_entities_included=False,budget_version_id=self.budget_version_id))
+            self.sync_obj(self.catalog, 'syncCatalogData', extra=dict(user_id="fbec95c7-9fd2-415e-9365-7c4a8e613a49"))
+            self.sync_obj(self.budget, 'syncBudgetData',
+                          extra=dict(calculated_entities_included=False, budget_version_id=self.budget_version_id))
+        self.session.commit()
 
-    def update_from_sync_data(self,obj,sync_data):
-        session=self.Session()
+    def update_from_sync_data(self, obj, sync_data):
         for namefield in obj.ListFields:
             getattr(obj, namefield).changed = []
         for name, value in sync_data['changed_entities'].items():
             if isinstance(value, list):
                 list_of_entities = getattr(obj, name)
                 for entityDict in value:
-                    new_obj = session.query(obj.ListFields[name]).get(entityDict['id'])
+                    for column in obj.ListFields[name].__table__.columns:
+                        if column.name in entityDict and entityDict[column.name] is not None:
+                            if column.type.__class__.__name__ == Date.__name__:
+                                entityDict[column.name] = datetime.strptime(entityDict[column.name], '%Y-%m-%d').date()
+                            if column.type.__class__.__name__ == NYNAB_GUID.__name__:
+                                entityDict[column.name] = entityDict[column.name].split('/')[-1]
+                            if column.type.__class__.__name__ == AmountType.__name__:
+                                entityDict[column.name] /= 100
+
+                    new_obj = self.session.query(obj.ListFields[name]).get(entityDict['id'])
                     if new_obj is not None:
                         if 'is_tombstone' in entityDict and entityDict['is_tombstone']:
-                            session.delete(new_obj)
+                            self.session.delete(new_obj)
                         else:
                             if new_obj not in list_of_entities:
                                 list_of_entities.append(new_obj)
                             else:
                                 new_obj.__dict__.update(entityDict)
                     else:
+
                         new_obj = obj.ListFields[name](**entityDict)
-                        session.add(new_obj)
-                        list_of_entities.append(obj)
-                    session.flush()
+                        self.session.add(new_obj)
+                        list_of_entities.append(new_obj)
+                        new_obj.parent = obj
+                        self.session.flush()
 
-        session.commit()
-
-    def sync_obj(self, obj, opname,knowledge=True,extra=None):
+    def sync_obj(self, obj, opname, knowledge=True, extra=None):
         if extra is None:
             extra = {}
         if opname not in self.current_device_knowledge:
@@ -143,16 +153,16 @@ class nYnabClient(object):
         if knowledge:
             changed_entities = obj.get_changed_entities()
         else:
-            changed_entities={}
+            changed_entities = {}
             # sync with disregard for knowledge, start from 0
         request_data = dict(starting_device_knowledge=self.current_device_knowledge[opname],
-                                ending_device_knowledge=self.current_device_knowledge[opname],
-                                device_knowledge_of_server=self.device_knowledge_of_server[opname],
-                                changed_entities={})
+                            ending_device_knowledge=self.current_device_knowledge[opname],
+                            device_knowledge_of_server=self.device_knowledge_of_server[opname],
+                            changed_entities={})
         request_data.update(extra)
 
         sync_data = self.connection.dorequest(request_data, opname)
-        self.update_from_sync_data(obj,sync_data)
+        self.update_from_sync_data(obj, sync_data)
 
         server_knowledge_of_device = sync_data['server_knowledge_of_device']
         current_server_knowledge = sync_data['current_server_knowledge']

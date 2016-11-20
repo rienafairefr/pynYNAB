@@ -1,15 +1,19 @@
 import copy
 import json
 import logging
+from uuid import UUID
 
+import functools
 from aenum import Enum
 from sqlalchemy import Column
+from sqlalchemy import event
+from sqlalchemy import orm
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.declarative import declared_attr
 
 from pynYNAB import KeyGenerator
 from pynYNAB.schema.Fields import EntityField, EntityListField, PropertyField
-from pynYNAB.schema.types import GUID
+from pynYNAB.schema.types import NYNAB_GUID
 
 logger = logging.getLogger('pynYNAB')
 from sqlalchemy import inspect
@@ -53,12 +57,9 @@ on_budget_dict[None] = None
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Entity):
-            pretreated = {}
-            for namefield, field in obj.AllFields.items():
-                value = getattr(obj, namefield)
-                if value != undef:
-                    pretreated[namefield] = field.pretreat(value)
-            return pretreated
+            return obj.getdict()
+        elif isinstance(obj,UUID):
+            return str(obj)
         elif isinstance(obj, ListofEntities):
             return list(obj)
         elif obj == undef:
@@ -107,19 +108,103 @@ def addprop(inst, name, method, setter=None, cleaner=None):
     return p
 
 
-class Entity(object):
+class BaseModel(object):
+    id = Column(NYNAB_GUID, primary_key=True, default=KeyGenerator.generateuuid)
+
     @declared_attr
     def __tablename__(cls):
         return cls.__name__.lower()
 
-    id = Column(GUID, primary_key=True, default=KeyGenerator.generateuuid)
 
+class Changed(BaseModel):
+    pass
+
+
+class Entity(BaseModel):
+    def getdict(self):
+        return self.__dict__
+
+
+changed = {}
+
+class Root(BaseModel):
     @property
     def ListFields(self):
         relations = inspect(self.__class__).relationships
         return {k:relations[k].mapper.class_ for k in relations.keys()}
 
+    @property
+    def ScalarFields(self):
+        scalarcolumns = self.__table__.columns
+        return {k: scalarcolumns[k].type.__class__.__name__ for k in scalarcolumns.keys()}
+
+    def get_changed_entities(self):
+        return {key: value for key,value in self.changed.items() if value !=[]}
+
+    def clear_changed_entities(self):
+        self.__changed = {k: [] for k in self.ListFields}
+
+    def getdict(self):
+        objs_dict = {}
+        for key in self.ListFields:
+            objs_dict[key] = []
+            for instance in getattr(self,key):
+                objs_dict[key].append(instance.getdict())
+
+
+def ensure_changed(instance,key):
+    try:
+        changed_list = changed[instance.id][key]
+    except:
+        changed[instance.id] = {}
+        changed[instance.id] = {}
+        changed[instance.id][key] = []
+        changed_list = changed[instance.id][key]
+
+
+def configure_entity_listener(class_, key, inst):
+    def set_(instance, value, oldvalue, initiator):
+        if not hasattr(instance,'parent'):
+            return
+        parent = instance.parent
+        if parent is not None:
+            for relationship in parent.__mapper__.relationships:
+                if relationship.mapper == instance.__mapper__:
+
+                    changed_list.append(instance)
+
+    event.listen(inst, 'set', set_)
+
+
+def configure_listener(class_, key, inst):
+    def append(instance, value, initiator):
+        if not instance.is_root:
+            return
+        if instance.changed is None:
+            instance.changed = class_()
+        entities_list = getattr(instance.changed, initiator.key)
+        entities_list.append(value)
+
+    def remove(instance, value, initiator):
+        if not instance.is_root:
+            return
+        if instance.changed is None:
+            instance.changed = class_()
+        value.is_tombstone=True
+        entities_list = getattr(instance.changed, initiator.key)
+        entities_list.append(value)
+
+    event.listen(inst, 'append', append)
+    event.listen(inst, 'remove', remove)
+
+    #for relationship in class_.__mapper__.relationships:
+     #   remote_class = getattr(class_,relationship.key).class_
+     #   event.listen(remote_class,'attribute_instrument',configure_entity_listener)
+
 Base = declarative_base(cls=Entity)
+
+event.listen(Root, 'attribute_instrument', configure_listener)
+event.listen(Entity, 'attribute_instrument', configure_entity_listener)
 
 class EntityCls(object):
     def __init__(self, *args, **kwargs):
@@ -181,12 +266,9 @@ class EntityCls(object):
     def __unicode__(self):
         return self.__str__()
 
-    def getdict(self):
-        return {namefield: getattr(self, namefield) for namefield in self.AllFields}
 
-    def get_changed_entities(self):
-        firstrun = {namefield: getattr(self, namefield).get_changed_entities() for namefield in self.ListFields}
-        return {namefield: value for namefield, value in firstrun.items() if value != []}
+
+
 
     def update_from_changed_entities(self, changed_entities):
         for namefield in self.ListFields:

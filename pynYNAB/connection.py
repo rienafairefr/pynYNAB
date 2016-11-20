@@ -7,7 +7,7 @@ from time import sleep
 import requests
 from requests.cookies import RequestsCookieJar
 
-from pynYNAB.Entity import ComplexEncoder
+from pynYNAB.schema.Entity import ComplexEncoder
 from pynYNAB.utils import RateLimited
 
 

@@ -1,28 +1,16 @@
-from sqlalchemy import Boolean, types
+from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import Date
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
-from pynYNAB.Entity import Entity, undef, on_budget_dict, AccountTypes, Base
-from pynYNAB.schema.Fields import EntityField, AmountField, DateField, AccountTypeField, EntityListField, DatesField, \
+from pynYNAB.schema.Entity import Entity, undef, on_budget_dict, AccountTypes, Base, ListofEntities,Root
+from pynYNAB.schema.Fields import EntityField, DateField, AccountTypeField, DatesField, \
     PropertyField
-
-
-class AmountType(types.TypeDecorator):
-    impl = types.Integer
-
-    def load_dialect_impl(self, dialect):
-        return dialect.type_descriptor(types.Integer)
-
-    def process_bind_param(self, value, dialect):
-        return int(value * 100) if value is not None else None
-
-    def process_result_value(self, value, dialect):
-        return float(value) / 100 if value is not None else None
+from pynYNAB.schema.types import AmountType
 
 
 class BudgetEntity(Entity):
@@ -32,7 +20,65 @@ class BudgetEntity(Entity):
 
     @declared_attr
     def parent(self):
-        return relationship('Budget')
+        return relationship('Budget',lazy=False)
+
+
+class Budget(Base, Root):
+    def __init__(self):
+        super(Budget, self).__init__()
+        self.budget_version_id = None
+
+    be_transactions = relationship('Transaction')
+    be_transactions_changed = relationship('Transaction')
+    be_master_categories = relationship('MasterCategory')
+    be_settings = relationship('Setting')
+    be_monthly_budget_calculations = relationship('MonthlyBudgetCalculation')
+    be_account_mappings = relationship('AccountMapping')
+    be_subtransactions = relationship('Subtransaction')
+    be_scheduled_subtransactions = relationship('ScheduledSubtransaction')
+    be_monthly_budgets = relationship('MonthlyBudget')
+    be_subcategories = relationship('Subcategory')
+    be_payee_locations = relationship('PayeeLocation')
+    be_account_calculations = relationship('AccountCalculation')
+    be_monthly_account_calculations = relationship('MonthlyAccountCalculation')
+    be_monthly_subcategory_budget_calculations = relationship('MonthlySubcategoryBudgetCalculation')
+    be_scheduled_transactions = relationship('ScheduledTransaction')
+    be_payees = relationship('Payee')
+    be_monthly_subcategory_budgets = relationship('MonthlySubcategoryBudget')
+    be_payee_rename_conditions = relationship('PayeeRenameCondition')
+    be_accounts = relationship('Account')
+    last_month = Column(Date)
+    first_month = Column(Date)
+
+    is_root = Column(Boolean,default=True)
+    changed_id = Column(ForeignKey('budget.id'))
+    changed = relationship('Budget', uselist=False, foreign_keys=[changed_id])
+
+    def get_request_data(self):
+        request_data = super(Budget, self).get_request_data()
+        request_data['budget_version_id'] = self.budget_version_id
+        request_data['calculated_entities_included'] = False
+        return request_data
+
+    def get_changed_entities(self):
+        changed_entities = super(Budget, self).get_changed_entities()
+        if 'be_transactions' in changed_entities:
+            changed_entities['be_transaction_groups'] = ListofEntities(TransactionGroup)
+            for tr in changed_entities.pop('be_transactions'):
+                subtransactions = ListofEntities(Subtransaction)
+                if 'be_subtransactions' in changed_entities:
+                    for subtr in [subtransaction for subtransaction in changed_entities.get('be_subtransactions') if
+                                  subtransaction.entities_transaction_id == tr.id]:
+                        changed_entities['be_subtransactions'].remove(subtr)
+                        subtransactions.append(subtr)
+                changed_entities['be_transaction_groups'].append(TransactionGroup(
+                    id=tr.id,
+                    be_transaction=tr,
+                    be_subtransactions=subtransactions
+                ))
+        if changed_entities.get('be_subtransactions') is not None:
+            del changed_entities['be_subtransactions']
+        return changed_entities
 
 
 class Transaction(Base, BudgetEntity):
@@ -54,7 +100,8 @@ class Transaction(Base, BudgetEntity):
     imported_date = Column(Date)
     imported_payee = Column(String)
     is_tombstone = Column(Boolean, default=False)
-    matched_transaction_id = Column(String)
+    matched_transaction_id = Column(ForeignKey('transaction.id'))
+    matched_transaction = relationship('Transaction',foreign_keys=matched_transaction_id)
     memo = Column(String)
     source = Column(String)
     subcategory_credit_amount_preceding = Column(AmountType, default=0)
@@ -62,7 +109,7 @@ class Transaction(Base, BudgetEntity):
     transfer_account=relationship('Account',foreign_keys=transfer_account_id)
     transfer_subtransaction_id = Column(ForeignKey('subtransaction.id'))
     transfer_transaction_id = Column(ForeignKey('transaction.id'))
-    transfer_transaction = relationship('Transaction')
+    transfer_transaction = relationship('Transaction', foreign_keys=transfer_transaction_id)
     ynab_id = Column(String)
 
 
@@ -280,10 +327,11 @@ class MonthlySubcategoryBudget(Base, BudgetEntity):
     overspending_handling = Column(String)
 
 
-class TransactionGroup(Base, BudgetEntity):
-    be_transaction = Column(String)
-    be_subtransactions = Column(String)
-    be_matched_transaction = Column(String)
+class TransactionGroup(object):
+    def __init__(self):
+        self.be_transaction = None
+        self.be_subtransactions = []
+        self.be_matched_transaction = None
 
 
 class PayeeRenameCondition(Base, BudgetEntity):
@@ -316,54 +364,3 @@ class Account(Base, BudgetEntity):
     sortable_index = EntityField(0)
     on_budget = PropertyField(on_budget_default)
 
-class Budget(Base, Entity):
-    def __init__(self):
-        super(Budget, self).__init__()
-        self.budget_version_id = None
-
-    be_transactions = relationship('Transaction')
-    be_master_categories = relationship('MasterCategory')
-    be_settings = relationship('Setting')
-    be_monthly_budget_calculations = relationship('MonthlyBudgetCalculation')
-    be_account_mappings = relationship('AccountMapping')
-    be_subtransactions = relationship('Subtransaction')
-    be_scheduled_subtransactions = relationship('ScheduledSubtransaction')
-    be_monthly_budgets = relationship('MonthlyBudget')
-    be_subcategories = relationship('Subcategory')
-    be_payee_locations = relationship('PayeeLocation')
-    be_account_calculations = relationship('AccountCalculation')
-    be_monthly_account_calculations = relationship('MonthlyAccountCalculation')
-    be_monthly_subcategory_budget_calculations = relationship('MonthlySubcategoryBudgetCalculation')
-    be_scheduled_transactions = relationship('ScheduledTransaction')
-    be_payees = relationship('Payee')
-    be_monthly_subcategory_budgets = relationship('MonthlySubcategoryBudget')
-    be_payee_rename_conditions = relationship('PayeeRenameCondition')
-    be_accounts = relationship('Account')
-    last_month = Column(Date)
-    first_month = Column(Date)
-
-    def get_request_data(self):
-        request_data = super(Budget, self).get_request_data()
-        request_data['budget_version_id'] = self.budget_version_id
-        request_data['calculated_entities_included'] = False
-        return request_data
-
-    def get_changed_entities(self):
-        changed_entities = super(Budget, self).get_changed_entities()
-        if 'be_transactions' in changed_entities:
-            changed_entities['be_transaction_groups'] = ListofEntities(TransactionGroup)
-            for tr in changed_entities.pop('be_transactions'):
-                subtransactions = ListofEntities(Subtransaction)
-                if 'be_subtransactions' in changed_entities:
-                    for subtr in [subtransaction for subtransaction in changed_entities.get('be_subtransactions') if
-                                  subtransaction.entities_transaction_id == tr.id]:
-                        changed_entities['be_subtransactions'].remove(subtr)
-                        subtransactions.append(subtr)
-                changed_entities['be_transaction_groups'].append(TransactionGroup(
-                    id=tr.id,
-                    be_transaction=tr,
-                    be_subtransactions=subtransactions
-                ))
-        if changed_entities.get('be_subtransactions') is not None:
-            del changed_entities['be_subtransactions']
-        return changed_entities

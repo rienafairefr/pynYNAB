@@ -1,26 +1,40 @@
 import json
 import unittest
 
-from pynYNAB.Entity import Entity, ComplexEncoder, ListofEntities, undef, AccountTypes, addprop
-from pynYNAB.roots import Budget, Catalog
-from pynYNAB.schema.Fields import EntityField, EntityListField, DateField, PropertyField
+from sqlalchemy import Column
+from sqlalchemy import Integer
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from pynYNAB.schema.Entity import Entity, ComplexEncoder, ListofEntities, addprop, Base
+from pynYNAB.schema.Fields import EntityField, EntityListField, PropertyField
 from pynYNAB.schema.budget import Account, AccountCalculation, AccountMapping, MasterCategory, Transaction, Subcategory, \
     MonthlyAccountCalculation, MonthlyBudget, MonthlySubcategoryBudget, MonthlyBudgetCalculation, \
     MonthlySubcategoryBudgetCalculation, PayeeLocation, Payee, PayeeRenameCondition, ScheduledSubtransaction, \
-    ScheduledTransaction, Setting, Subtransaction, TransactionGroup
-from pynYNAB.schema.catalog import BudgetVersion, CatalogBudget, User, UserBudget, UserSetting
+    ScheduledTransaction, Setting, Subtransaction, TransactionGroup, Budget
+from pynYNAB.schema.catalog import BudgetVersion, CatalogBudget, User, UserBudget, UserSetting, Catalog
 
+
+class MyEntity(Base, Entity):
+    greatfield = Column(Integer, default=2)
 
 class Test1(unittest.TestCase):
     maxDiff = None
 
-    def testEntityjson(self):
-        class MyEntity(Entity):
-            greatfield = EntityField(2)
+    def setUp(self):
+        engine = create_engine('sqlite://',echo=True)
 
+        Base.metadata.create_all(engine)
+        self.Session = sessionmaker(bind=engine)
+        self.session = self.Session()
+
+    def testEntityjson(self):
         obj = MyEntity()
+        self.session.add(obj)
+        self.session.commit()
+
         jsonroundtrip = json.loads(json.dumps(obj, cls=ComplexEncoder))
-        assert (jsonroundtrip == {'id': obj.id, 'greatfield': 2})
+        self.assertEqual({'id': str(obj.id), 'greatfield': 2},jsonroundtrip)
 
     def testequality(self):
         tr1 = Transaction()
@@ -49,63 +63,64 @@ class Test1(unittest.TestCase):
         result = tr1._hash()
         self.assertIsInstance(result, int)
 
-
     def testprop(self):
 
-        namefield='p'
-        default= lambda self:self.y
+        namefield = 'p'
+        default = lambda self: self.y
+
         def pgetter(self):
-            if hasattr(self,'__prop_'+namefield):
-                return getattr(self,'__prop_'+namefield)
+            if hasattr(self, '__prop_' + namefield):
+                return getattr(self, '__prop_' + namefield)
             else:
                 return default(self)
 
-        def psetter(self,value):
-            setattr(self,'__prop_'+namefield,value)
+        def psetter(self, value):
+            setattr(self, '__prop_' + namefield, value)
 
         class myClass(object):
             y = 1
 
-        obj1=myClass()
-        addprop(obj1,namefield,pgetter,psetter)
+        obj1 = myClass()
+        addprop(obj1, namefield, pgetter, psetter)
 
-        self.assertEqual(obj1.p,1)
-        obj1.y=3
-        self.assertEqual(obj1.p,3)
-        obj1.p=5
-        self.assertEqual(obj1.p,5)
-        obj1.y=7
-        self.assertNotEqual(obj1.p,7)
+        self.assertEqual(obj1.p, 1)
+        obj1.y = 3
+        self.assertEqual(obj1.p, 3)
+        obj1.p = 5
+        self.assertEqual(obj1.p, 5)
+        obj1.y = 7
+        self.assertNotEqual(obj1.p, 7)
 
     def test_lambdaprop(self):
         class MockEntity(Entity):
             input = EntityField(True),
             override = PropertyField(lambda x: x.input)
+
         # override behaves like a @property attribute:
 
-        entity1=MockEntity()
-        self.assertEqual(entity1.override,entity1.input)
-        entity1.input=False
-        self.assertEqual(entity1.override,entity1.input)
-        entity1.input=12
-        self.assertEqual(entity1.override,entity1.input)
+        entity1 = MockEntity()
+        self.assertEqual(entity1.override, entity1.input)
+        entity1.input = False
+        self.assertEqual(entity1.override, entity1.input)
+        entity1.input = 12
+        self.assertEqual(entity1.override, entity1.input)
 
         # unless set directly:
 
-        entity1.override=42
-        self.assertEqual(entity1.override,42)
+        entity1.override = 42
+        self.assertEqual(entity1.override, 42)
         # then it behaves like a normal attribute:
-        entity1.input=False
-        self.assertEqual(entity1.override,42)
+        entity1.input = False
+        self.assertEqual(entity1.override, 42)
 
         # we can clear and come back to @property behavior
         entity1.clean_override()
 
-        self.assertEqual(entity1.override,entity1.input)
-        entity1.input=False
-        self.assertEqual(entity1.override,entity1.input)
-        entity1.input=12
-        self.assertEqual(entity1.override,entity1.input)
+        self.assertEqual(entity1.override, entity1.input)
+        entity1.input = False
+        self.assertEqual(entity1.override, entity1.input)
+        entity1.input = 12
+        self.assertEqual(entity1.override, entity1.input)
 
     def testimports(self):
         types = [
@@ -144,19 +159,20 @@ class Test1(unittest.TestCase):
             obj = typ()
             self.assertIsInstance(obj.AllFields, dict)
             for f in obj.AllFields:
-                self.assertTrue(isinstance(obj.AllFields[f], EntityField) or isinstance(obj.AllFields[f], EntityListField))
+                self.assertTrue(
+                    isinstance(obj.AllFields[f], EntityField) or isinstance(obj.AllFields[f], EntityListField))
             self.assertTrue(checkequal(obj.getdict().keys(), obj.AllFields.keys()))
 
-            valuesleft=list(obj.getdict().values())
-            valuesright=[getattr(obj, f) for f in obj.AllFields.keys()]
+            valuesleft = list(obj.getdict().values())
+            valuesright = [getattr(obj, f) for f in obj.AllFields.keys()]
 
             unhashableleft = [v for v in valuesleft if v.__hash__ is None]
             hashableleft = [v for v in valuesleft if v.__hash__ is not None]
 
             unhashableright = [v for v in valuesright if v.__hash__ is None]
             hashableright = [v for v in valuesright if v.__hash__ is not None]
-            self.assertEqual(set(hashableleft),set(hashableright))
-            self.assertEqual(unhashableleft,unhashableright)
+            self.assertEqual(set(hashableleft), set(hashableright))
+            self.assertEqual(unhashableleft, unhashableright)
 
     def testupdatechangedentities(self):
         obj = Budget()
@@ -184,10 +200,6 @@ class Test1(unittest.TestCase):
         transaction = Transaction()
         self.assertRaises(ValueError, lambda: obj.be_accounts.append(transaction))
 
-    def testCE_nochange(self):
-        obj = Transaction(None)
-        self.assertEqual(obj.get_changed_entities(), {})
-
     def testCE_simpleadd(self):
         obj = Budget()
         account = Account()
@@ -197,17 +209,21 @@ class Test1(unittest.TestCase):
     def testCE_simpledelete(self):
         obj = Budget()
         account = Account()
-        obj.be_accounts.delete(account)
+        obj.be_accounts.append(account)
+        obj.__changed = None
+        obj.be_accounts.remove(account)
         self.assertEqual(obj.get_changed_entities(), {'be_accounts': [account]})
 
     def testCE_simplechange(self):
         obj = Budget()
         account1 = Account()
         obj.be_accounts.append(account1)
-        account2 = Account(id=account1.id, account_name='BLA')
-        obj.be_accounts.changed = []
-        obj.be_accounts.modify(account2)
-        self.assertEqual(obj.get_changed_entities(), {'be_accounts': [account2]})
+        self.session.add(obj)
+        self.session.commit()
+
+        account1.account_name='BLA'
+        changed_entities = obj.get_changed_entities()
+        self.assertEqual(changed_entities, {'be_accounts': [account1]})
 
     def test_str(self):
         # tests no exceptions when getting the string representation of some entities

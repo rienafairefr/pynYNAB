@@ -2,7 +2,8 @@ import json
 import uuid
 from uuid import UUID
 
-from sqlalchemy import String, TypeDecorator, CHAR
+from datetime import datetime
+from sqlalchemy import String, TypeDecorator, CHAR, types
 from sqlalchemy import TypeDecorator
 
 
@@ -24,7 +25,7 @@ class ArrayType(TypeDecorator):
         return ArrayType(self.impl.length)
 
 
-class GUID(TypeDecorator):
+class NYNAB_GUID(TypeDecorator):
     """Platform-independent GUID type.
 
     Uses PostgreSQL's UUID type, otherwise uses
@@ -56,3 +57,16 @@ class GUID(TypeDecorator):
             return value
         else:
             return uuid.UUID(value)
+
+
+class AmountType(types.TypeDecorator):
+    impl = types.Integer
+
+    def load_dialect_impl(self, dialect):
+        return dialect.type_descriptor(types.Integer)
+
+    def process_bind_param(self, value, dialect):
+        return int(value * 100) if value is not None else None
+
+    def process_result_value(self, value, dialect):
+        return float(value) / 100 if value is not None else None

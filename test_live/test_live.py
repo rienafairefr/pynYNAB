@@ -1,9 +1,8 @@
 import random
-import unittest
 from datetime import datetime, timedelta
 
 from pynYNAB import KeyGenerator
-from pynYNAB.Entity import AccountTypes
+from pynYNAB.schema.Entity import AccountTypes
 from pynYNAB.schema.budget import Transaction, Account, Subtransaction, Payee
 from test_live.common_Live import commonLive
 from test_live.common_Live import needs_account,needs_transaction
