@@ -4,8 +4,7 @@ from sqlalchemy import String
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from pynYNAB.schema.Entity import Entity, undef, Base, Root
-from pynYNAB.schema.Fields import EntityField
+from pynYNAB.schema.Entity import Entity, Base, RootEntity
 from pynYNAB.schema.types import ArrayType
 
 
@@ -19,7 +18,7 @@ class CatalogEntity(Entity):
         return relationship('Catalog')
 
 
-class Catalog(Base, Root):
+class Catalog(Base, RootEntity):
     ce_user_budgets = relationship('UserBudget')
     ce_user_settings = relationship('UserSetting')
     ce_budget_versions = relationship('BudgetVersion')
@@ -29,13 +28,11 @@ class Catalog(Base, Root):
 
 class CatalogBudget(Base, CatalogEntity):
     budget_name = Column(String)
-    is_tombstone = Column(String)
 
 
 class User(Base, CatalogEntity):
     username = Column(String)
     trial_expires_on = Column(String)
-    is_tombstone = EntityField(False)
     email = Column(String)
     feature_flags = Column(ArrayType)
     is_subscribed = Column(String)
@@ -50,9 +47,10 @@ class UserSetting(Base, CatalogEntity):
 
 
 class UserBudget(Base, CatalogEntity):
-    budget_id = EntityField(undef)
+    budget_id = Column(ForeignKey('catalogbudget.id'))
+    budget = relationship('CatalogBudget')
+
     user_id = Column(ForeignKey('user.id'))
-    is_tombstone = EntityField(False)
     permissions = Column(String)
 
     user = relationship('User', backref='budgets')
@@ -63,7 +61,6 @@ class BudgetVersion(Base, CatalogEntity):
     last_accessed_on = Column(String)
     currency_format = Column(String)
     budget_id = Column(ForeignKey('catalogbudget.id'))
-    is_tombstone = EntityField(False)
     version_name = Column(String)
     source = Column(String)
 

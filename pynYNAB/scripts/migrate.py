@@ -4,7 +4,6 @@ import random
 import re
 
 import configargparse
-from pynYNAB.config import test_common_args
 from ynab import YNAB
 
 from pynYNAB.Client import clientfromargs
@@ -20,7 +19,6 @@ def migrate_main():
     parser.add_argument('budget', metavar='BudgetPath', type=str,
                         help='The budget .ynab4 directory')
     args = parser.parse_args()
-    test_common_args(args)
 
     budget_base_name=os.path.basename(args.budget)
     budget_path=os.path.dirname(args.budget)

@@ -1,22 +1,23 @@
-import copy
 import json
 import logging
+from datetime import datetime
 from uuid import UUID
 
-import functools
 from aenum import Enum
+from sqlalchemy import Boolean
 from sqlalchemy import Column
+from sqlalchemy import Date
 from sqlalchemy import event
 from sqlalchemy import orm
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.declarative import declared_attr
 
 from pynYNAB import KeyGenerator
-from pynYNAB.schema.Fields import EntityField, EntityListField, PropertyField
-from pynYNAB.schema.types import NYNAB_GUID
+from pynYNAB.schema.types import NYNAB_GUID, AmountType
 
 logger = logging.getLogger('pynYNAB')
 from sqlalchemy import inspect
+
 
 def undef():
     pass
@@ -57,11 +58,9 @@ on_budget_dict[None] = None
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Entity):
-            return obj.getdict()
-        elif isinstance(obj,UUID):
+            return obj.getdict(treat=True)
+        elif isinstance(obj, UUID):
             return str(obj)
-        elif isinstance(obj, ListofEntities):
-            return list(obj)
         elif obj == undef:
             return
         else:
@@ -70,23 +69,6 @@ class ComplexEncoder(json.JSONEncoder):
 
 class UnknowEntityFieldValueError(Exception):
     pass
-
-
-def obj_from_dict(obj_type, dictionary):
-    treated = {}
-    obt = obj_type()
-    for key, value in dictionary.items():
-        try:
-            field = obt.AllFields[key]
-        except KeyError:
-            msg = 'Encountered field %s in a dictionary to create an entity of type %s, value %s ' % (
-            key, obj_type, dictionary[key])
-            logger.error(msg)
-            raise UnknowEntityFieldValueError(msg)
-        if isinstance(field, EntityField):
-            treated[key] = field.posttreat(value)
-
-    return obj_type(**treated)
 
 
 ignored_fields_for_hash = ['id', 'credit_amount', 'cash_amount', 'feature_flags']
@@ -110,283 +92,252 @@ def addprop(inst, name, method, setter=None, cleaner=None):
 
 class BaseModel(object):
     id = Column(NYNAB_GUID, primary_key=True, default=KeyGenerator.generateuuid)
+    is_tombstone = Column(Boolean, default=False)
 
     @declared_attr
     def __tablename__(cls):
         return cls.__name__.lower()
 
-
-class Changed(BaseModel):
-    pass
-
-
-class Entity(BaseModel):
-    def getdict(self):
-        return self.__dict__
-
-
-changed = {}
-
-class Root(BaseModel):
     @property
-    def ListFields(self):
+    def listfields(self):
         relations = inspect(self.__class__).relationships
-        return {k:relations[k].mapper.class_ for k in relations.keys()}
+        return {k: relations[k].mapper.class_ for k in relations.keys()}
 
     @property
-    def ScalarFields(self):
+    def scalarfields(self):
         scalarcolumns = self.__table__.columns
         return {k: scalarcolumns[k].type.__class__.__name__ for k in scalarcolumns.keys()}
 
-    def get_changed_entities(self):
-        return {key: value for key,value in self.changed.items() if value !=[]}
-
-    def clear_changed_entities(self):
-        self.__changed = {k: [] for k in self.ListFields}
-
-    def getdict(self):
-        objs_dict = {}
-        for key in self.ListFields:
-            objs_dict[key] = []
-            for instance in getattr(self,key):
-                objs_dict[key].append(instance.getdict())
+    @property
+    def allfields(self):
+        z = self.scalarfields.copy()
+        z.update(self.listfields)
+        return z
 
 
-def ensure_changed(instance,key):
-    try:
-        changed_list = changed[instance.id][key]
-    except:
-        changed[instance.id] = {}
-        changed[instance.id] = {}
-        changed[instance.id][key] = []
-        changed_list = changed[instance.id][key]
+def configure_listener(mapper, class_):
+    """Establish attribute setters for every default-holding column on the
+    given mapper."""
+
+    # iterate through ColumnProperty objects
+    for col_attr in mapper.column_attrs:
+
+        # look at the Column mapped by the ColumnProperty
+        # (we look at the first column in the less common case
+        # of a property mapped to multiple columns at once)
+        column = col_attr.columns[0]
+
+        # if the Column has a "default", set up a listener
+        if column.default is not None:
+            default_listener(col_attr, column.default)
+
+    for rel_attr in mapper.relationships:
+        expectedtype_listener(rel_attr)
 
 
-def configure_entity_listener(class_, key, inst):
-    def set_(instance, value, oldvalue, initiator):
-        if not hasattr(instance,'parent'):
-            return
-        parent = instance.parent
-        if parent is not None:
-            for relationship in parent.__mapper__.relationships:
-                if relationship.mapper == instance.__mapper__:
-
-                    changed_list.append(instance)
-
-    event.listen(inst, 'set', set_)
+def expectedtype_listener(rel_attr):
+    @event.listens_for(rel_attr, 'append')
+    def append(target, value, initiator):
+        expected_type = initiator.parent_token.mapper.class_
+        value_type = type(value)
+        if expected_type != value_type:
+            raise ValueError('expect a %s, received a %s ' % (expected_type, value_type))
 
 
-def configure_listener(class_, key, inst):
-    def append(instance, value, initiator):
-        if not instance.is_root:
-            return
-        if instance.changed is None:
-            instance.changed = class_()
-        entities_list = getattr(instance.changed, initiator.key)
-        entities_list.append(value)
+def default_listener(col_attr, default):
+    """Establish a default-setting listener.
 
-    def remove(instance, value, initiator):
-        if not instance.is_root:
-            return
-        if instance.changed is None:
-            instance.changed = class_()
-        value.is_tombstone=True
-        entities_list = getattr(instance.changed, initiator.key)
-        entities_list.append(value)
+    Given a class_, attrname, and a :class:`.DefaultGenerator` instance.
+    The default generator should be a :class:`.ColumnDefault` object with a
+    plain Python value or callable default; otherwise, the appropriate behavior
+    for SQL functions and defaults should be determined here by the
+    user integrating this feature.
 
-    event.listen(inst, 'append', append)
-    event.listen(inst, 'remove', remove)
+    """
+    @event.listens_for(col_attr, "init_scalar", retval=True, propagate=True)
+    def init_scalar(target, value, dict_):
 
-    #for relationship in class_.__mapper__.relationships:
-     #   remote_class = getattr(class_,relationship.key).class_
-     #   event.listen(remote_class,'attribute_instrument',configure_entity_listener)
+        if default.is_callable:
+            # the callable of ColumnDefault always accepts a context
+            # argument; we can pass it as None here.
+            value = default.arg(None)
+        elif default.is_scalar:
+            value = default.arg
+        else:
+            # default is a Sequence, a SQL expression, server
+            # side default generator, or other non-Python-evaluable
+            # object.  The feature here can't easily support this.   This
+            # can be made to return None, rather than raising,
+            # or can procure a connection from an Engine
+            # or Session and actually run the SQL, if desired.
+            raise NotImplementedError(
+                "Can't invoke pre-default for a SQL-level column default")
 
-Base = declarative_base(cls=Entity)
+        # set the value in the given dict_; this won't emit any further
+        # attribute set events or create attribute "history", but the value
+        # will be used in the INSERT statement
+        dict_[col_attr.key] = value
 
-event.listen(Root, 'attribute_instrument', configure_listener)
-event.listen(Entity, 'attribute_instrument', configure_entity_listener)
+        # return the value as well
+        return value
 
-class EntityCls(object):
-    def __init__(self, *args, **kwargs):
-        self.ListFields = {}
-        self.Fields = {}
-        self.AllFields = {}
 
-        for namefield in dir(self):
-            if namefield.startswith('__'): continue
-            field = getattr(self, namefield)
-            if isinstance(field, PropertyField):
-                fieldc = copy.deepcopy(field)
+class Entity(BaseModel):
+    def getdict(self, treat=False):
+        entityDict = {key: getattr(self, key) for key in self.scalarfields}
+        if treat:
+            for column in self.__table__.columns:
+                if column.name in entityDict and entityDict[column.name] is not None:
+                    if column.type.__class__.__name__ == Date.__name__:
+                        entityDict[column.name] = entityDict[column.name].strftime('%Y-%m-%d')
+                    if column.type.__class__.__name__ == NYNAB_GUID.__name__:
+                        entityDict[column.name] = str(entityDict[column.name])
+                    if column.type.__class__.__name__ == AmountType.__name__:
+                        entityDict[column.name] *= 100
+        return entityDict
 
-                def getter(selfi):
-                    if hasattr(selfi, '__prop_' + namefield):
-                        return getattr(selfi, '__prop_' + namefield)
-                    else:
-                        return fieldc()(selfi)
-
-                def setter(selfi, valuei):
-                    setattr(selfi, '__prop_' + namefield, valuei)
-
-                def cleaner(selfi):
-                    delattr(selfi, '__prop_' + namefield)
-
-                p = addprop(self, namefield, getter, setter, cleaner)
-                if kwargs.get(namefield):
-                    setattr(self.__class__, namefield, kwargs.get(namefield))
-            elif isinstance(field, EntityField):
-                self.Fields[namefield] = field
-            elif isinstance(field, EntityListField):
-                self.ListFields[namefield] = field
-            else:
-                continue
-            self.AllFields[namefield] = field
-            if isinstance(field, PropertyField): continue
-            value = kwargs.get(namefield) if kwargs.get(namefield) is not None else field()
-            setattr(self, namefield, value)
-        super(Entity, self).__init__()
-
-    id = EntityField(KeyGenerator.generateuuid)
-
-    def __hash__(self):
-        return self._hash()
-
-    def _hash(self):
-        t = tuple((k, v) for k, v in self.getdict().items() if k not in ignored_fields_for_hash)
-        try:
-            return hash(frozenset(t))
-        except TypeError:
-            pass
+    def __unicode__(self):
+        return self.__str__()
 
     def __str__(self):
         return self.getdict().__str__()
 
     def __repr__(self):
-        return self.getdict().__repr__()
-
-    def __unicode__(self):
-        return self.__str__()
-
-
-
-
-
-    def update_from_changed_entities(self, changed_entities):
-        for namefield in self.ListFields:
-            getattr(self, namefield).update_from_changed_entities(changed_entities.get(namefield))
-
-    def update_from_dict(self, d):
-        self.__dict__.update(d)
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
+        return self.getdict().__str__()
 
     def __eq__(self, other):
-        if isinstance(other, Entity):
-            return self.getdict() == other.getdict()
-        else:
+        try:
+            return self.__key() == other.__key()
+        except:
             return False
 
-
-class ListofEntities(list):
-    def __init__(self, typ):
-        super(ListofEntities, self).__init__()
-        from collections import OrderedDict
-        self._dict_entities = OrderedDict()
-        self._dict_entities_hash = {}
-        self.typeItems = typ
-        self.type_instance = typ()
-        self.changed = []
-
-    def _update_hashes(self):
-        self._dict_entities_hash = {hash(v): v for k, v in self._dict_entities.items()}
+    def __key(self):
+        return tuple(self.getdict().items())
 
     def __hash__(self):
-        return hash(frozenset(self._dict_entities))
+        return hash(self.__key())
 
-    def __str__(self):
-        return self._dict_entities.__str__()
+    def copy(self):
+        return type(self)(**self.getdict())
 
-    def __repr__(self):
-        return self._dict_entities.__repr__()
+    @classmethod
+    def from_dict(cls, entityDict, treat=False):
+        if treat:
+            for column in cls.__table__.columns:
+                if column.name in entityDict and entityDict[column.name] is not None:
+                    if column.type.__class__.__name__ == Date.__name__:
+                        entityDict[column.name] = datetime.strptime(entityDict[column.name], '%Y-%m-%d').date()
+                    if column.type.__class__.__name__ == NYNAB_GUID.__name__:
+                        entityDict[column.name] = entityDict[column.name].split('/')[-1]
+                    if column.type.__class__.__name__ == AmountType.__name__:
+                        entityDict[column.name] /= 100
 
-    def __unicode__(self):
-        return self.__str__()
+        return cls(**entityDict)
 
-    def __getitem__(self, item):
-        return self._dict_entities.values().__getitem__(item)
+Base = declarative_base(cls=Entity)
+
+event.listen(BaseModel, 'mapper_configured', configure_listener, propagate=True)
+
+
+class DictDiffer(object):
+    """
+    Calculate the difference between two dictionaries as:
+    (1) items added
+    (2) items removed
+    (3) keys same in both but changed values
+    (4) keys same in both and unchanged values
+    """
+
+    def __init__(self, current_dict, past_dict):
+        self.current_dict, self.past_dict = current_dict, past_dict
+        self.set_current, self.set_past = set(current_dict.keys()), set(past_dict.keys())
+        self.intersect = self.set_current.intersection(self.set_past)
+
+    def added(self):
+        return self.set_current - self.intersect
+
+    def removed(self):
+        return self.set_past - self.intersect
+
+    def changed(self):
+        return set(o for o in self.intersect if self.past_dict[o] != self.current_dict[o])
+
+    def unchanged(self):
+        return set(o for o in self.intersect if self.past_dict[o] == self.current_dict[o])
+
+
+class RootEntity(BaseModel):
+    previous_map = {}
+
+    def get_changed_dict(self, treat=False):
+        changed_entities = self.get_changed_entities()
+        changed_dict={}
+        for key in changed_entities:
+            changed_dict[key]=map(lambda entity:entity.getdict(treat),changed_entities[key])
+
+    def get_changed_entities(self):
+        current_map = self.getmap()
+        diff_map = {}
+
+        for key in current_map:
+            if key not in diff_map:
+                diff_map[key] = {}
+            if isinstance(current_map[key], dict):
+                if key in self.previous_map:
+                    diff = DictDiffer(current_map[key], self.previous_map[key])
+                    for obj_id in diff.added() | diff.changed():
+                        obj = current_map[key][obj_id]
+                        objc = obj.copy()
+                        diff_map[key][obj_id] = objc
+                    for obj_id in diff.removed():
+                        obj = self.previous_map[key][obj_id]
+                        objc = obj.copy()
+                        objc.is_tombstone = True
+                        diff_map[key][obj.id] = objc
+
+                else:
+                    diff_map[key] = current_map[key]
+        returnvalue = {}
+        for key, value in diff_map.items():
+            if isinstance(value, dict):
+                if value:
+                    returnvalue[key] = list(value.values())
+
+        return returnvalue
 
     def update_from_changed_entities(self, changed_entities):
         if changed_entities is None:
             return
-        for entity in changed_entities:
-            if hasattr(entity, 'is_tombstone') and entity.is_tombstone:
-                continue
-            try:
-                self._dict_entities[entity.id].update_from_changed_entities(entity)
-            except KeyError:
-                self._dict_entities[entity.id] = entity
-        self._update_hashes()
+        current_map = self.getmap()
+        for key in self.listfields:
+            listattr = getattr(self, key)
+            if key in changed_entities:
+                for entity in changed_entities[key]:
+                    if hasattr(entity, 'is_tombstone') and entity.is_tombstone:
+                        if entity.id in current_map[key]:
+                            listattr.remove(current_map[key][entity.id])
+                        else:
+                            pass
+                    try:
+                        current_map[key][entity.id].__dict__.update(entity.getdict())
+                    except KeyError:
+                        listattr.append(entity)
 
-    def get(self, entity_id):
-        return self._dict_entities.get(entity_id)
+    def __init__(self):
+        super(RootEntity, self).__init__()
+        self.clear_changed_entities()
 
-    def extend(self, objects, track=True):
-        if not all(isinstance(x, self.typeItems) for x in objects):
-            raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
-        for o in objects:
-            self._dict_entities[o.id] = o
-            self._dict_entities_hash[hash(o)] = o
-        if track:
-            self.changed.extend(objects)
+    @orm.reconstructor
+    def clear_changed_entities(self):
+        self.previous_map = self.getmap()
 
-    def append(self, o, track=True):
-        if not isinstance(o, self.typeItems):
-            raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
-        self._dict_entities[o.id] = o
-        self._dict_entities_hash[hash(o)] = o
-        if track:
-            self.changed.append(o)
-
-    def delete(self, o, track=True):
-        if not isinstance(o, self.typeItems):
-            raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
-        if o.id in self._dict_entities:
-            del self._dict_entities[o.id]
-        if hash(o) in self._dict_entities_hash:
-            del self._dict_entities_hash[hash(o)]
-        if track:
-            o.is_tombstone = True
-            self.changed.append(o)
-
-    def modify(self, o, track=True):
-        if not isinstance(o, self.typeItems):
-            raise ValueError('this ListofEntities can only contain %s' % self.typeItems.__name__)
-        if o.id in self._dict_entities:
-            h = hash(self._dict_entities[o.id])
-            if h in self._dict_entities_hash:
-                del self._dict_entities_hash[h]
-            self._dict_entities[o.id] = o
-            self._dict_entities_hash[hash(o)] = o
-            if track:
-                self.changed.append(o)
-
-    def __iter__(self):
-        return self._dict_entities.values().__iter__()
-
-    def __len__(self):
-        return len(self._dict_entities)
-
-    def containsduplicate(self, item):
-        if not isinstance(item, self.typeItems):
-            return False
-        else:
-            return item._hash() in self._dict_entities_hash
-
-    def __contains__(self, item):
-        if not isinstance(item, self.typeItems):
-            return False
-        else:
-            return item.id in self._dict_entities
-
-    def get_changed_entities(self):
-        return self.changed
+    def getmap(self) -> dict:
+        objs_dict = {}
+        for key in self.listfields:
+            objs_dict[key] = {}
+            if getattr(self, key) is not None:
+                for instance in getattr(self, key):
+                    objs_dict[key][instance.id] = instance
+        for key in self.scalarfields:
+            objs_dict[key] = getattr(self, key)
+        return objs_dict

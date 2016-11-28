@@ -1,14 +1,12 @@
-import codecs
+import csv
 import inspect
 import json
+import os
+import sys
 from collections import namedtuple
 from datetime import datetime
-import configargparse
-import os
-import csv
-import sys
 
-import jsontableschema
+import configargparse
 from jsontableschema.exceptions import InvalidSchemaError
 from jsontableschema.model import SchemaModel
 

@@ -8,7 +8,7 @@ from test_live.common_Live import commonLive
 from test_live.common_Live import needs_account,needs_transaction
 
 
-class liveTests(commonLive):
+class LiveTests(commonLive):
     def test_add_delete_budget(self):
         budget_name=KeyGenerator.generateuuid()
         self.client.create_budget(budget_name)

@@ -2,8 +2,7 @@ import json
 import uuid
 from uuid import UUID
 
-from datetime import datetime
-from sqlalchemy import String, TypeDecorator, CHAR, types
+from sqlalchemy import String, CHAR, types
 from sqlalchemy import TypeDecorator
 
 
