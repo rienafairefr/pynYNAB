@@ -337,7 +337,7 @@ class RootEntity(BaseModel):
             objs_dict[key] = {}
             if getattr(self, key) is not None:
                 for instance in getattr(self, key):
-                    objs_dict[key][instance.id] = instance
+                    objs_dict[key][str(instance.id)] = instance
         for key in self.scalarfields:
             objs_dict[key] = getattr(self, key)
         return objs_dict

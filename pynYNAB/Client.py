@@ -95,14 +95,21 @@ class nYnabClient(object):
             catalog_changed_entities = self.catalog.get_changed_entities()
             budget_changed_entities = self.budget.get_changed_entities()
 
-            if any(catalog_changed_entities) or any(budget_changed_entities):
-                self.delta_device_knowledge = 1
-            else:
-                self.delta_device_knowledge = 0
-
-            self.sync_obj(self.catalog, 'syncCatalogData', extra=dict(user_id="fbec95c7-9fd2-415e-9365-7c4a8e613a49"))
-            self.sync_obj(self.budget, 'syncBudgetData',
-                          extra=dict(calculated_entities_included=False, budget_version_id=self.budget_version_id))
+            if any(catalog_changed_entities):
+                opname = 'syncCatalogData'
+                self.sync_obj(self.catalog, opname,
+                              extra=dict(user_id="fbec95c7-9fd2-415e-9365-7c4a8e613a49",
+                              starting_device_knowledge=self.current_device_knowledge[opname],
+                              ending_device_knowledge=self.current_device_knowledge[opname] + 1
+                              ))
+            if any(budget_changed_entities):
+                opname = 'syncBudgetData'
+                self.sync_obj(self.budget, opname,
+                          extra=dict(
+                              starting_device_knowledge = self.current_device_knowledge[opname],
+                              ending_device_knowledge = self.current_device_knowledge[opname]+1,
+                              calculated_entities_included=False,
+                                     budget_version_id=self.budget_version_id))
         self.session.commit()
 
     def update_from_sync_data(self, obj, sync_data):

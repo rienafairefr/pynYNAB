@@ -30,7 +30,6 @@ class Budget(Base, RootEntity):
         self.budget_version_id = None
 
     be_transactions = relationship('Transaction')
-    be_transactions_changed = relationship('Transaction')
     be_master_categories = relationship('MasterCategory')
     be_settings = relationship('Setting')
     be_monthly_budget_calculations = relationship('MonthlyBudgetCalculation')
