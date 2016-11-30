@@ -194,6 +194,8 @@ class Entity(BaseModel):
                         entityDict[column.name] = str(entityDict[column.name])
                     if column.type.__class__.__name__ == AmountType.__name__:
                         entityDict[column.name] *= 100
+                    if column.type.__class__.__name__ == Enum.__name__:
+                        pass
         return entityDict
 
     def __unicode__(self):
@@ -273,7 +275,8 @@ class RootEntity(BaseModel):
         changed_entities = self.get_changed_entities()
         changed_dict={}
         for key in changed_entities:
-            changed_dict[key]=map(lambda entity:entity.getdict(treat),changed_entities[key])
+            changed_dict[key]=list(map(lambda entity:entity.getdict(treat),changed_entities[key]))
+        return changed_dict
 
     def get_changed_entities(self):
         current_map = self.getmap()
