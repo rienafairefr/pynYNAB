@@ -7,7 +7,7 @@ import configargparse
 from ynab import YNAB
 
 from pynYNAB.Client import clientfromargs
-from pynYNAB.schema.budget import MasterCategory, Subcategory, Account, Payee, Transaction
+from pynYNAB.schema.budget import MasterCategory, SubCategory, Account, Payee, Transaction
 
 
 def migrate_main():
@@ -51,7 +51,7 @@ def migrate_main():
         client.budget.be_master_categories.append(master_entity)
         for category in master_category.categories:
 
-            entity = Subcategory(
+            entity = SubCategory(
                 name=category.name,
                 entities_master_category_id=master_entity.id,
                 sortable_index=random.randint(-50000, 50000)

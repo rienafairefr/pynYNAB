@@ -69,7 +69,6 @@ class nYnabClient(object):
             print('No budget by the name %s found in nYNAB' % args.budgetname)
             exit(-1)
 
-
     def sync(self):
         # ending-starting represents the number of modifications that have been done to the data ?
         self.logger.debug('Client sync')
@@ -99,17 +98,17 @@ class nYnabClient(object):
                 opname = 'syncCatalogData'
                 self.sync_obj(self.catalog, opname,
                               extra=dict(user_id="fbec95c7-9fd2-415e-9365-7c4a8e613a49",
-                              starting_device_knowledge=self.current_device_knowledge[opname],
-                              ending_device_knowledge=self.current_device_knowledge[opname] + 1
-                              ))
+                                         starting_device_knowledge=self.current_device_knowledge[opname],
+                                         ending_device_knowledge=self.current_device_knowledge[opname] + 1
+                                         ))
             if any(budget_changed_entities):
                 opname = 'syncBudgetData'
                 self.sync_obj(self.budget, opname,
-                          extra=dict(
-                              starting_device_knowledge = self.current_device_knowledge[opname],
-                              ending_device_knowledge = self.current_device_knowledge[opname]+1,
-                              calculated_entities_included=False,
-                                     budget_version_id=self.budget_version_id))
+                              extra=dict(
+                                  starting_device_knowledge=self.current_device_knowledge[opname],
+                                  ending_device_knowledge=self.current_device_knowledge[opname] + 1,
+                                  calculated_entities_included=False,
+                                  budget_version_id=self.budget_version_id))
         self.session.commit()
 
     def update_from_sync_data(self, obj, sync_data):
@@ -129,7 +128,7 @@ class nYnabClient(object):
                                 current_obj.__dict__.update(entityDict)
                     else:
                         if 'is_tombstone' in entityDict and not entityDict['is_tombstone']:
-                            new_obj = obj.listfields[name].from_dict(entityDict,treat=True)
+                            new_obj = obj.listfields[name].from_dict(entityDict, treat=True)
                             self.session.add(new_obj)
                             list_of_entities.append(new_obj)
                             new_obj.parent = obj
@@ -217,7 +216,13 @@ class nYnabClient(object):
 
     @operation
     def delete_account(self, account):
-        self.budget.be_accounts.delete(account)
+        self.budget.be_accounts.remove(account)
+        for payee in list(self.budget.be_payees):
+            if payee.entities_account == account:
+                self.budget.be_payees.remove(payee)
+        for transaction in list(self.budget.be_transactions):
+            if transaction.entities_account == account:
+                self.budget.be_transactions.remove(transaction)
 
     @operation
     def add_transaction(self, transaction):
@@ -234,7 +239,7 @@ class nYnabClient(object):
 
     @operation
     def delete_transaction(self, transaction):
-        self.budget.be_transactions.delete(transaction)
+        self.budget.be_transactions.remove(transaction)
 
     def select_account_ui(self, create=False):
         accounts = list(self.budget.be_accounts)
@@ -265,8 +270,7 @@ class nYnabClient(object):
     def delete_budget(self, budget_name):
         for budget in self.catalog.ce_budgets:
             if budget.budget_name == budget_name:
-                budget.is_tombstone = True
-                self.catalog.ce_budgets.modify(budget)
+                self.catalog.ce_budgets.remove(budget)
 
     def select_budget(self, budget_name):
         self.logger.debug('Catalog sync')

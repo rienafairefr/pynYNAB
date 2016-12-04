@@ -11,6 +11,7 @@ from sqlalchemy import event
 from sqlalchemy import orm
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm.base import ONETOMANY, MANYTOMANY
 
 from pynYNAB import KeyGenerator
 from pynYNAB.schema.types import NYNAB_GUID, AmountType
@@ -101,7 +102,7 @@ class BaseModel(object):
     @property
     def listfields(self):
         relations = inspect(self.__class__).relationships
-        return {k: relations[k].mapper.class_ for k in relations.keys()}
+        return {k: relations[k].mapper.class_ for k in relations.keys() if relations[k].direction==ONETOMANY or relations[k].direction==MANYTOMANY}
 
     @property
     def scalarfields(self):
@@ -141,7 +142,7 @@ def expectedtype_listener(rel_attr):
         expected_type = initiator.parent_token.mapper.class_
         value_type = type(value)
         if expected_type != value_type:
-            raise ValueError('expect a %s, received a %s ' % (expected_type, value_type))
+            raise ValueError('type %s, attribute %s, expect a %s, received a %s ' % (type(target),rel_attr.key, expected_type, value_type))
 
 
 def default_listener(col_attr, default):
@@ -184,7 +185,7 @@ def default_listener(col_attr, default):
 
 class Entity(BaseModel):
     def getdict(self, treat=False):
-        entityDict = {key: getattr(self, key) for key in self.scalarfields}
+        entityDict = {key: getattr(self, key) for key in self.scalarfields if key != 'parent_id'}
         if treat:
             for column in self.__table__.columns:
                 if column.name in entityDict and entityDict[column.name] is not None:
@@ -193,19 +194,19 @@ class Entity(BaseModel):
                     if column.type.__class__.__name__ == NYNAB_GUID.__name__:
                         entityDict[column.name] = str(entityDict[column.name])
                     if column.type.__class__.__name__ == AmountType.__name__:
-                        entityDict[column.name] *= 100
+                        entityDict[column.name] = int(100*entityDict[column.name])
                     if column.type.__class__.__name__ == Enum.__name__:
-                        pass
+                        entityDict[column.name] = entityDict[column.name]._name_
         return entityDict
 
     def __unicode__(self):
         return self.__str__()
 
     def __str__(self):
-        return self.getdict().__str__()
+        return (type(self),self.id).__str__()
 
     def __repr__(self):
-        return self.getdict().__str__()
+        return self.__str__()
 
     def __eq__(self, other):
         try:
@@ -279,7 +280,7 @@ class RootEntity(BaseModel):
         return changed_dict
 
     def get_changed_entities(self):
-        current_map = self.getmap()
+        current_map = self.getmaps()
         diff_map = {}
 
         for key in current_map:
@@ -311,7 +312,7 @@ class RootEntity(BaseModel):
     def update_from_changed_entities(self, changed_entities):
         if changed_entities is None:
             return
-        current_map = self.getmap()
+        current_map = self.getmaps()
         for key in self.listfields:
             listattr = getattr(self, key)
             if key in changed_entities:
@@ -332,12 +333,19 @@ class RootEntity(BaseModel):
 
     @orm.reconstructor
     def clear_changed_entities(self):
-        self.previous_map = self.getmap()
+        self.previous_map = self.getmaps()
 
-    def getmap(self) -> dict:
+    def getmap(self,key) -> dict:
+        objs_dict = {}
+        if getattr(self, key) is not None:
+            for instance in getattr(self, key):
+                objs_dict[str(instance.id)] = instance
+        return objs_dict
+
+    def getmaps(self) -> dict:
         objs_dict = {}
         for key in self.listfields:
-            objs_dict[key] = {}
+            objs_dict[key] = self.getmap(key)
             if getattr(self, key) is not None:
                 for instance in getattr(self, key):
                     objs_dict[key][str(instance.id)] = instance

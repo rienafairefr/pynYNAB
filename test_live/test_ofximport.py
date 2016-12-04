@@ -90,7 +90,6 @@ NEWFILEUID:NONE
 
         key = '11706 41029 29939615002'
         account.note='great note key[%s]key' %key
-        self.client.budget.be_accounts.modify(account)
         self.client.sync()
 
         def getTr(date,payee,amount,memo,account):

@@ -7,7 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from pynYNAB.schema.Entity import Entity, ComplexEncoder, addprop, Base
-from pynYNAB.schema.budget import Account, AccountCalculation, AccountMapping, MasterCategory, Transaction, Subcategory, \
+from pynYNAB.schema.budget import Account, AccountCalculation, AccountMapping, MasterCategory, Transaction, SubCategory, \
     MonthlyAccountCalculation, MonthlyBudget, MonthlySubcategoryBudget, MonthlyBudgetCalculation, \
     MonthlySubcategoryBudgetCalculation, PayeeLocation, Payee, PayeeRenameCondition, ScheduledSubtransaction, \
     ScheduledTransaction, Setting, Subtransaction, TransactionGroup, Budget
@@ -34,13 +34,13 @@ class TestGetChangedEntities(CommonTest):
         self.account = Account()
         self.obj.be_accounts = [self.account]
         self.account2 = Account(id=self.account.id)
+        self.obj.clear_changed_entities()
 
     def testGetCE_add(self):
         changed_entities = self.obj.get_changed_entities()
         self.assertEqual(changed_entities, {'be_accounts': [self.account]})
 
     def testGetCE_delete(self):
-        self.obj.clear_changed_entities()
         self.obj.be_accounts.remove(self.account)
         changed_entities = self.obj.get_changed_entities()
         deleted = self.account.copy()
@@ -60,7 +60,6 @@ class TestUpdateChangedEntities(CommonTest):
         self.account = Account()
         self.obj.be_accounts = [self.account]
         self.account2 = self.account.copy()
-
 
     def testUpdateCE_add(self):
         new_account = Account()
@@ -109,54 +108,6 @@ class OtherTests(CommonTest):
         tr2 = Transaction()
         self.assertNotEqual(tr1, tr2)
 
-    def testimports(self):
-        types = [
-            Account,
-            AccountCalculation,
-            AccountMapping,
-            Budget,
-            MasterCategory,
-            MonthlyAccountCalculation,
-            MonthlyBudget,
-            MonthlyBudgetCalculation,
-            MonthlySubcategoryBudget,
-            MonthlySubcategoryBudgetCalculation,
-            Payee,
-            PayeeLocation,
-            PayeeRenameCondition,
-            ScheduledSubtransaction,
-            ScheduledTransaction,
-            Setting,
-            Subcategory,
-            Subtransaction,
-            Transaction,
-            BudgetVersion,
-            Catalog,
-            CatalogBudget,
-            User,
-            UserBudget,
-            UserSetting
-        ]
-
-        def checkequal(l1, l2):
-            return len(l1) == len(l2) and sorted(l1) == sorted(l2)
-
-        for typ in types:
-            obj = typ()
-            self.assertIsInstance(obj.allfields, dict)
-            self.assertTrue(checkequal(obj.getdict().keys(), obj.scalarfields.keys()))
-
-            valuesleft = list(obj.getdict().values())
-            valuesright = [getattr(obj, f) for f in obj.scalarfields.keys()]
-
-            unhashableleft = [v for v in valuesleft if v.__hash__ is None]
-            hashableleft = [v for v in valuesleft if v.__hash__ is not None]
-
-            unhashableright = [v for v in valuesright if v.__hash__ is None]
-            hashableright = [v for v in valuesright if v.__hash__ is not None]
-            self.assertEqual(set(hashableleft), set(hashableright))
-            self.assertEqual(unhashableleft, unhashableright)
-
     def testappend(self):
         obj = Budget()
         account = Account()
@@ -170,7 +121,6 @@ class OtherTests(CommonTest):
         def testappend():
             obj.be_accounts.append(transaction)
         self.assertRaises(ValueError, testappend)
-
 
     def test_str(self):
         # tests no exceptions when getting the string representation of some entities

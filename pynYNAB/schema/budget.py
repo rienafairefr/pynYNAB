@@ -37,7 +37,7 @@ class Budget(Base, RootEntity):
     be_subtransactions = relationship('Subtransaction')
     be_scheduled_subtransactions = relationship('ScheduledSubtransaction')
     be_monthly_budgets = relationship('MonthlyBudget')
-    be_subcategories = relationship('Subcategory')
+    be_subcategories = relationship('SubCategory')
     be_payee_locations = relationship('PayeeLocation')
     be_account_calculations = relationship('AccountCalculation')
     be_monthly_account_calculations = relationship('MonthlyAccountCalculation')
@@ -56,7 +56,7 @@ class Budget(Base, RootEntity):
         request_data['calculated_entities_included'] = False
         return request_data
 
-    def get_changed_entities(self,treat=False):
+    def get_changed_entities(self, treat=False):
         changed_entities = super(Budget, self).get_changed_entities()
         if 'be_transactions' in changed_entities:
             changed_entities['be_transaction_groups'] = []
@@ -67,11 +67,14 @@ class Budget(Base, RootEntity):
                         if subtransaction.entities_transaction_id == tr.id:
                             changed_entities['be_subtransactions'].remove(subtransaction)
                             subtransactions.append(subtransaction)
-                changed_entities['be_transaction_groups'].append(TransactionGroup(
+                if not subtransactions:
+                    subtransactions = None
+                group = TransactionGroup(
                     id=tr.id,
                     be_transaction=tr,
-                    be_subtransactions=subtransactions
-                ))
+                    be_subtransactions=subtransactions,
+                    be_matched_transaction=None)
+                changed_entities['be_transaction_groups'].append(group)
         if changed_entities.get('be_subtransactions') is not None:
             del changed_entities['be_subtransactions']
         return changed_entities
@@ -92,7 +95,8 @@ class Transaction(Base, BudgetEntity):
     entities_payee = relationship('Payee')
     entities_scheduled_transaction_id = Column(ForeignKey('scheduledtransaction.id'))
     entities_subcategory_id = Column(ForeignKey('subcategory.id'))
-    flag = Column(String, default="")
+    entities_subcategory = relationship('SubCategory')
+    flag = Column(String, default=None)
     imported_date = Column(Date)
     imported_payee = Column(String)
     matched_transaction_id = Column(ForeignKey('transaction.id'))
@@ -148,7 +152,8 @@ class MonthlyBudgetCalculation(Base, BudgetEntity):
 
 class AccountMapping(Base, BudgetEntity):
     date_sequence = Column(Date)
-    entities_account_id = Column(NYNAB_GUID)
+    entities_account_id = Column(ForeignKey('account.id'))
+    entities_account = relationship('Account', foreign_keys=entities_account_id)
     hash = Column(String)
     fid = Column(String)
     salt = Column(String)
@@ -166,6 +171,7 @@ class Subtransaction(Base, BudgetEntity):
     entities_payee_id = Column(ForeignKey('payee.id'))
     entities_payee = relationship('Payee')
     entities_subcategory_id = Column(ForeignKey('subcategory.id'))
+    entities_subcategory = relationship('SubCategory', foreign_keys=entities_subcategory_id)
     entities_transaction_id = Column(ForeignKey('transaction.id'))
     entities_transaction = relationship('Transaction', foreign_keys=entities_transaction_id)
     memo = Column(String)
@@ -180,12 +186,16 @@ class Subtransaction(Base, BudgetEntity):
 
 class ScheduledSubtransaction(Base, BudgetEntity):
     amount = Column(AmountType)
-    entities_payee_id = Column(NYNAB_GUID)
-    entities_scheduled_transaction_id = Column(NYNAB_GUID)
-    entities_subcategory_id = Column(NYNAB_GUID)
+    entities_payee_id = Column(ForeignKey('payee.id'))
+    entities_payee = relationship('Payee',foreign_keys=entities_payee_id)
+    entities_scheduled_transaction_id = Column(ForeignKey('scheduledtransaction.id'))
+    entities_scheduled_transaction = relationship('ScheduledTransaction', foreign_keys=entities_scheduled_transaction_id)
+    entities_subcategory_id = Column(ForeignKey('subcategory.id'))
+    entities_subcategory = relationship('SubCategory', foreign_keys=entities_subcategory_id)
     memo = Column(String)
     sortable_index = Column(Integer, default=0)
-    transfer_account_id = Column(NYNAB_GUID)
+    transfer_account_id = Column(ForeignKey('account.id'))
+    transfer_account = relationship('Account',foreign_keys=transfer_account_id)
 
 
 class MonthlyBudget(Base, BudgetEntity):
@@ -193,9 +203,15 @@ class MonthlyBudget(Base, BudgetEntity):
     note = Column(String)
 
 
-class Subcategory(Base, BudgetEntity):
-    entities_account_id = Column(NYNAB_GUID)
-    entities_master_category_id = Column(NYNAB_GUID)
+def notapi(s):
+    pass
+
+
+class SubCategory(Base, BudgetEntity):
+    entities_account_id = Column(ForeignKey('account.id'))
+    entities_account = relationship('Account', foreign_keys=entities_account_id)
+    entities_master_category_id = Column(ForeignKey('mastercategory.id'))
+    entities_master_category = relationship('MasterCategory', foreign_keys=entities_master_category_id)
     goal_creation_month = Column(String)
     goal_type = Column(String)
     internal_name = Column(String)
@@ -208,19 +224,18 @@ class Subcategory(Base, BudgetEntity):
     target_balance_month = Column(String)
     type = Column(String)
 
-    transaction = relationship(Transaction, backref='entities_subcategory')
-    subtransaction = relationship(Subtransaction, backref='entities_subcategory')
-
 
 class PayeeLocation(Base, BudgetEntity):
-    entities_payee_id = Column(NYNAB_GUID)
+    entities_payee_id = Column(ForeignKey('payee.id'))
+    entities_payee = relationship('Payee',foreign_keys=entities_payee_id)
     latitude = Column(String)
     longitude = Column(String)
 
 
 class AccountCalculation(Base, BudgetEntity):
     cleared_balance = Column(AmountType)
-    entities_account_id = Column(NYNAB_GUID)
+    entities_account_id = Column(ForeignKey('account.id'))
+    entities_account = relationship('Account',foreign_keys=entities_account_id)
     error_count = Column(String)
     info_count = Column(String)
     transaction_count = Column(String)
@@ -230,7 +245,8 @@ class AccountCalculation(Base, BudgetEntity):
 
 class MonthlyAccountCalculation(Base, BudgetEntity):
     cleared_balance = Column(AmountType)
-    entities_account_id = Column(NYNAB_GUID)
+    entities_account_id = Column(ForeignKey('account.id'))
+    entities_account = relationship('Account', foreign_keys=entities_account_id)
     error_count = Column(String)
     info_count = Column(String)
     month = Column(String)
@@ -253,7 +269,8 @@ class MonthlySubcategoryBudgetCalculation(Base, BudgetEntity):
     budgeted_spending = Column(AmountType)
     cash_outflows = Column(AmountType)
     credit_outflows = Column(AmountType)
-    entities_monthly_subcategory_budget_id = Column(NYNAB_GUID)
+    entities_monthly_subcategory_budget_id = Column(ForeignKey('monthlysubcategorybudget.id'))
+    entities_monthly_subcategory_budget = relationship('MonthlySubcategoryBudget',foreign_keys=entities_monthly_subcategory_budget_id)
     goal_expected_completion = Column(String)
     goal_overall_funded = Column(AmountType)
     goal_overall_left = Column(AmountType)
@@ -279,14 +296,19 @@ class UpComingInstance(Base):
 class ScheduledTransaction(Base, BudgetEntity):
     amount = Column(AmountType)
     date = Column(Date)
-    entities_account_id = Column(NYNAB_GUID)
-    entities_payee_id = Column(NYNAB_GUID)
-    entities_subcategory_id = Column(NYNAB_GUID)
+    entities_account_id = Column(ForeignKey('account.id'))
+    entities_account = relationship('Account',foreign_keys=entities_account_id)
+    entities_payee_id = Column(ForeignKey('payee.id'))
+    entities_payee = relationship('Payee',foreign_keys=entities_payee_id)
+    entities_subcategory_id = Column(ForeignKey('subcategory.id'))
+    entities_subcategory = relationship('SubCategory', foreign_keys=entities_subcategory_id)
     transaction = relationship(Transaction, backref='entities_scheduled_transaction')
-    flag = Column(String)
+    flag = Column(String,default=None)
     frequency = Column(String)
     memo = Column(String)
-    transfer_account_id = Column(NYNAB_GUID)
+    transfer_account_id = Column(ForeignKey('account.id'))
+    transfer_account = relationship('Account', foreign_keys=transfer_account_id)
+
     upcoming_instances = relationship('UpComingInstance')
 
 
@@ -296,9 +318,11 @@ class Payee(Base, BudgetEntity):
     auto_fill_memo = Column(String)
     auto_fill_memo_enabled = Column(String)
     auto_fill_subcategory_enabled = Column(String)
-    auto_fill_subcategory_id = Column(NYNAB_GUID)
+    auto_fill_subcategory_id = Column(ForeignKey('subcategory.id'))
+    auto_fill_subcategory = relationship('SubCategory',foreign_keys=auto_fill_subcategory_id)
     enabled = Column(Boolean, default=True)
-    entities_account_id = Column(NYNAB_GUID)
+    entities_account_id = Column(ForeignKey('account.id'))
+    entities_account = relationship('Account', foreign_keys=entities_account_id)
     internal_name = Column(String)
     name = Column(String)
     rename_on_import_enabled = Column(String)
@@ -306,23 +330,22 @@ class Payee(Base, BudgetEntity):
 
 class MonthlySubcategoryBudget(Base, BudgetEntity):
     budgeted = Column(AmountType)
-    entities_monthly_budget_id = Column(NYNAB_GUID)
-    entities_subcategory_id = Column(NYNAB_GUID)
+    entities_monthly_budget_id = Column(ForeignKey('monthlybudget.id'))
+    entities_monthly_budget = relationship('MonthlyBudget',foreign_keys = entities_monthly_budget_id)
+    entities_subcategory_id = Column(ForeignKey('subcategory.id'))
+    entities_subcategory = relationship('SubCategory', foreign_keys=entities_subcategory_id)
     note = Column(String)
     overspending_handling = Column(String)
 
 
-class TransactionGroup(Base, BudgetEntity):
-    be_transaction_id = Column(ForeignKey('transaction.id'))
-    be_transaction = relationship('Transaction', foreign_keys=[be_transaction_id])
-    be_subtransactions_id = Column(ForeignKey('subtransaction.id'))
-    be_subtransactions = relationship('Subtransaction')
-    be_matched_transaction_id = Column(ForeignKey('transaction.id'))
-    be_matched_transaction = relationship('Transaction', foreign_keys=[be_matched_transaction_id])
+class TransactionGroup(dict):
+    def getdict(self, treat=False):
+        return self
 
 
 class PayeeRenameCondition(Base, BudgetEntity):
-    entities_payee_id = Column(NYNAB_GUID)
+    entities_payee_id = Column(ForeignKey('payee.id'))
+    entities_payee = relationship('Payee', foreign_keys=entities_payee_id)
     operand = Column(String)
     operator = Column(String)
 
@@ -330,20 +353,27 @@ class PayeeRenameCondition(Base, BudgetEntity):
 class Account(Base, BudgetEntity):
     account_name = Column(String)
     account_type = Column(Enum(AccountTypes), default=AccountTypes.undef)
-    direct_connect_account_id = Column(NYNAB_GUID)
-    direct_connect_enabled = Column(Boolean, default=False)
-    direct_connect_institution_id = Column(NYNAB_GUID)
     hidden = Column(Boolean, default=False)
     last_entered_check_number = Column(String)
-    last_imported_at = Column(Date)
-    last_imported_error_code = Column(String)
     last_reconciled_balance = Column(String)
     last_reconciled_date = Column(Date)
-    direct_connect_last_error_code = Column(String)
-    direct_connect_last_imported_at = Column(Date)
     note = Column(String)
     sortable_index = Column(Integer, default=0)
-    on_budget = Column(Boolean)
+    on_budget = Column(Boolean,default=True)
 
+    direct_connect_enabled = Column(Boolean, default=False)
+    direct_connect_account_id = Column(NYNAB_GUID)
+    direct_connect_institution_id = Column(NYNAB_GUID)
+    direct_connect_last_imported_at = Column(Date)
+    direct_connect_last_error_code = Column(String)
 
-pass
+    def getdict(self, treat=False):
+        super_dict = super(Account,self).getdict(treat)
+        if not super_dict['direct_connect_enabled']:
+            super_dict['direct_connect_enabled'] = False
+            del super_dict['direct_connect_account_id']
+            del super_dict['direct_connect_last_error_code']
+            del super_dict['direct_connect_institution_id']
+            del super_dict['direct_connect_last_imported_at']
+        return super_dict
+

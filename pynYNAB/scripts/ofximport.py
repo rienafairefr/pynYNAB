@@ -49,7 +49,6 @@ def do_ofximport(args, client = None):
                 account.note += addon
             else:
                 account.note = addon
-            client.budget.be_accounts.modify(account)
             client.sync()
         else:
             for note in accountvsnotes:
