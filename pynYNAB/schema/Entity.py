@@ -339,16 +339,13 @@ class RootEntity(BaseModel):
         objs_dict = {}
         if getattr(self, key) is not None:
             for instance in getattr(self, key):
-                objs_dict[str(instance.id)] = instance
+                objs_dict[str(instance.id)] = instance.copy()
         return objs_dict
 
     def getmaps(self) -> dict:
         objs_dict = {}
         for key in self.listfields:
             objs_dict[key] = self.getmap(key)
-            if getattr(self, key) is not None:
-                for instance in getattr(self, key):
-                    objs_dict[key][str(instance.id)] = instance
         for key in self.scalarfields:
             objs_dict[key] = getattr(self, key)
         return objs_dict

@@ -37,8 +37,10 @@ class TestGetChangedEntities(CommonTest):
         self.obj.clear_changed_entities()
 
     def testGetCE_add(self):
+        added_account = Account()
+        self.obj.be_accounts.append(added_account)
         changed_entities = self.obj.get_changed_entities()
-        self.assertEqual(changed_entities, {'be_accounts': [self.account]})
+        self.assertEqual(changed_entities, {'be_accounts': [added_account]})
 
     def testGetCE_delete(self):
         self.obj.be_accounts.remove(self.account)

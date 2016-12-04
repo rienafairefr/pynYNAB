@@ -1,16 +1,11 @@
 Client sync
 First sync
-syncCatalogData  ... {'request_data': '{"changed_entities": {}, "ending_device_knowledge": 0, "device_knowledge_of_server": 0, "starting_device_knowledge": 0}', 'operation_name': 'syncCatalogData'} 
-server_knowledge_of_device 297
-current_server_knowledge 341459173
-Server knowledge has gone up by 341459173. We should be getting back some entities from the server
-current_device_knowledge 297
-device_knowledge_of_server 341459173
-syncBudgetData  ... {'request_data': '{"starting_device_knowledge": 0, "calculated_entities_included": false, "budget_version_id": "cac574c4-fe1c-470f-93ef-297832101daf", "changed_entities": {}, "ending_device_knowledge": 0, "device_knowledge_of_server": 0}', 'operation_name': 'syncBudgetData'} 
-server_knowledge_of_device 78
-current_server_knowledge 257
-Server knowledge has gone up by 257. We should be getting back some entities from the server
-current_device_knowledge 78
-device_knowledge_of_server 257
-Client sync
-Not first sync
+syncCatalogData  ... {'operation_name': 'syncCatalogData', 'request_data': '{"ending_device_knowledge": 0, "changed_entities": {}, "device_knowledge_of_server": 0, "starting_device_knowledge": 0}'} 
+server_knowledge_of_device 298
+current_server_knowledge 341480704
+Server knowledge has gone up by 341480704. We should be getting back some entities from the server
+current_device_knowledge 298
+device_knowledge_of_server 341480704
+syncBudgetData  ... {'operation_name': 'syncBudgetData', 'request_data': '{"ending_device_knowledge": 0, "changed_entities": {}, "device_knowledge_of_server": 0, "budget_version_id": "cac574c4-fe1c-470f-93ef-297832101daf", "starting_device_knowledge": 0, "calculated_entities_included": false}'} 
+server_knowledge_of_device 82
+current_server_knowledge 266
