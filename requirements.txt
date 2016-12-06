@@ -8,5 +8,5 @@ aenum
 six>=1.5
 sqlalchemy
 lxml
-ofxtools -e git://github.com/csingley/ofxtools.git@4a3e496d7d2a3babdeabd4e114d98fc5f2862667#eff=ofxtools
+ofxtools==0.3.9dev -e git://github.com/csingley/ofxtools.git@4a3e496d7d2a3babdeabd4e114d98fc5f2862667#eff=ofxtools
 pynab
