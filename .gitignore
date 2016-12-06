@@ -8,3 +8,4 @@ tests/
 
 ynab.conf
 .coverage
+*.log
