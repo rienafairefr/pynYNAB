@@ -1,16 +1,13 @@
-import configargparse
 import inspect
 import os
 import random
 import re
-import sys
-from pynYNAB.config import test_common_args
+
+import configargparse
 from ynab import YNAB
 
-from pynYNAB.Client import nYnabClient, BudgetNotFound, clientfromargs
-from pynYNAB.Entity import AccountTypes
-from pynYNAB.connection import nYnabConnection
-from pynYNAB.schema.budget import MasterCategory, Subcategory, Account, Payee, Transaction
+from pynYNAB.Client import clientfromargs
+from pynYNAB.schema.budget import MasterCategory, SubCategory, Account, Payee, Transaction
 
 
 def migrate_main():
@@ -22,7 +19,6 @@ def migrate_main():
     parser.add_argument('budget', metavar='BudgetPath', type=str,
                         help='The budget .ynab4 directory')
     args = parser.parse_args()
-    test_common_args(args)
 
     budget_base_name=os.path.basename(args.budget)
     budget_path=os.path.dirname(args.budget)
@@ -55,7 +51,7 @@ def migrate_main():
         client.budget.be_master_categories.append(master_entity)
         for category in master_category.categories:
 
-            entity = Subcategory(
+            entity = SubCategory(
                 name=category.name,
                 entities_master_category_id=master_entity.id,
                 sortable_index=random.randint(-50000, 50000)

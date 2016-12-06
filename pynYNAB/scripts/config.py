@@ -1,4 +1,3 @@
-import argparse
 import logging
 import os
 from appdirs import AppDirs
@@ -33,6 +32,7 @@ def get_logger(args=None):
     logger = logging.getLogger('pynYNAB')
     logging.basicConfig()
     logger.setLevel(logginglevel)
+    logger.handlers[:] = [logging.FileHandler('pynynab.log',mode='w')]
     return logger
 
 

@@ -1,16 +1,14 @@
-import configargparse
 import random
 import unittest
 from datetime import datetime
+from functools import wraps
 
 from pynYNAB import KeyGenerator
 from pynYNAB.Client import clientfromargs
-from pynYNAB.Entity import AccountTypes
+from pynYNAB.schema.Entity import AccountTypes
 from pynYNAB.schema.budget import Account, Payee
 from pynYNAB.schema.budget import Transaction
-
 from pynYNAB.scripts.config import parser
-from functools import wraps
 
 
 def needs_account(account_name=None):

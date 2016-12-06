@@ -5,7 +5,7 @@ from tempfile import gettempdir
 
 import configargparse
 
-from pynYNAB.Entity import ComplexEncoder
+from pynYNAB.schema.Entity import ComplexEncoder
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.csvimport import do_csvimport
 from test_live.common_Live import commonLive

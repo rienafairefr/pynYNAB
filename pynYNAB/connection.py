@@ -7,7 +7,7 @@ from time import sleep
 import requests
 from requests.cookies import RequestsCookieJar
 
-from pynYNAB.Entity import ComplexEncoder
+from pynYNAB.schema.Entity import ComplexEncoder
 from pynYNAB.utils import RateLimited
 
 
@@ -40,7 +40,7 @@ class nYnabConnection(object):
         self.sessionToken = None
         self.id = str(uuid.uuid3(uuid.NAMESPACE_DNS, 'rienafairefr.pynYNAB'))
         self.lastrequest_elapsed=None
-        self.logger = logging.getLogger('pynYnab')
+        self.logger = logging.getLogger('pynYNAB')
         self._init_session()
 
     @RateLimited(maxpersecond=5)
@@ -55,7 +55,7 @@ class nYnabConnection(object):
         """
         # Available operations :
 
-        params = { u'operation_name': opname,'request_data': json.dumps(request_dic, cls=ComplexEncoder),}
+        params = {u'operation_name': opname,'request_data': json.dumps(request_dic, cls=ComplexEncoder),}
         self.logger.debug('%s  ... %s ' % (opname,params))
         r = self.session.post(self.urlCatalog, params, verify=False)
         self.lastrequest_elapsed=r.elapsed
@@ -81,7 +81,11 @@ class nYnabConnection(object):
                  sleep(float(retyrafter))
                  return self.dorequest(request_dic,opname)
             else:
-                raise NYnabConnectionError('Unknown Error \"%s\" was returned from the API'%error['id'])
+                self.logger.debug('Unknown API error')
+                self.logger.debug(error)
+                self.logger.debug('Request data:')
+                self.logger.debug(request_dic)
+                raise NYnabConnectionError('Unknown Error \"%s\" was returned from the API when sending request (%s,%s)'%(error['id'],opname, request_dic))
 
 
 

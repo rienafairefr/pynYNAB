@@ -1,271 +1,379 @@
-from pynYNAB.Entity import Entity, undef, on_budget_dict, AccountTypes
-from pynYNAB.schema.Fields import EntityField, AmountField, DateField, AccountTypeField, EntityListField, DatesField, \
-    PropertyField
+from sqlalchemy import Boolean
+from sqlalchemy import Column
+from sqlalchemy import Date
+from sqlalchemy import Enum
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import String
+from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import relationship
+from sqlalchemy.util import hybridproperty
+
+from pynYNAB.schema.Entity import Entity, on_budget_dict, AccountTypes, Base, RootEntity
+from pynYNAB.schema.types import AmountType, NYNAB_GUID
 
 
-class Transaction(Entity):
-    accepted=EntityField(True)
-    amount=AmountField()
-    cash_amount=AmountField()
-    check_number=EntityField(None)
-    cleared=EntityField('Uncleared')
-    credit_amount=AmountField()
-    date=DateField(None)
-    date_entered_from_schedule=DateField(None)
-    entities_account_id=EntityField(None)
-    entities_payee_id=EntityField(None)
-    entities_scheduled_transaction_id=EntityField(None)
-    entities_subcategory_id=EntityField(None)
-    flag=EntityField("")
-    imported_date=DateField(None)
-    imported_payee=EntityField(None)
-    is_tombstone=EntityField(False)
-    matched_transaction_id=EntityField(None)
-    memo=EntityField(None)
-    source=EntityField(None)
-    subcategory_credit_amount_preceding=EntityField(0)
-    transfer_account_id=EntityField(None)
-    transfer_subtransaction_id=EntityField(None)
-    transfer_transaction_id=EntityField(None)
-    ynab_id=EntityField(None)
+class BudgetEntity(Entity):
+    @declared_attr
+    def parent_id(self):
+        return Column(ForeignKey('budget.id'))
+
+    @declared_attr
+    def parent(self):
+        return relationship('Budget', lazy=False)
 
 
-class MasterCategory(Entity):
-    deletable=EntityField(True)
-    internal_name=EntityField(None)
-    is_hidden=EntityField(False)
-    is_tombstone=EntityField(False)
-    name=EntityField(None)
-    note=EntityField(None)
-    sortable_index=EntityField(None)
+class Budget(Base, RootEntity):
+    def __init__(self):
+        RootEntity.__init__(self)
+        self.budget_version_id = None
+
+    be_transactions = relationship('Transaction')
+    be_master_categories = relationship('MasterCategory')
+    be_settings = relationship('Setting')
+    be_monthly_budget_calculations = relationship('MonthlyBudgetCalculation')
+    be_account_mappings = relationship('AccountMapping')
+    be_subtransactions = relationship('Subtransaction')
+    be_scheduled_subtransactions = relationship('ScheduledSubtransaction')
+    be_monthly_budgets = relationship('MonthlyBudget')
+    be_subcategories = relationship('SubCategory')
+    be_payee_locations = relationship('PayeeLocation')
+    be_account_calculations = relationship('AccountCalculation')
+    be_monthly_account_calculations = relationship('MonthlyAccountCalculation')
+    be_monthly_subcategory_budget_calculations = relationship('MonthlySubcategoryBudgetCalculation')
+    be_scheduled_transactions = relationship('ScheduledTransaction')
+    be_payees = relationship('Payee')
+    be_monthly_subcategory_budgets = relationship('MonthlySubcategoryBudget')
+    be_payee_rename_conditions = relationship('PayeeRenameCondition')
+    be_accounts = relationship('Account')
+    last_month = Column(Date)
+    first_month = Column(Date)
+
+    def get_request_data(self):
+        request_data = super(Budget, self).get_request_data()
+        request_data['budget_version_id'] = self.budget_version_id
+        request_data['calculated_entities_included'] = False
+        return request_data
+
+    def get_changed_entities(self, treat=False):
+        changed_entities = super(Budget, self).get_changed_entities()
+        if 'be_transactions' in changed_entities:
+            changed_entities['be_transaction_groups'] = []
+            for tr in changed_entities.pop('be_transactions'):
+                subtransactions = []
+                if 'be_subtransactions' in changed_entities:
+                    for subtransaction in changed_entities.get('be_subtransactions'):
+                        if subtransaction.entities_transaction_id == tr.id:
+                            changed_entities['be_subtransactions'].remove(subtransaction)
+                            subtransactions.append(subtransaction)
+                if not subtransactions:
+                    subtransactions = None
+                group = TransactionGroup(
+                    id=tr.id,
+                    be_transaction=tr,
+                    be_subtransactions=subtransactions,
+                    be_matched_transaction=None)
+                changed_entities['be_transaction_groups'].append(group)
+        if changed_entities.get('be_subtransactions') is not None:
+            del changed_entities['be_subtransactions']
+        return changed_entities
 
 
-class Setting(Entity):
-    setting_name=EntityField(None)
-    setting_value=EntityField(None)
+class Transaction(Base, BudgetEntity):
+    accepted = Column(Boolean, default=True)
+    amount = Column(AmountType)
+    cash_amount = Column(AmountType)
+    check_number = Column(String)
+    cleared = Column(String, default='Uncleared')
+    credit_amount = Column(AmountType)
+    date = Column(Date)
+    date_entered_from_schedule = Column(Date)
+    entities_account_id = Column(ForeignKey('account.id'))
+    entities_account = relationship('Account', foreign_keys=entities_account_id)
+    entities_payee_id = Column(ForeignKey('payee.id'))
+    entities_payee = relationship('Payee')
+    entities_scheduled_transaction_id = Column(ForeignKey('scheduledtransaction.id'))
+    entities_subcategory_id = Column(ForeignKey('subcategory.id'))
+    entities_subcategory = relationship('SubCategory')
+    flag = Column(String, default=None)
+    imported_date = Column(Date)
+    imported_payee = Column(String)
+    matched_transaction_id = Column(ForeignKey('transaction.id'))
+    matched_transaction = relationship('Transaction', foreign_keys=matched_transaction_id)
+    memo = Column(String)
+    source = Column(String)
+    subcategory_credit_amount_preceding = Column(AmountType, default=0)
+    transfer_account_id = Column(ForeignKey('account.id'))
+    transfer_account = relationship('Account', foreign_keys=transfer_account_id)
+    transfer_subtransaction_id = Column(ForeignKey('subtransaction.id'))
+    transfer_transaction_id = Column(ForeignKey('transaction.id'))
+    transfer_transaction = relationship('Transaction', foreign_keys=transfer_transaction_id)
+    ynab_id = Column(String)
 
 
-class MonthlyBudgetCalculation(Entity):
-    additional_to_be_budgeted=AmountField()
-    age_of_money=EntityField(None)
-    available_to_budget=EntityField(None)
-    balance=EntityField(None)
-    budgeted=EntityField(None)
-    calculation_notes=EntityField(None)
-    cash_outflows=AmountField()
-    credit_outflows=AmountField()
-    deferred_income=AmountField()
-    entities_monthly_budget_id=EntityField(None)
-    hidden_balance=AmountField()
-    hidden_budgeted=AmountField()
-    hidden_cash_outflows=AmountField()
-    hidden_credit_outflows=AmountField()
-    immediate_income=AmountField()
-    is_tombstone=EntityField(False)
-    over_spent=AmountField()
-    previous_income=AmountField()
-    uncategorized_balance=AmountField()
-    uncategorized_cash_outflows=AmountField()
-    uncategorized_credit_outflows=AmountField()
+class MasterCategory(Base, BudgetEntity):
+    deletable = Column(Boolean, default=True)
+    internal_name = Column(String)
+    is_hidden = Column(Boolean, default=False)
+    name = Column(String)
+    note = Column(String)
+    sortable_index = Column(String)
 
 
-class AccountMapping(Entity):
-    date_sequence=DateField(None)
-    entities_account_id=EntityField(None)
-    hash=EntityField(None)
-    fid=EntityField(None)
-    is_tombstone=EntityField(False)
-    salt=EntityField(None)
-    shortened_account_id=EntityField(None)
-    should_flip_payees_memos=EntityField(None)
-    should_import_memos=EntityField(None)
-    skip_import=EntityField(None)
+class Setting(Base, BudgetEntity):
+    setting_name = Column(String)
+    setting_value = Column(String)
 
 
-class Subtransaction(Entity):
-    amount=AmountField()
-    cash_amount=AmountField()
-    check_number=EntityField(None)
-    credit_amount=AmountField()
-    entities_payee_id=EntityField(None)
-    entities_subcategory_id=EntityField(None)
-    entities_transaction_id=EntityField(None)
-    is_tombstone=EntityField(False)
-    memo=EntityField(None)
-    sortable_index=EntityField(0)
-    subcategory_credit_amount_preceding=EntityField(0)
-    transfer_account_id=EntityField(None)
-    transfer_transaction_id=EntityField(None)
+class MonthlyBudgetCalculation(Base, BudgetEntity):
+    additional_to_be_budgeted = Column(AmountType)
+    age_of_money = Column(String)
+    available_to_budget = Column(String)
+    balance = Column(String)
+    budgeted = Column(String)
+    calculation_notes = Column(String)
+    cash_outflows = Column(AmountType)
+    credit_outflows = Column(AmountType)
+    deferred_income = Column(AmountType)
+    entities_monthly_budget_id = Column(ForeignKey('monthlybudget.id'))
+    entities_monthly_budget = relationship('MonthlyBudget')
+    hidden_balance = Column(AmountType)
+    hidden_budgeted = Column(AmountType)
+    hidden_cash_outflows = Column(AmountType)
+    hidden_credit_outflows = Column(AmountType)
+    immediate_income = Column(AmountType)
+    over_spent = Column(AmountType)
+    previous_income = Column(AmountType)
+    uncategorized_balance = Column(AmountType)
+    uncategorized_cash_outflows = Column(AmountType)
+    uncategorized_credit_outflows = Column(AmountType)
 
 
-class ScheduledSubtransaction(Entity):
-    amount=AmountField()
-    entities_payee_id=EntityField(None)
-    entities_scheduled_transaction_id=EntityField(None)
-    entities_subcategory_id=EntityField(None)
-    is_tombstone=EntityField(False)
-    memo=EntityField(None)
-    sortable_index=EntityField(0)
-    transfer_account_id=EntityField(None)
+class AccountMapping(Base, BudgetEntity):
+    date_sequence = Column(Date)
+    entities_account_id = Column(ForeignKey('account.id'))
+    entities_account = relationship('Account', foreign_keys=entities_account_id)
+    hash = Column(String)
+    fid = Column(String)
+    salt = Column(String)
+    shortened_account_id = Column(NYNAB_GUID)
+    should_flip_payees_memos = Column(String)
+    should_import_memos = Column(String)
+    skip_import = Column(String)
 
 
-class MonthlyBudget(Entity):
-    is_tombstone=EntityField(False)
-    month=EntityField(None)
-    note=EntityField(None)
+class Subtransaction(Base, BudgetEntity):
+    amount = Column(AmountType)
+    cash_amount = Column(AmountType)
+    check_number = Column(String)
+    credit_amount = Column(AmountType)
+    entities_payee_id = Column(ForeignKey('payee.id'))
+    entities_payee = relationship('Payee')
+    entities_subcategory_id = Column(ForeignKey('subcategory.id'))
+    entities_subcategory = relationship('SubCategory', foreign_keys=entities_subcategory_id)
+    entities_transaction_id = Column(ForeignKey('transaction.id'))
+    entities_transaction = relationship('Transaction', foreign_keys=entities_transaction_id)
+    memo = Column(String)
+    sortable_index = Column(Integer, default=0)
+    subcategory_credit_amount_preceding = Column(Integer, default=0)
+    transfer_account_id = Column(ForeignKey('account.id'))
+    transfer_account = relationship('Account')
+    transfer_transaction_id = Column(ForeignKey('transaction.id'))
+    transfer_transaction = relationship('Transaction', backref='transfer_subtransaction',
+                                        foreign_keys=transfer_transaction_id)
 
 
-class Subcategory(Entity):
-    entities_account_id=EntityField(None)
-    entities_master_category_id=EntityField(None)
-    goal_creation_month=EntityField(None)
-    goal_type=EntityField(None)
-    internal_name=EntityField(None)
-    is_hidden=EntityField(False)
-    is_tombstone=EntityField(False)
-    monthly_funding=EntityField(None)
-    name=EntityField(None)
-    note=EntityField(None)
-    sortable_index=EntityField(0)
-    target_balance=AmountField()
-    target_balance_month=EntityField(None)
-    type=EntityField(None)
+class ScheduledSubtransaction(Base, BudgetEntity):
+    amount = Column(AmountType)
+    entities_payee_id = Column(ForeignKey('payee.id'))
+    entities_payee = relationship('Payee',foreign_keys=entities_payee_id)
+    entities_scheduled_transaction_id = Column(ForeignKey('scheduledtransaction.id'))
+    entities_scheduled_transaction = relationship('ScheduledTransaction', foreign_keys=entities_scheduled_transaction_id)
+    entities_subcategory_id = Column(ForeignKey('subcategory.id'))
+    entities_subcategory = relationship('SubCategory', foreign_keys=entities_subcategory_id)
+    memo = Column(String)
+    sortable_index = Column(Integer, default=0)
+    transfer_account_id = Column(ForeignKey('account.id'))
+    transfer_account = relationship('Account',foreign_keys=transfer_account_id)
 
 
-class PayeeLocation(Entity):
-    entities_payee_id=EntityField(None)
-    is_tombstone=EntityField(False)
-    latitude=EntityField(None)
-    longitude=EntityField(None)
+class MonthlyBudget(Base, BudgetEntity):
+    month = Column(String)
+    note = Column(String)
 
 
-class AccountCalculation(Entity):
-    cleared_balance=AmountField()
-    entities_account_id=EntityField(None)
-    error_count=EntityField(None)
-    info_count=EntityField(None)
-    is_tombstone=EntityField(False)
-    transaction_count=EntityField(None)
-    uncleared_balance=AmountField()
-    warning_count=EntityField(None)
+def notapi(s):
+    pass
 
 
-class MonthlyAccountCalculation(Entity):
-    cleared_balance=AmountField()
-    entities_account_id=EntityField(None)
-    error_count=EntityField(None)
-    info_count=EntityField(None)
-    is_tombstone=EntityField(False)
-    month=EntityField(None)
-    transaction_count=EntityField(None)
-    uncleared_balance=AmountField()
-    warning_count=EntityField(None)
-    rolling_balance=AmountField()
+class SubCategory(Base, BudgetEntity):
+    entities_account_id = Column(ForeignKey('account.id'))
+    entities_account = relationship('Account', foreign_keys=entities_account_id)
+    entities_master_category_id = Column(ForeignKey('mastercategory.id'))
+    entities_master_category = relationship('MasterCategory', foreign_keys=entities_master_category_id)
+    goal_creation_month = Column(String)
+    goal_type = Column(String)
+    internal_name = Column(String)
+    is_hidden = Column(Boolean, default=False)
+    monthly_funding = Column(String)
+    name = Column(String)
+    note = Column(String)
+    sortable_index = Column(Integer, default=0)
+    target_balance = Column(AmountType)
+    target_balance_month = Column(String)
+    type = Column(String)
 
 
-class MonthlySubcategoryBudgetCalculation(Entity):
-    additional_to_be_budgeted=EntityField(None)
-    all_spending=AmountField()
-    all_spending_since_last_payment=AmountField()
-    balance=AmountField()
-    balance_previous_month=AmountField()
-    budgeted_average=AmountField()
-    budgeted_cash_outflows=AmountField()
-    budgeted_credit_outflows=AmountField()
-    budgeted_previous_month=AmountField()
-    budgeted_spending=AmountField()
-    cash_outflows=AmountField()
-    credit_outflows=AmountField()
-    entities_monthly_subcategory_budget_id=EntityField(None)
-    goal_expected_completion=EntityField(None)
-    goal_overall_funded=AmountField()
-    goal_overall_left=AmountField()
-    goal_percentage_complete=EntityField(None)
-    goal_target=EntityField(None)
-    goal_under_funded=EntityField(None)
-    is_tombstone=EntityField(False)
-    overspending_affects_buffer=EntityField(None)
-    payment_average=AmountField()
-    payment_previous_month=AmountField()
-    spent_average=AmountField()
-    spent_previous_month=AmountField()
-    unbudgeted_cash_outflows=AmountField()
-    unbudgeted_credit_outflows=AmountField()
-    upcoming_transactions=AmountField()
-    upcoming_transactions_count=EntityField(None)
-    positive_cash_outflows=AmountField()
+class PayeeLocation(Base, BudgetEntity):
+    entities_payee_id = Column(ForeignKey('payee.id'))
+    entities_payee = relationship('Payee',foreign_keys=entities_payee_id)
+    latitude = Column(String)
+    longitude = Column(String)
 
 
-class ScheduledTransaction(Entity):
-    amount=AmountField()
-    date=DateField(None)
-    entities_account_id=EntityField(None)
-    entities_payee_id=EntityField(None)
-    entities_subcategory_id=EntityField(None)
-    flag=EntityField(None)
-    frequency=EntityField(None)
-    is_tombstone=EntityField(False)
-    memo=EntityField(None)
-    transfer_account_id=EntityField(None)
-    upcoming_instances=DatesField([])
+class AccountCalculation(Base, BudgetEntity):
+    cleared_balance = Column(AmountType)
+    entities_account_id = Column(ForeignKey('account.id'))
+    entities_account = relationship('Account',foreign_keys=entities_account_id)
+    error_count = Column(String)
+    info_count = Column(String)
+    transaction_count = Column(String)
+    uncleared_balance = Column(AmountType)
+    warning_count = Column(String)
 
 
-class Payee(Entity):
-    auto_fill_amount=AmountField()
-    auto_fill_amount_enabled=EntityField(None)
-    auto_fill_memo=EntityField(None)
-    auto_fill_memo_enabled=EntityField(None)
-    auto_fill_subcategory_enabled=EntityField(None)
-    auto_fill_subcategory_id=EntityField(None)
-    enabled=EntityField(True)
-    entities_account_id=EntityField(None)
-    internal_name=EntityField(None)
-    is_tombstone=EntityField(False)
-    name=EntityField(None)
-    rename_on_import_enabled=EntityField(None)
+class MonthlyAccountCalculation(Base, BudgetEntity):
+    cleared_balance = Column(AmountType)
+    entities_account_id = Column(ForeignKey('account.id'))
+    entities_account = relationship('Account', foreign_keys=entities_account_id)
+    error_count = Column(String)
+    info_count = Column(String)
+    month = Column(String)
+    transaction_count = Column(String)
+    uncleared_balance = Column(AmountType)
+    warning_count = Column(String)
+    rolling_balance = Column(AmountType)
 
 
-class MonthlySubcategoryBudget(Entity):
-    budgeted=AmountField()
-    entities_monthly_budget_id=EntityField(None)
-    entities_subcategory_id=EntityField(None)
-    is_tombstone=EntityField(False)
-    note=EntityField(None)
-    overspending_handling=EntityField(None)
+class MonthlySubcategoryBudgetCalculation(Base, BudgetEntity):
+    additional_to_be_budgeted = Column(String)
+    all_spending = Column(AmountType)
+    all_spending_since_last_payment = Column(AmountType)
+    balance = Column(AmountType)
+    balance_previous_month = Column(AmountType)
+    budgeted_average = Column(AmountType)
+    budgeted_cash_outflows = Column(AmountType)
+    budgeted_credit_outflows = Column(AmountType)
+    budgeted_previous_month = Column(AmountType)
+    budgeted_spending = Column(AmountType)
+    cash_outflows = Column(AmountType)
+    credit_outflows = Column(AmountType)
+    entities_monthly_subcategory_budget_id = Column(ForeignKey('monthlysubcategorybudget.id'))
+    entities_monthly_subcategory_budget = relationship('MonthlySubcategoryBudget',foreign_keys=entities_monthly_subcategory_budget_id)
+    goal_expected_completion = Column(String)
+    goal_overall_funded = Column(AmountType)
+    goal_overall_left = Column(AmountType)
+    goal_percentage_complete = Column(String)
+    goal_target = Column(String)
+    goal_under_funded = Column(String)
+    overspending_affects_buffer = Column(String)
+    payment_average = Column(AmountType)
+    payment_previous_month = Column(AmountType)
+    spent_average = Column(AmountType)
+    spent_previous_month = Column(AmountType)
+    unbudgeted_cash_outflows = Column(AmountType)
+    unbudgeted_credit_outflows = Column(AmountType)
+    upcoming_transactions = Column(AmountType)
+    upcoming_transactions_count = Column(String)
+    positive_cash_outflows = Column(AmountType)
 
 
-class TransactionGroup(Entity):
-    be_transaction=EntityField(None)
-    be_subtransactions=EntityField(None)
-    be_matched_transaction=EntityField(None)
+class UpComingInstance(Base):
+    scheduledtransaction_id = Column(ForeignKey('scheduledtransaction.id'))
 
 
-class PayeeRenameCondition(Entity):
-    entities_payee_id=EntityField(None)
-    is_tombstone=EntityField(False)
-    operand=EntityField(None)
-    operator=EntityField(None)
+class ScheduledTransaction(Base, BudgetEntity):
+    amount = Column(AmountType)
+    date = Column(Date)
+    entities_account_id = Column(ForeignKey('account.id'))
+    entities_account = relationship('Account',foreign_keys=entities_account_id)
+    entities_payee_id = Column(ForeignKey('payee.id'))
+    entities_payee = relationship('Payee',foreign_keys=entities_payee_id)
+    entities_subcategory_id = Column(ForeignKey('subcategory.id'))
+    entities_subcategory = relationship('SubCategory', foreign_keys=entities_subcategory_id)
+    transaction = relationship(Transaction, backref='entities_scheduled_transaction')
+    flag = Column(String,default=None)
+    frequency = Column(String)
+    memo = Column(String)
+    transfer_account_id = Column(ForeignKey('account.id'))
+    transfer_account = relationship('Account', foreign_keys=transfer_account_id)
+
+    upcoming_instances = relationship('UpComingInstance')
 
 
-def on_budget_default(self):
-    return on_budget_dict[self.account_type.value]
+class Payee(Base, BudgetEntity):
+    auto_fill_amount = Column(AmountType)
+    auto_fill_amount_enabled = Column(String)
+    auto_fill_memo = Column(String)
+    auto_fill_memo_enabled = Column(String)
+    auto_fill_subcategory_enabled = Column(String)
+    auto_fill_subcategory_id = Column(ForeignKey('subcategory.id'))
+    auto_fill_subcategory = relationship('SubCategory',foreign_keys=auto_fill_subcategory_id)
+    enabled = Column(Boolean, default=True)
+    entities_account_id = Column(ForeignKey('account.id'))
+    entities_account = relationship('Account', foreign_keys=entities_account_id)
+    internal_name = Column(String)
+    name = Column(String)
+    rename_on_import_enabled = Column(String)
 
 
-class Account(Entity):
-    account_name=EntityField(None)
-    account_type=AccountTypeField(AccountTypes.undef)
-    direct_connect_account_id=EntityField(undef)
-    direct_connect_enabled=EntityField(False)
-    direct_connect_institution_id=EntityField(undef)
-    hidden=EntityField(False)
-    is_tombstone=EntityField(False)
-    last_entered_check_number=EntityField(None)
-    last_imported_at=EntityField(undef)
-    last_imported_error_code=EntityField(undef)
-    last_reconciled_balance=EntityField(None)
-    last_reconciled_date=DateField(None)
-    direct_connect_last_error_code=EntityField(None)
-    direct_connect_last_imported_at=DateField(None)
-    note=EntityField(None)
-    sortable_index=EntityField(0)
-    on_budget=PropertyField(on_budget_default)
+class MonthlySubcategoryBudget(Base, BudgetEntity):
+    budgeted = Column(AmountType)
+    entities_monthly_budget_id = Column(ForeignKey('monthlybudget.id'))
+    entities_monthly_budget = relationship('MonthlyBudget',foreign_keys = entities_monthly_budget_id)
+    entities_subcategory_id = Column(ForeignKey('subcategory.id'))
+    entities_subcategory = relationship('SubCategory', foreign_keys=entities_subcategory_id)
+    note = Column(String)
+    overspending_handling = Column(String)
+
+
+class TransactionGroup(dict):
+    def getdict(self, treat=False):
+        return self
+
+
+class PayeeRenameCondition(Base, BudgetEntity):
+    entities_payee_id = Column(ForeignKey('payee.id'))
+    entities_payee = relationship('Payee', foreign_keys=entities_payee_id)
+    operand = Column(String)
+    operator = Column(String)
+
+
+class Account(Base, BudgetEntity):
+    account_name = Column(String)
+    account_type = Column(Enum(AccountTypes), default=AccountTypes.undef)
+    hidden = Column(Boolean, default=False)
+    last_entered_check_number = Column(String)
+    last_reconciled_balance = Column(String)
+    last_reconciled_date = Column(Date)
+    note = Column(String)
+    sortable_index = Column(Integer, default=0)
+    on_budget = Column(Boolean,default=True)
+
+    direct_connect_enabled = Column(Boolean, default=False)
+    direct_connect_account_id = Column(NYNAB_GUID)
+    direct_connect_institution_id = Column(NYNAB_GUID)
+    direct_connect_last_imported_at = Column(Date)
+    direct_connect_last_error_code = Column(String)
+
+    def getdict(self, treat=False):
+        super_dict = super(Account,self).getdict(treat)
+        if not super_dict['direct_connect_enabled']:
+            super_dict['direct_connect_enabled'] = False
+            del super_dict['direct_connect_account_id']
+            del super_dict['direct_connect_last_error_code']
+            del super_dict['direct_connect_institution_id']
+            del super_dict['direct_connect_last_imported_at']
+        return super_dict
+

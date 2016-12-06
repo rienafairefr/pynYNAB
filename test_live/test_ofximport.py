@@ -6,7 +6,7 @@ from datetime import datetime
 import configargparse
 
 from pynYNAB.Client import clientfromargs
-from pynYNAB.Entity import ComplexEncoder
+from pynYNAB.schema.Entity import ComplexEncoder
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.ofximport import do_ofximport
 from test_live.common_Live import commonLive
@@ -90,7 +90,6 @@ NEWFILEUID:NONE
 
         key = '11706 41029 29939615002'
         account.note='great note key[%s]key' %key
-        self.client.budget.be_accounts.modify(account)
         self.client.sync()
 
         def getTr(date,payee,amount,memo,account):
