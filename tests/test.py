@@ -133,7 +133,14 @@ class OtherTests(CommonTest):
         obj2 = Budget()
         obj2.be_accounts.__str__()
 
-
     def jsondefault(self):
         encoded = json.dumps('test', cls=ComplexEncoder)
         self.assertEqual(encoded, 'test')
+
+
+class TestOthers(unittest.TestCase):
+    def test_copy(self):
+        obj = Account()
+        objc = obj.copy()
+        self.assertEqual(obj.id,objc.id)
+        self.assertEqual(obj.getdict(),objc.getdict())

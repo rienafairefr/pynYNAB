@@ -42,10 +42,10 @@ class LiveTests(commonLive):
         )
 
         self.client.add_account(account, balance=random.randint(-10, 10), balance_date=datetime.now())
-        self.client.sync()
+        self.reload()
         self.assertIn(account, self.client.budget.be_accounts)
         self.client.delete_account(account)
-        self.client.sync()
+        self.reload()
         self.assertNotIn(account,self.client.budget.be_accounts)
 
     @needs_account()
@@ -58,10 +58,10 @@ class LiveTests(commonLive):
             entities_account_id=self.account.id,
         )
         self.client.add_transaction(transaction)
-        self.client.sync()
+        self.reload()
         self.assertIn(transaction, self.client.budget.be_transactions)
         self.client.delete_transaction(transaction)
-        self.client.sync()
+        self.reload()
         self.assertNotIn(transaction, self.client.budget.be_transactions)
 
     @needs_account('account1')
@@ -73,34 +73,34 @@ class LiveTests(commonLive):
         try:
             payee_2 = next(payee for payee in self.client.budget.be_payees if payee.entities_account_id == account2.id)
         except StopIteration:
-            payee_2 = Payee(entities_account_id=account2.id)
+            payee_2 = Payee(entities_account=account2)
             self.client.budget.be_payees.append(payee_2)
         try:
             payee_1 = next(payee for payee in self.client.budget.be_payees if payee.entities_account_id == account1.id)
         except StopIteration:
-            payee_1 = Payee(entities_account_id=account1.id)
+            payee_1 = Payee(entities_account=account1)
             self.client.budget.be_payees.append(payee_1)
 
         transaction1 = Transaction(
             amount=random.randint(-10, 10),
             date=datetime.now(),
-            entities_account_id=account1.id,
-            entities_payee_id=payee_2.id
+            entities_account=account1,
+            entities_payee=payee_2
         )
         transaction2 = Transaction(
             amount=-transaction1.amount,
             date=datetime.now(),
-            entities_account_id=account2.id,
-            entities_payee_id=payee_1.id
+            entities_account=account2,
+            entities_payee=payee_1
         )
         self.client.budget.be_transactions.append(transaction1)
         self.client.budget.be_transactions.append(transaction2)
-        self.client.sync()
+        self.reload()
         self.assertIn(transaction1, self.client.budget.be_transactions)
         self.assertIn(transaction2, self.client.budget.be_transactions)
         self.client.budget.be_transactions.remove(transaction1)
         self.client.budget.be_transactions.remove(transaction2)
-        self.client.sync()
+        self.reload()
 
     @needs_account()
     def test_add_deletetransactions(self):
@@ -127,12 +127,12 @@ class LiveTests(commonLive):
 
         self.client.add_transactions(transactions)
         print('Time for request: ' + str(self.client.connection.lastrequest_elapsed.total_seconds()) + ' s')
-        self.client.sync()
+        self.reload()
         for transaction in transactions:
             self.assertIn(transaction, self.client.budget.be_transactions)
         for transaction in transactions:
             self.client.delete_transaction(transaction)
-        self.client.sync()
+        self.reload()
         for transaction in transactions:
             self.assertNotIn(transaction,self.client.budget.be_transactions)
 
@@ -157,7 +157,7 @@ class LiveTests(commonLive):
         self.client.budget.be_transactions.append(transaction)
         self.client.budget.be_subtransactions.append(sub1)
         self.client.budget.be_subtransactions.append(sub2)
-        self.client.sync()
+        self.reload()
         self.assertIn(transaction, self.client.budget.be_transactions)
         self.assertIn(sub1, self.client.budget.be_subtransactions)
         self.assertIn(sub2, self.client.budget.be_subtransactions)
@@ -185,7 +185,7 @@ class LiveTests(commonLive):
         self.client.budget.be_subtransactions.append(subtransaction1)
         self.client.budget.be_subtransactions.append(subtransaction2)
 
-        self.client.sync()
+        self.reload()
 
         self.assertIn(subtransaction1, self.client.budget.be_subtransactions)
         self.assertIn(self.transaction, self.client.budget.be_transactions)
