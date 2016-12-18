@@ -1,4 +1,3 @@
-import itertools
 import random
 
 from datetime import datetime
@@ -10,11 +9,11 @@ from pynYNAB.scripts.config import parser
 # used to ping the nYNAB API to check that the sync works
 
 args = parser.parse_known_args()[0]
-N=2
+N = 20
 client = clientfromargs(args)
 client.sync()
 account = next(acc for acc in client.budget.be_accounts)
-for _ in itertools.repeat(None, N):
+for _ in range(0, N):
     transaction = Transaction(
         cleared='Uncleared',
         date=datetime.now(),

@@ -8,8 +8,7 @@ import configargparse
 from pynYNAB.schema.Entity import ComplexEncoder
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.csvimport import do_csvimport
-from test_live.common_Live import commonLive
-from test_live.test_live import needs_account
+from test_live.common_Live import commonLive, needs_account
 
 
 class TestCsv(commonLive):

@@ -10,6 +10,7 @@ from pynYNAB.Client import clientfromargs
 from pynYNAB.schema.budget import MasterCategory, SubCategory, Account, Payee, Transaction
 
 
+# noinspection PyArgumentList
 def migrate_main():
     print('migrate YNAB4 to pynYNAB')
     """Migrate a YNAB4 budget transaction history to nYNAB, using pyynab"""

@@ -58,7 +58,7 @@ class commonLive(unittest.TestCase):
 
     def util_add_account(self,account_name=None):
         if account_name is None:
-            account_name = KeyGenerator.generateuuid()
+            account_name = str(KeyGenerator.generateuuid())
         account = Account(
             account_type=random.choice(list(AccountTypes)),
             account_name= account_name

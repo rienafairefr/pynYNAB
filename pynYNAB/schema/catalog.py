@@ -1,3 +1,4 @@
+from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import ForeignKey
 from sqlalchemy import String
@@ -35,7 +36,7 @@ class User(Base, CatalogEntity):
     trial_expires_on = Column(String)
     email = Column(String)
     feature_flags = Column(ArrayType)
-    is_subscribed = Column(String)
+    is_subscribed = Column(Boolean)
 
 
 class UserSetting(Base, CatalogEntity):

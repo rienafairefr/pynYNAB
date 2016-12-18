@@ -6,12 +6,9 @@ from sqlalchemy import Integer
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from pynYNAB.schema.Entity import Entity, ComplexEncoder, addprop, Base
-from pynYNAB.schema.budget import Account, AccountCalculation, AccountMapping, MasterCategory, Transaction, SubCategory, \
-    MonthlyAccountCalculation, MonthlyBudget, MonthlySubcategoryBudget, MonthlyBudgetCalculation, \
-    MonthlySubcategoryBudgetCalculation, PayeeLocation, Payee, PayeeRenameCondition, ScheduledSubtransaction, \
-    ScheduledTransaction, Setting, Subtransaction, TransactionGroup, Budget
-from pynYNAB.schema.catalog import BudgetVersion, CatalogBudget, User, UserBudget, UserSetting, Catalog
+from pynYNAB.Client import nYnabClient
+from pynYNAB.schema.Entity import Entity, ComplexEncoder, Base
+from pynYNAB.schema.budget import Account, Transaction, Budget
 
 
 class MyEntity(Base, Entity):
@@ -58,17 +55,20 @@ class TestGetChangedEntities(CommonTest):
 class TestUpdateChangedEntities(CommonTest):
     def setUp(self):
         super(TestUpdateChangedEntities,self).setUp()
-        self.obj = Budget()
         self.account = Account()
+        self.client = nYnabClient(None,'Mock Budget')
+        self.obj = self.client.budget
         self.obj.be_accounts = [self.account]
         self.account2 = self.account.copy()
+        self.client.session.commit()
+
 
     def testUpdateCE_add(self):
         new_account = Account()
         changed_entities = dict(
             be_accounts=[new_account]
         )
-        self.obj.update_from_changed_entities(changed_entities)
+        self.client.update_from_changed_entities(self.obj,changed_entities)
         self.assertEqual(len(self.obj.be_accounts), 2)
         self.assertIn(new_account,self.obj.be_accounts)
 
@@ -77,19 +77,20 @@ class TestUpdateChangedEntities(CommonTest):
         changed_entities = dict(
             be_accounts=[self.account2]
         )
-        self.obj.update_from_changed_entities(changed_entities)
+        self.client.update_from_changed_entities(self.obj, changed_entities)
         self.assertEqual(len(self.obj.be_accounts), 0)
 
     def testUpdateCE_modify(self):
-        self.account2=self.account.copy()
-        self.account2.direct_connect_account_id='s'
+        self.account2 = self.account.copy()
+        self.account2.note = 'note'
         changed_entities = dict(
             be_accounts=[self.account2]
         )
-        self.obj.update_from_changed_entities(changed_entities)
+
+        self.client.update_from_changed_entities(self.obj, changed_entities)
         self.assertEqual(len(self.obj.be_accounts),1)
         acc = self.obj.be_accounts[0]
-        self.assertEqual(acc.getdict(),self.account2.getdict())
+        self.assertEqual(acc, self.account2)
 
 
 class OtherTests(CommonTest):
@@ -143,4 +144,4 @@ class TestOthers(unittest.TestCase):
         obj = Account()
         objc = obj.copy()
         self.assertEqual(obj.id,objc.id)
-        self.assertEqual(obj.getdict(),objc.getdict())
+        self.assertEqual(obj.get_dict(), objc.get_dict())

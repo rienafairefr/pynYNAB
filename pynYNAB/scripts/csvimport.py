@@ -168,10 +168,10 @@ def do_csvimport(args,client=None):
                 source="Imported"
             )
             if args.import_duplicates or (not client.budget.be_transactions.containsduplicate(transaction)):
-                get_logger(args).debug('Appending transaction %s '%transaction.getdict())
+                get_logger(args).debug('Appending transaction %s ' % transaction.get_dict())
                 transactions.append(transaction)
             else:
-                get_logger(args).debug('Duplicate transaction found %s '%transaction.getdict())
+                get_logger(args).debug('Duplicate transaction found %s ' % transaction.get_dict())
 
 
 

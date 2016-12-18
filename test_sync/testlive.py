@@ -8,9 +8,10 @@ from test_live.common_Live import commonLive
 from test_live.common_Live import needs_account, needs_transaction
 
 
+# noinspection PyArgumentList
 class LiveTests(commonLive):
     def test_add_delete_budget(self):
-        budget_name = KeyGenerator.generateuuid()
+        budget_name = str(KeyGenerator.generateuuid())
         self.client.create_budget(budget_name)
         self.reload()
         matches = [b for b in self.client.catalog.ce_budgets if b.budget_name == budget_name]
@@ -23,7 +24,7 @@ class LiveTests(commonLive):
 
     def test_add_delete_account(self):
         account_type = AccountTypes.Checking
-        account_name = KeyGenerator.generateuuid()
+        account_name = str(KeyGenerator.generateuuid())
         budget = self.client.budget
 
         for account in budget.be_accounts:

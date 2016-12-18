@@ -6,11 +6,9 @@ from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
-from sqlalchemy.util import hybridproperty
 
-from pynYNAB.schema.Entity import Entity, on_budget_dict, AccountTypes, Base, RootEntity
+from pynYNAB.schema.Entity import Entity, AccountTypes, Base, RootEntity
 from pynYNAB.schema.types import AmountType, NYNAB_GUID
 
 
@@ -49,12 +47,8 @@ class Budget(Base, RootEntity):
     be_accounts = relationship('Account')
     last_month = Column(Date)
     first_month = Column(Date)
-
-    def get_request_data(self):
-        request_data = super(Budget, self).get_request_data()
-        request_data['budget_version_id'] = self.budget_version_id
-        request_data['calculated_entities_included'] = False
-        return request_data
+    budget_version_id=Column(ForeignKey('budgetversion.id'), nullable=True)
+    calculated_entities_included=Column(Boolean, default=False)
 
     def get_changed_entities(self, treat=False):
         changed_entities = super(Budget, self).get_changed_entities()
@@ -199,12 +193,8 @@ class ScheduledSubtransaction(Base, BudgetEntity):
 
 
 class MonthlyBudget(Base, BudgetEntity):
-    month = Column(String)
+    month = Column(Date)
     note = Column(String)
-
-
-def notapi(s):
-    pass
 
 
 class SubCategory(Base, BudgetEntity):
@@ -339,7 +329,10 @@ class MonthlySubcategoryBudget(Base, BudgetEntity):
 
 
 class TransactionGroup(dict):
-    def getdict(self, treat=False):
+    def get_apidict(self):
+        return self
+
+    def get_dict(self):
         return self
 
 
@@ -367,8 +360,8 @@ class Account(Base, BudgetEntity):
     direct_connect_last_imported_at = Column(Date)
     direct_connect_last_error_code = Column(String)
 
-    def getdict(self, treat=False):
-        super_dict = super(Account,self).getdict(treat)
+    def get_dict(self):
+        super_dict = super(Account,self).get_dict()
         if not super_dict['direct_connect_enabled']:
             super_dict['direct_connect_enabled'] = False
             del super_dict['direct_connect_account_id']

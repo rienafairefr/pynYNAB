@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 from uuid import UUID
 
+from sqlalchemy.sql.sqltypes import Enum as sqlaEnum
 from aenum import Enum
 from sqlalchemy import Boolean
 from sqlalchemy import Column
@@ -18,10 +19,6 @@ from pynYNAB.schema.types import NYNAB_GUID, AmountType
 
 logger = logging.getLogger('pynYNAB')
 from sqlalchemy import inspect
-
-
-def undef():
-    pass
 
 
 class AccountTypes(Enum):
@@ -59,11 +56,11 @@ on_budget_dict[None] = None
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Entity):
-            return obj.getdict(treat=True)
+            return obj.get_apidict()
         elif isinstance(obj, UUID):
             return str(obj)
-        elif obj == undef:
-            return
+        elif isinstance(obj,Enum):
+            return obj.value
         else:
             return json.JSONEncoder.default(self, obj)
 
@@ -107,7 +104,7 @@ class BaseModel(object):
     @property
     def scalarfields(self):
         scalarcolumns = self.__table__.columns
-        return {k: scalarcolumns[k].type.__class__.__name__ for k in scalarcolumns.keys()}
+        return {k: scalarcolumns[k].type.__class__.__name__ for k in scalarcolumns.keys() if k!='parent_id'}
 
     @property
     def allfields(self):
@@ -117,18 +114,8 @@ class BaseModel(object):
 
 
 def configure_listener(mapper, class_):
-    """Establish attribute setters for every default-holding column on the
-    given mapper."""
-
-    # iterate through ColumnProperty objects
     for col_attr in mapper.column_attrs:
-
-        # look at the Column mapped by the ColumnProperty
-        # (we look at the first column in the less common case
-        # of a property mapped to multiple columns at once)
         column = col_attr.columns[0]
-
-        # if the Column has a "default", set up a listener
         if column.default is not None:
             default_listener(col_attr, column.default)
 
@@ -184,20 +171,23 @@ def default_listener(col_attr, default):
 
 
 class Entity(BaseModel):
-    def getdict(self, treat=False):
-        entityDict = {key: getattr(self, key) for key in self.scalarfields if key != 'parent_id'}
-        if treat:
-            for column in self.__table__.columns:
-                if column.name in entityDict and entityDict[column.name] is not None:
-                    if column.type.__class__.__name__ == Date.__name__:
-                        entityDict[column.name] = entityDict[column.name].strftime('%Y-%m-%d')
-                    if column.type.__class__.__name__ == NYNAB_GUID.__name__:
-                        entityDict[column.name] = str(entityDict[column.name])
-                    if column.type.__class__.__name__ == AmountType.__name__:
-                        entityDict[column.name] = int(100*entityDict[column.name])
-                    if column.type.__class__.__name__ == Enum.__name__:
-                        entityDict[column.name] = entityDict[column.name]._name_
+    def get_apidict(self):
+        entityDict=self.get_dict()
+        for column in self.__table__.columns:
+            if column.name in entityDict and entityDict[column.name] is not None:
+                columntype = column.type.__class__
+                if columntype == Date:
+                    entityDict[column.name] = entityDict[column.name].strftime('%Y-%m-%d')
+                elif columntype == NYNAB_GUID:
+                    entityDict[column.name] = str(entityDict[column.name])
+                elif columntype == AmountType:
+                    entityDict[column.name] = int(100 * entityDict[column.name])
+                elif columntype == Enum:
+                    entityDict[column.name] = entityDict[column.name]._name_
         return entityDict
+
+    def get_dict(self):
+        return {key: getattr(self, key) for key in self.scalarfields if key != 'parent_id'}
 
     def __unicode__(self):
         return self.__str__()
@@ -215,27 +205,35 @@ class Entity(BaseModel):
             return False
 
     def __key(self):
-        return tuple(self.getdict().items())
+        return tuple(self.get_dict().items())
 
     def __hash__(self):
         return hash(self.__key())
 
     def copy(self):
-        return type(self)(**self.getdict())
+        returnvalue = type(self)(**self.get_dict())
+        return returnvalue
 
     @classmethod
     def from_dict(cls, entityDict, treat=False):
-        if treat:
-            for column in cls.__table__.columns:
-                if column.name in entityDict and entityDict[column.name] is not None:
-                    if column.type.__class__.__name__ == Date.__name__:
-                        entityDict[column.name] = datetime.strptime(entityDict[column.name], '%Y-%m-%d').date()
-                    if column.type.__class__.__name__ == NYNAB_GUID.__name__:
-                        entityDict[column.name] = entityDict[column.name].split('/')[-1]
-                    if column.type.__class__.__name__ == AmountType.__name__:
-                        entityDict[column.name] /= 100
-
         return cls(**entityDict)
+
+    @classmethod
+    def from_apidict(cls,entityDict):
+        for column in cls.__table__.columns:
+            if column.name in entityDict and entityDict[column.name] is not None:
+                columntype = column.type.__class__
+                if columntype == Date:
+                    entityDict[column.name] = datetime.strptime(entityDict[column.name], '%Y-%m-%d').date()
+                elif columntype == NYNAB_GUID:
+                    entityDict[column.name] = UUID(entityDict[column.name].split('/')[-1])
+                elif columntype == AmountType:
+                    entityDict[column.name] = int(entityDict[column.name])/100
+                elif columntype == sqlaEnum:
+                    entityDict[column.name] = column.type.enum_class[entityDict[column.name]]
+                else:
+                    pass
+        return cls.from_dict(entityDict)
 
 Base = declarative_base(cls=Entity)
 
@@ -272,12 +270,18 @@ class DictDiffer(object):
 class RootEntity(BaseModel):
     previous_map = {}
 
-    def get_changed_dict(self, treat=False):
+    def _get_changed(self,fn):
         changed_entities = self.get_changed_entities()
-        changed_dict={}
+        changed_dict = {}
         for key in changed_entities:
-            changed_dict[key]=list(map(lambda entity:entity.getdict(treat),changed_entities[key]))
+            changed_dict[key] = list(map(fn, changed_entities[key]))
         return changed_dict
+
+    def get_changed_apidict(self):
+        return self._get_changed(lambda entity: entity.get_apidict())
+
+    def get_changed_dict(self):
+        return self._get_changed(lambda entity: entity.get_dict())
 
     def get_changed_entities(self):
         current_map = self.getmaps()
@@ -309,24 +313,6 @@ class RootEntity(BaseModel):
 
         return returnvalue
 
-    def update_from_changed_entities(self, changed_entities):
-        if changed_entities is None:
-            return
-        current_map = self.getmaps()
-        for key in self.listfields:
-            listattr = getattr(self, key)
-            if key in changed_entities:
-                for entity in changed_entities[key]:
-                    if hasattr(entity, 'is_tombstone') and entity.is_tombstone:
-                        if entity.id in current_map[key]:
-                            listattr.remove(current_map[key][entity.id])
-                        else:
-                            pass
-                    try:
-                        current_map[key][entity.id].__dict__.update(entity.getdict())
-                    except KeyError:
-                        listattr.append(entity)
-
     def __init__(self):
         super(RootEntity, self).__init__()
         self.clear_changed_entities()
@@ -339,7 +325,8 @@ class RootEntity(BaseModel):
         objs_dict = {}
         if getattr(self, key) is not None:
             for instance in getattr(self, key):
-                objs_dict[str(instance.id)] = instance.copy()
+                objc = instance.copy()
+                objs_dict[str(instance.id)] = objc
         return objs_dict
 
     def getmaps(self) -> dict:

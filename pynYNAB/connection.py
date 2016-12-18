@@ -55,7 +55,8 @@ class nYnabConnection(object):
         """
         # Available operations :
 
-        params = {u'operation_name': opname,'request_data': json.dumps(request_dic, cls=ComplexEncoder),}
+        json_request_dict = json.dumps(request_dic, cls=ComplexEncoder)
+        params = {u'operation_name': opname, 'request_data': json_request_dict}
         self.logger.debug('%s  ... %s ' % (opname,params))
         r = self.session.post(self.urlCatalog, params, verify=False)
         self.lastrequest_elapsed=r.elapsed
@@ -82,20 +83,7 @@ class nYnabConnection(object):
                  return self.dorequest(request_dic,opname)
             else:
                 self.logger.debug('Unknown API error')
-                self.logger.debug(error)
                 self.logger.debug('Request data:')
-                self.logger.debug(request_dic)
-                raise NYnabConnectionError('Unknown Error \"%s\" was returned from the API when sending request (%s,%s)'%(error['id'],opname, request_dic))
-
-
-
-
-
-
-
-
-
-
-
-
+                self.logger.debug(params)
+                raise NYnabConnectionError('Unknown Error \"%s\" was returned from the API when sending request (%s)'%(error['id'],params))
 

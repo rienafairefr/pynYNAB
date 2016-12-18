@@ -2,7 +2,6 @@ import logging
 from functools import wraps
 
 from sqlalchemy import create_engine
-from sqlalchemy.exc import StatementError
 from sqlalchemy.orm import sessionmaker
 
 from pynYNAB.connection import nYnabConnection
@@ -52,13 +51,15 @@ class nYnabClient(object):
         self.session.commit()
 
         self.first = True
-        self.sync()
+        self.online = self.connection is not None
+        if self.connection is not None:
+            self.sync()
 
     @staticmethod
     def from_obj(args, reset=False):
         connection = nYnabConnection(args.email, args.password)
         try:
-            client = nYnabClient(connection, budget_name=args.budgetname)
+            client = nYnabClient(nynabconnection=connection, budget_name=args.budgetname)
             if reset:
                 # deletes the budget
                 client.delete_budget(args.budgetname)
@@ -70,6 +71,8 @@ class nYnabClient(object):
             exit(-1)
 
     def sync(self):
+        if self.connection is None:
+            return
         # ending-starting represents the number of modifications that have been done to the data ?
         self.logger.debug('Client sync')
         if self.first:
@@ -91,8 +94,8 @@ class nYnabClient(object):
                 raise BudgetNotFound()
         else:
             self.logger.debug('Not first sync')
-            catalog_changed_entities = self.catalog.get_changed_entities()
-            budget_changed_entities = self.budget.get_changed_entities()
+            catalog_changed_entities = self.catalog.get_changed_apidict()
+            budget_changed_entities = self.budget.get_changed_apidict()
 
             if any(catalog_changed_entities):
                 opname = 'syncCatalogData'
@@ -111,30 +114,47 @@ class nYnabClient(object):
                                   budget_version_id=self.budget_version_id))
         self.session.commit()
 
-    def update_from_sync_data(self, obj, sync_data):
-        for name, value in sync_data['changed_entities'].items():
+    def update_from_api_changed_entities(self, obj, changed_entities):
+        for name in obj.listfields:
+            newlist = []
+            for entitydict in changed_entities[name]:
+                newlist.append(obj.listfields[name].from_apidict(entitydict))
+            changed_entities[name] = newlist
+        self.update_from_changed_entities(obj,changed_entities)
+
+    def update_from_changed_entities(self, obj, changed_entities):
+        for name, value in changed_entities.items():
             if isinstance(value, list):
                 list_of_entities = getattr(obj, name)
-                for entityDict in value:
-                    entityDict['id'] = entityDict['id'].split('/')[-1]
-                    current_obj = self.session.query(obj.listfields[name]).get(entityDict['id'])
+                for incoming_obj in value:
+                    current_obj = self.session.query(obj.listfields[name]).get(incoming_obj.id)
                     if current_obj is not None:
-                        if 'is_tombstone' in entityDict and entityDict['is_tombstone']:
+                        if incoming_obj.is_tombstone:
                             self.session.delete(current_obj)
                         else:
                             if current_obj not in list_of_entities:
-                                list_of_entities.append(current_obj)
+                                current_obj.parent = obj
                             else:
-                                current_obj.__dict__.update(entityDict)
+                                for field in current_obj.scalarfields:
+                                    incoming = getattr(incoming_obj,field)
+                                    present = getattr(current_obj,field)
+                                    if present != incoming:
+                                        setattr(current_obj, field, incoming)
+                                        pass
+                                pass
                     else:
-                        if 'is_tombstone' in entityDict and not entityDict['is_tombstone']:
-                            new_obj = obj.listfields[name].from_dict(entityDict, treat=True)
-                            self.session.add(new_obj)
-                            list_of_entities.append(new_obj)
-                            new_obj.parent = obj
-                            self.session.flush()
+                        if not incoming_obj.is_tombstone:
+                            self.session.add(incoming_obj)
+                            incoming_obj.parent = obj
+        self.session.commit()
+        pass
+
+    def update_from_sync_data(self, obj, sync_data):
+        self.update_from_api_changed_entities(obj, sync_data['changed_entities'])
 
     def sync_obj(self, obj, opname, knowledge=True, extra=None):
+        if self.connection is None:
+            return
         if extra is None:
             extra = {}
         if opname not in self.current_device_knowledge:
@@ -142,7 +162,7 @@ class nYnabClient(object):
         if opname not in self.device_knowledge_of_server:
             self.device_knowledge_of_server[opname] = 0
         if knowledge:
-            changed_entities = obj.get_changed_dict(treat=True)
+            changed_entities = obj.get_changed_apidict()
         else:
             changed_entities = {}
             # sync with disregard for knowledge, start from 0
@@ -157,6 +177,7 @@ class nYnabClient(object):
         self.logger.debug('server_knowledge_of_device ' + str(sync_data['server_knowledge_of_device']))
         self.logger.debug('current_server_knowledge ' + str(sync_data['current_server_knowledge']))
         self.update_from_sync_data(obj, sync_data)
+        self.session.commit()
         obj.clear_changed_entities()
 
         server_knowledge_of_device = sync_data['server_knowledge_of_device']
