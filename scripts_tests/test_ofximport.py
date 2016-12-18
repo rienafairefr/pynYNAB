@@ -5,11 +5,11 @@ from datetime import datetime
 
 import configargparse
 
+from live_tests.common_Live import commonLive
 from pynYNAB.Client import clientfromargs
 from pynYNAB.schema.Entity import ComplexEncoder
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.ofximport import do_ofximport
-from test_live.common_Live import commonLive
 
 
 class TestOFX(commonLive):

@@ -116,6 +116,8 @@ class nYnabClient(object):
 
     def update_from_api_changed_entities(self, obj, changed_entities):
         for name in obj.listfields:
+            if changed_entities[name] is None:
+                continue
             newlist = []
             for entitydict in changed_entities[name]:
                 newlist.append(obj.listfields[name].from_apidict(entitydict))

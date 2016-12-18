@@ -1,14 +1,13 @@
 import random
 from datetime import datetime, timedelta
 
+from live_tests.common_Live import commonLive
+from live_tests.common_Live import needs_account, needs_transaction
 from pynYNAB import KeyGenerator
 from pynYNAB.schema.Entity import AccountTypes
 from pynYNAB.schema.budget import Transaction, Account, Subtransaction, Payee
-from test_live.common_Live import commonLive
-from test_live.common_Live import needs_account, needs_transaction
 
 
-# noinspection PyArgumentList
 class LiveTests(commonLive):
     def test_add_delete_budget(self):
         budget_name = str(KeyGenerator.generateuuid())
