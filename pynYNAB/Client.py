@@ -24,6 +24,7 @@ class BudgetNotFound(Exception):
 
 class nYnabClient(object):
     def __init__(self, nynabconnection, budget_name):
+
         self.delta_device_knowledge = 0
         self.budget_version_id = None
         self.logger = get_logger()
@@ -39,6 +40,8 @@ class nYnabClient(object):
 
         self.current_device_knowledge = {}
         self.device_knowledge_of_server = {}
+        self.starting_device_knowledge = 0
+        self.ending_device_knowledge = 0
 
         engine = create_engine('sqlite://')
 
@@ -78,7 +81,8 @@ class nYnabClient(object):
         if self.first:
             self.logger.debug('First sync')
             self.first = False
-            self.sync_obj(self.catalog, 'syncCatalogData', knowledge=False)
+
+            self.sync_obj(self.catalog, 'syncCatalogData',extra=dict(user_id=self.connection.user_id))
             for catalogbudget in self.catalog.ce_budgets:
                 if catalogbudget.budget_name == self.budget_name:
                     for budget_version in self.catalog.ce_budget_versions:
@@ -86,10 +90,11 @@ class nYnabClient(object):
                             self.budget_version_id = budget_version.id
             if self.budget_version_id is None:
                 raise BudgetNotFound()
-            self.sync_obj(self.budget, 'syncBudgetData', knowledge=False,
+            self.sync_obj(self.budget, 'syncBudgetData',
                           extra=dict(
                               calculated_entities_included=False,
-                              budget_version_id=self.budget_version_id))
+                              budget_version_id=self.budget_version_id)
+                          )
             if self.budget_version_id is None and self.budget_name is not None:
                 raise BudgetNotFound()
         else:
@@ -97,21 +102,14 @@ class nYnabClient(object):
             catalog_changed_entities = self.catalog.get_changed_apidict()
             budget_changed_entities = self.budget.get_changed_apidict()
 
-            if any(catalog_changed_entities):
-                opname = 'syncCatalogData'
-                self.sync_obj(self.catalog, opname,
-                              extra=dict(user_id="fbec95c7-9fd2-415e-9365-7c4a8e613a49",
-                                         starting_device_knowledge=self.current_device_knowledge[opname],
-                                         ending_device_knowledge=self.current_device_knowledge[opname] + 1
-                                         ))
-            if any(budget_changed_entities):
-                opname = 'syncBudgetData'
-                self.sync_obj(self.budget, opname,
-                              extra=dict(
-                                  starting_device_knowledge=self.current_device_knowledge[opname],
-                                  ending_device_knowledge=self.current_device_knowledge[opname] + 1,
-                                  calculated_entities_included=False,
-                                  budget_version_id=self.budget_version_id))
+            if any(catalog_changed_entities) or any(budget_changed_entities):
+                self.ending_device_knowledge = self.starting_device_knowledge +1
+            self.sync_obj(self.catalog, 'syncCatalogData',extra=dict(user_id=self.connection.user_id))
+            self.sync_obj(self.budget, 'syncBudgetData',
+                          extra=dict(
+                              calculated_entities_included=False,
+                              budget_version_id=self.budget_version_id))
+            self.starting_device_knowledge = self.ending_device_knowledge
         self.session.commit()
 
     def update_from_api_changed_entities(self, obj, changed_entities):
@@ -168,10 +166,10 @@ class nYnabClient(object):
         else:
             changed_entities = {}
             # sync with disregard for knowledge, start from 0
-        request_data = dict(starting_device_knowledge=self.current_device_knowledge[opname],
-                                ending_device_knowledge=self.current_device_knowledge[opname],
-                                device_knowledge_of_server=self.device_knowledge_of_server[opname],
-                                changed_entities=changed_entities)
+        request_data = dict(starting_device_knowledge=self.starting_device_knowledge,
+                            ending_device_knowledge=self.ending_device_knowledge,
+                            device_knowledge_of_server=self.device_knowledge_of_server[opname],
+                            changed_entities=changed_entities)
 
         request_data.update(extra)
 

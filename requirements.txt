@@ -1,4 +1,3 @@
-ofxtools
 configargparse
 configparser
 appdirs

@@ -138,21 +138,27 @@ class LiveTests(commonLive):
 
     @needs_account()
     def test_add_splittransactions(self):
-        subcatsplit_id = next(subcategory.id for subcategory in self.client.budget.be_subcategories if
+        subcatsplit = next(subcategory for subcategory in self.client.budget.be_subcategories if
                               subcategory.internal_name == 'Category/__Split__')
         transaction = Transaction(
             amount=1,
             date=datetime.now(),
             entities_account=self.account,
-            entities_subcategory_id=subcatsplit_id
+            entities_subcategory=subcatsplit
         )
+        cat1 = self.client.budget.be_subcategories[0]
+        cat2 = self.client.budget.be_subcategories[1]
+
+
         sub1 = Subtransaction(
-            amount=5000,
-            entities_transaction=transaction
+            amount=0.5,
+            entities_transaction=transaction,
+            entities_subcategory=cat1
         )
         sub2 = Subtransaction(
-            amount=5000,
-            entities_transaction=transaction
+            amount=0.5,
+            entities_transaction=transaction,
+            entities_subcategory=cat2
         )
         self.client.budget.be_transactions.append(transaction)
         self.client.budget.be_subtransactions.append(sub1)
@@ -162,36 +168,3 @@ class LiveTests(commonLive):
         self.assertIn(sub1, self.client.budget.be_subtransactions)
         self.assertIn(sub2, self.client.budget.be_subtransactions)
 
-    @needs_account()
-    @needs_transaction
-    def test_split(self):
-        subcat1, subcat2 = tuple(random.sample(list(self.client.budget.be_subcategories), 2))
-        subcatsplit = next(subcategory for subcategory in self.client.budget.be_subcategories if
-                              subcategory.internal_name == 'Category/__Split__')
-        self.client.budget.clear_changed_entities()
-        self.transaction.entities_subcategory = subcatsplit
-
-        subtransaction1 = Subtransaction(
-            amount=self.transaction.amount - 5000,
-            entities_transaction=self.transaction,
-            entities_subcategory=subcat1
-        )
-        subtransaction2 = Subtransaction(
-            amount=5000,
-            entities_transaction=self.transaction,
-            entities_subcategory=subcat2
-        )
-
-        self.client.budget.be_subtransactions.append(subtransaction1)
-        self.client.budget.be_subtransactions.append(subtransaction2)
-
-        self.reload()
-
-        self.assertIn(subtransaction1, self.client.budget.be_subtransactions)
-        self.assertIn(self.transaction, self.client.budget.be_transactions)
-        self.assertIn(subtransaction2, self.client.budget.be_subtransactions)
-
-        self.client.budget.be_subtransactions.remove(subtransaction1)
-        self.client.budget.be_subtransactions.remove(subtransaction2)
-        self.transaction.entities_subcategory = None
-        self.client.sync()

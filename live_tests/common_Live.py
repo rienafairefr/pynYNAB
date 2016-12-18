@@ -40,6 +40,7 @@ def needs_transaction(fn):
 
     return wrapped
 
+
 class commonLive(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(commonLive, self).__init__(*args, **kwargs)
@@ -49,6 +50,8 @@ class commonLive(unittest.TestCase):
         self.client = None
 
     def reload(self):
+        if self.client is not None:
+            self.client.sync()
         # parser = configargparse.getArgumentParser('pynYNAB')
         args = parser.parse_known_args()[0]
         self.client = clientfromargs(args)

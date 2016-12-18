@@ -321,7 +321,7 @@ class RootEntity(BaseModel):
     def clear_changed_entities(self):
         self.previous_map = self.getmaps()
 
-    def getmap(self,key) -> dict:
+    def getmap(self,key):
         objs_dict = {}
         if getattr(self, key) is not None:
             for instance in getattr(self, key):
@@ -329,7 +329,7 @@ class RootEntity(BaseModel):
                 objs_dict[str(instance.id)] = objc
         return objs_dict
 
-    def getmaps(self) -> dict:
+    def getmaps(self):
         objs_dict = {}
         for key in self.listfields:
             objs_dict[key] = self.getmap(key)

@@ -7,6 +7,7 @@ from time import sleep
 import requests
 from requests.cookies import RequestsCookieJar
 
+from pynYNAB.KeyGenerator import generateuuid
 from pynYNAB.schema.Entity import ComplexEncoder
 from pynYNAB.utils import RateLimited
 
@@ -32,13 +33,14 @@ class nYnabConnection(object):
             raise NYnabConnectionError('Couldnt connect with the provided email and password')
         self.sessionToken = firstlogin["session_token"]
         self.session.headers['X-Session-Token'] = self.sessionToken
+        self.user_id = firstlogin['user']['id']
 
     def __init__(self, email, password):
         self.email = email
         self.password = password
         self.session = requests.Session()
         self.sessionToken = None
-        self.id = str(uuid.uuid3(uuid.NAMESPACE_DNS, 'rienafairefr.pynYNAB'))
+        self.id = str(generateuuid())
         self.lastrequest_elapsed=None
         self.logger = logging.getLogger('pynYNAB')
         self._init_session()
@@ -86,4 +88,5 @@ class nYnabConnection(object):
                 self.logger.debug('Request data:')
                 self.logger.debug(params)
                 raise NYnabConnectionError('Unknown Error \"%s\" was returned from the API when sending request (%s)'%(error['id'],params))
+
 

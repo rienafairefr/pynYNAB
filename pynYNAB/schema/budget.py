@@ -50,17 +50,18 @@ class Budget(Base, RootEntity):
     budget_version_id=Column(ForeignKey('budgetversion.id'), nullable=True)
     calculated_entities_included=Column(Boolean, default=False)
 
-    def get_changed_entities(self, treat=False):
+    def get_changed_entities(self):
         changed_entities = super(Budget, self).get_changed_entities()
         if 'be_transactions' in changed_entities:
             changed_entities['be_transaction_groups'] = []
             for tr in changed_entities.pop('be_transactions'):
                 subtransactions = []
                 if 'be_subtransactions' in changed_entities:
-                    for subtransaction in changed_entities.get('be_subtransactions'):
+                    for subtransaction in changed_entities['be_subtransactions']:
                         if subtransaction.entities_transaction_id == tr.id:
-                            changed_entities['be_subtransactions'].remove(subtransaction)
                             subtransactions.append(subtransaction)
+                    for subtransaction in subtransactions:
+                        changed_entities['be_subtransactions'].remove(subtransaction)
                 if not subtransactions:
                     subtransactions = None
                 group = TransactionGroup(
