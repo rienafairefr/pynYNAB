@@ -110,6 +110,7 @@ class nYnabClient(object):
                               calculated_entities_included=False,
                               budget_version_id=self.budget_version_id))
             self.starting_device_knowledge = self.ending_device_knowledge
+
         self.session.commit()
 
     def update_from_api_changed_entities(self, obj, changed_entities):

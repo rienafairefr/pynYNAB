@@ -50,8 +50,6 @@ class commonLive(unittest.TestCase):
         self.client = None
 
     def reload(self):
-        if self.client is not None:
-            self.client.sync()
         # parser = configargparse.getArgumentParser('pynYNAB')
         args = parser.parse_known_args()[0]
         self.client = clientfromargs(args)
