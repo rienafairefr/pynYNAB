@@ -17,8 +17,7 @@ for _ in range(0, N):
     transaction = Transaction(
         cleared='Uncleared',
         date=datetime.now(),
-        entities_account_id=account.id,
+        entities_account=account,
         amount=random.randrange(-10, 10)
     )
     client.add_transaction(transaction)
-    client.sync()
