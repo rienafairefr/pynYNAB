@@ -5,10 +5,10 @@ from tempfile import gettempdir
 
 import configargparse
 
-from live_tests.common_Live import CommonLive, needs_account
 from pynYNAB.schema.Entity import ComplexEncoder
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.csvimport import do_csvimport
+from test_live.common_Live import CommonLive, needs_account
 
 
 class TestCsv(CommonLive):

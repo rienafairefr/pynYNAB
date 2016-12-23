@@ -1,11 +1,11 @@
 import random
 from datetime import datetime, timedelta
 
-from live_tests.common_Live import CommonLive
-from live_tests.common_Live import needs_account
 from pynYNAB import KeyGenerator
 from pynYNAB.schema.Entity import AccountTypes
 from pynYNAB.schema.budget import Transaction, Account, Subtransaction, Payee
+from test_live.common import CommonLive
+from test_live.common import needs_account
 
 
 # noinspection PyArgumentList

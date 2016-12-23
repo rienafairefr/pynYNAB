@@ -14,7 +14,7 @@ before_install:
 script:
 - 'export NYNAB_LOGGINGLEVEL=error;
   coverage run -m unittest discover tests;
-  coverage run -m unittest discover test_sync;
+  python -m unittest discover test_live;
   '
 - ( if [ -n "$TRAVIS_TAG" ]; then if [ $TAG_NAME != $TRAVIS_TAG ]; then echo "This tag is for the wrong version. Got \"$TRAVIS_TAG\" expected \"$TAG_NAME\"."; exit 1; fi; fi; )
 after_success:

@@ -11,7 +11,7 @@ logger = get_logger()
 class TestSync(unittest.TestCase):
     @staticmethod
     def test_sync():
-        print('test_sync')
+        print('test_live')
         args = parser.parse_known_args()[0]
         client = clientfromargs(args)
         client.sync()
