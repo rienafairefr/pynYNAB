@@ -23,7 +23,9 @@ def needs_account(account_name=None):
             self.account = self.util_add_account(account_name)
             fn(self, *args, **kwargs)
             return
+
         return wrapped
+
     return decorator
 
 
@@ -41,9 +43,9 @@ def needs_transaction(fn):
     return wrapped
 
 
-class commonLive(unittest.TestCase):
+class CommonLive(unittest.TestCase):
     def __init__(self, *args, **kwargs):
-        super(commonLive, self).__init__(*args, **kwargs)
+        super(CommonLive, self).__init__(*args, **kwargs)
         self.account = None
         self.budget = None
         self.transaction = None
@@ -57,18 +59,16 @@ class commonLive(unittest.TestCase):
     def setUp(self):
         self.reload()
 
-    def util_add_account(self,account_name=None):
+    def util_add_account(self, account_name=None):
         if account_name is None:
             account_name = str(KeyGenerator.generateuuid())
         account = Account(
             account_type=random.choice(list(AccountTypes)),
-            account_name= account_name
+            account_name=account_name
         )
 
         self.client.add_account(account, balance=random.randint(-10, 10), balance_date=datetime.now())
         return account
-
-
 
     def util_add_transaction(self):
         transaction = Transaction(
@@ -108,4 +108,3 @@ class commonLive(unittest.TestCase):
         self.client.budget.be_payees.append(payee)
         self.client.sync()
         return payee
-

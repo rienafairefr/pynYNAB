@@ -15,7 +15,7 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm.base import ONETOMANY, MANYTOMANY
 
 from pynYNAB import KeyGenerator
-from pynYNAB.schema.types import NYNAB_GUID, AmountType
+from pynYNAB.schema.types import nYnabGuid, AmountType
 
 logger = logging.getLogger('pynYNAB')
 from sqlalchemy import inspect
@@ -89,7 +89,7 @@ def addprop(inst, name, method, setter=None, cleaner=None):
 
 
 class BaseModel(object):
-    id = Column(NYNAB_GUID, primary_key=True, default=KeyGenerator.generateuuid)
+    id = Column(nYnabGuid, primary_key=True, default=KeyGenerator.generateuuid)
     is_tombstone = Column(Boolean, default=False)
 
     @declared_attr
@@ -178,7 +178,7 @@ class Entity(BaseModel):
                 columntype = column.type.__class__
                 if columntype == Date:
                     entityDict[column.name] = entityDict[column.name].strftime('%Y-%m-%d')
-                elif columntype == NYNAB_GUID:
+                elif columntype == nYnabGuid:
                     entityDict[column.name] = str(entityDict[column.name])
                 elif columntype == AmountType:
                     entityDict[column.name] = int(100 * entityDict[column.name])
@@ -215,8 +215,8 @@ class Entity(BaseModel):
         return returnvalue
 
     @classmethod
-    def from_dict(cls, entityDict, treat=False):
-        return cls(**entityDict)
+    def from_dict(cls, entitydict):
+        return cls(**entitydict)
 
     @classmethod
     def from_apidict(cls,entityDict):
@@ -225,7 +225,7 @@ class Entity(BaseModel):
                 columntype = column.type.__class__
                 if columntype == Date:
                     entityDict[column.name] = datetime.strptime(entityDict[column.name], '%Y-%m-%d').date()
-                elif columntype == NYNAB_GUID:
+                elif columntype == nYnabGuid:
                     entityDict[column.name] = UUID(entityDict[column.name].split('/')[-1])
                 elif columntype == AmountType:
                     entityDict[column.name] = int(entityDict[column.name])/100

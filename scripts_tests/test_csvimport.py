@@ -5,13 +5,13 @@ from tempfile import gettempdir
 
 import configargparse
 
-from live_tests.common_Live import commonLive, needs_account
+from live_tests.common_Live import CommonLive, needs_account
 from pynYNAB.schema.Entity import ComplexEncoder
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.csvimport import do_csvimport
 
 
-class TestCsv(commonLive):
+class TestCsv(CommonLive):
     def getTr(self, date, payee, amount, memo, account):
         imported_date = datetime.now().date()
         return Transaction(

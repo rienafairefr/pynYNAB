@@ -1,14 +1,15 @@
 import random
 from datetime import datetime, timedelta
 
-from live_tests.common_Live import commonLive
-from live_tests.common_Live import needs_account, needs_transaction
+from live_tests.common_Live import CommonLive
+from live_tests.common_Live import needs_account
 from pynYNAB import KeyGenerator
 from pynYNAB.schema.Entity import AccountTypes
 from pynYNAB.schema.budget import Transaction, Account, Subtransaction, Payee
 
 
-class LiveTests(commonLive):
+# noinspection PyArgumentList
+class LiveTests(CommonLive):
     def test_add_delete_budget(self):
         budget_name = str(KeyGenerator.generateuuid())
         self.client.create_budget(budget_name)
@@ -46,7 +47,7 @@ class LiveTests(commonLive):
         self.assertIn(account, self.client.budget.be_accounts)
         self.client.delete_account(account)
         self.reload()
-        self.assertNotIn(account,self.client.budget.be_accounts)
+        self.assertNotIn(account, self.client.budget.be_accounts)
 
     @needs_account()
     def test_add_deletetransaction(self):
@@ -134,12 +135,12 @@ class LiveTests(commonLive):
             self.client.delete_transaction(transaction)
         self.reload()
         for transaction in transactions:
-            self.assertNotIn(transaction,self.client.budget.be_transactions)
+            self.assertNotIn(transaction, self.client.budget.be_transactions)
 
     @needs_account()
     def test_add_splittransactions(self):
         subcatsplit = next(subcategory for subcategory in self.client.budget.be_subcategories if
-                              subcategory.internal_name == 'Category/__Split__')
+                           subcategory.internal_name == 'Category/__Split__')
         transaction = Transaction(
             amount=1,
             date=datetime.now(),
@@ -148,7 +149,6 @@ class LiveTests(commonLive):
         )
         cat1 = self.client.budget.be_subcategories[0]
         cat2 = self.client.budget.be_subcategories[1]
-
 
         sub1 = Subtransaction(
             amount=0.5,
@@ -167,4 +167,3 @@ class LiveTests(commonLive):
         self.assertIn(transaction, self.client.budget.be_transactions)
         self.assertIn(sub1, self.client.budget.be_subtransactions)
         self.assertIn(sub2, self.client.budget.be_subtransactions)
-

@@ -66,11 +66,11 @@ def migrate_main():
         client.budget.be_payees.append(payee)
         client.sync()
 
-    for ynab4transaction in thisynab.transactions:
-        transaction=Transaction(
+    #for ynab4transaction in thisynab.transactions:
+    #   transaction=Transaction(
 
-        )
-        pass
+    #   )
+    #   pass
     #
     #     transactions = []
     #     subtransactions = []

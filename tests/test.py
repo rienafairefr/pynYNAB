@@ -17,7 +17,7 @@ class MyEntity(Base, Entity):
 
 class CommonTest(unittest.TestCase):
     def setUp(self):
-        engine = create_engine('sqlite://',echo=True)
+        engine = create_engine('sqlite://', echo=True)
 
         Base.metadata.create_all(engine)
         self.Session = sessionmaker(bind=engine)
@@ -26,53 +26,52 @@ class CommonTest(unittest.TestCase):
 
 class TestGetChangedEntities(CommonTest):
     def setUp(self):
-        super(TestGetChangedEntities,self).setUp()
+        super(TestGetChangedEntities, self).setUp()
         self.obj = Budget()
         self.account = Account()
         self.obj.be_accounts = [self.account]
-        self.account2 = Account(id=self.account.id)
         self.obj.clear_changed_entities()
+        self.account2 = Account(id=self.account)
 
-    def testGetCE_add(self):
+    def testgetChangedEntities_add(self):
         added_account = Account()
         self.obj.be_accounts.append(added_account)
         changed_entities = self.obj.get_changed_entities()
         self.assertEqual(changed_entities, {'be_accounts': [added_account]})
 
-    def testGetCE_delete(self):
+    def testgetChangedEntities_delete(self):
         self.obj.be_accounts.remove(self.account)
         changed_entities = self.obj.get_changed_entities()
         deleted = self.account.copy()
         deleted.is_tombstone = True
         self.assertEqual(changed_entities, {'be_accounts': [deleted]})
 
-    def testGetCE_change(self):
-        self.account.account_name='BLA'
+    def testgetChangedEntities_modify(self):
+        self.account.account_name = 'BLA'
         changed_entities = self.obj.get_changed_entities()
         self.assertEqual(changed_entities, {'be_accounts': [self.account]})
 
 
 class TestUpdateChangedEntities(CommonTest):
     def setUp(self):
-        super(TestUpdateChangedEntities,self).setUp()
+        super(TestUpdateChangedEntities, self).setUp()
         self.account = Account()
-        self.client = nYnabClient(None,'Mock Budget')
+        self.client = nYnabClient(None, 'Mock Budget')
         self.obj = self.client.budget
         self.obj.be_accounts = [self.account]
         self.account2 = self.account.copy()
         self.client.session.commit()
 
-
-    def testUpdateCE_add(self):
+    def testupdateChangedEntities_add(self):
         new_account = Account()
         changed_entities = dict(
             be_accounts=[new_account]
         )
-        self.client.update_from_changed_entities(self.obj,changed_entities)
+        self.client.update_from_changed_entities(self.obj, changed_entities)
         self.assertEqual(len(self.obj.be_accounts), 2)
-        self.assertIn(new_account,self.obj.be_accounts)
+        self.assertIn(new_account, self.obj.be_accounts)
 
-    def testUpdateCE_delete(self):
+    def testupdateChangedEntities_delete(self):
         self.account2.is_tombstone = True
         changed_entities = dict(
             be_accounts=[self.account2]
@@ -80,7 +79,7 @@ class TestUpdateChangedEntities(CommonTest):
         self.client.update_from_changed_entities(self.obj, changed_entities)
         self.assertEqual(len(self.obj.be_accounts), 0)
 
-    def testUpdateCE_modify(self):
+    def testupdateChangedEntities_modify(self):
         self.account2 = self.account.copy()
         self.account2.note = 'note'
         changed_entities = dict(
@@ -88,7 +87,7 @@ class TestUpdateChangedEntities(CommonTest):
         )
 
         self.client.update_from_changed_entities(self.obj, changed_entities)
-        self.assertEqual(len(self.obj.be_accounts),1)
+        self.assertEqual(len(self.obj.be_accounts), 1)
         acc = self.obj.be_accounts[0]
         self.assertEqual(acc, self.account2)
 
@@ -100,7 +99,7 @@ class OtherTests(CommonTest):
         self.session.commit()
 
         jsonroundtrip = json.loads(json.dumps(obj, cls=ComplexEncoder))
-        self.assertEqual({'id': str(obj.id), 'greatfield': 2, 'is_tombstone': False},jsonroundtrip)
+        self.assertEqual({'id': str(obj.id), 'greatfield': 2, 'is_tombstone': False}, jsonroundtrip)
 
     def testequality(self):
         tr1 = Transaction(id='t')
@@ -115,14 +114,16 @@ class OtherTests(CommonTest):
         obj = Budget()
         account = Account()
         obj.be_accounts.append(account)
-        self.assertEqual(len(obj.be_accounts) , 1)
+        self.assertEqual(len(obj.be_accounts), 1)
         self.assertEqual(list(obj.be_accounts)[-1], account)
 
     def testappendBad(self):
         obj = Budget()
         transaction = Transaction()
+
         def testappend():
             obj.be_accounts.append(transaction)
+
         self.assertRaises(ValueError, testappend)
 
     def test_str(self):
@@ -143,5 +144,5 @@ class TestOthers(unittest.TestCase):
     def test_copy(self):
         obj = Account()
         objc = obj.copy()
-        self.assertEqual(obj.id,objc.id)
+        self.assertEqual(obj.id, objc.id)
         self.assertEqual(obj.get_dict(), objc.get_dict())

@@ -24,7 +24,8 @@ class ArrayType(TypeDecorator):
         return ArrayType(self.impl.length)
 
 
-class NYNAB_GUID(TypeDecorator):
+# noinspection PyPep8Naming
+class nYnabGuid(TypeDecorator):
     """Platform-independent GUID type.
 
     Uses PostgreSQL's UUID type, otherwise uses

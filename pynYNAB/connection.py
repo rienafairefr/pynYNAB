@@ -1,7 +1,6 @@
 # coding=utf-8
 import json
 import logging
-import uuid
 from time import sleep
 
 import requests
@@ -9,7 +8,7 @@ from requests.cookies import RequestsCookieJar
 
 from pynYNAB.KeyGenerator import generateuuid
 from pynYNAB.schema.Entity import ComplexEncoder
-from pynYNAB.utils import RateLimited
+from pynYNAB.utils import rate_limited
 
 
 class NYnabConnectionError(Exception):
@@ -17,6 +16,8 @@ class NYnabConnectionError(Exception):
 
 requests.packages.urllib3.disable_warnings()
 
+
+# noinspection PyPep8Naming
 class nYnabConnection(object):
     url = 'https://app.youneedabudget.com/users/login'
     urlCatalog = 'https://app.youneedabudget.com/api/v1/catalog'
@@ -45,7 +46,7 @@ class nYnabConnection(object):
         self.logger = logging.getLogger('pynYNAB')
         self._init_session()
 
-    @RateLimited(maxpersecond=5)
+    @rate_limited(maxpersecond=5)
     def dorequest(self, request_dic, opname):
         """
         :param request_dic: a dictionary containing parameters for the request

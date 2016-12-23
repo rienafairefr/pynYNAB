@@ -22,6 +22,7 @@ class BudgetNotFound(Exception):
     pass
 
 
+# noinspection PyPep8Naming
 class nYnabClient(object):
     def __init__(self, nynabconnection, budget_name):
 
@@ -82,7 +83,7 @@ class nYnabClient(object):
             self.logger.debug('First sync')
             self.first = False
 
-            self.sync_obj(self.catalog, 'syncCatalogData',extra=dict(user_id=self.connection.user_id))
+            self.sync_obj(self.catalog, 'syncCatalogData', extra=dict(user_id=self.connection.user_id))
             for catalogbudget in self.catalog.ce_budgets:
                 if catalogbudget.budget_name == self.budget_name:
                     for budget_version in self.catalog.ce_budget_versions:
@@ -103,8 +104,8 @@ class nYnabClient(object):
             budget_changed_entities = self.budget.get_changed_apidict()
 
             if any(catalog_changed_entities) or any(budget_changed_entities):
-                self.ending_device_knowledge = self.starting_device_knowledge +1
-            self.sync_obj(self.catalog, 'syncCatalogData',extra=dict(user_id=self.connection.user_id))
+                self.ending_device_knowledge = self.starting_device_knowledge + 1
+            self.sync_obj(self.catalog, 'syncCatalogData', extra=dict(user_id=self.connection.user_id))
             self.sync_obj(self.budget, 'syncBudgetData',
                           extra=dict(
                               calculated_entities_included=False,
@@ -121,7 +122,7 @@ class nYnabClient(object):
             for entitydict in changed_entities[name]:
                 newlist.append(obj.listfields[name].from_apidict(entitydict))
             changed_entities[name] = newlist
-        self.update_from_changed_entities(obj,changed_entities)
+        self.update_from_changed_entities(obj, changed_entities)
 
     def update_from_changed_entities(self, obj, changed_entities):
         for name, value in changed_entities.items():
@@ -137,8 +138,8 @@ class nYnabClient(object):
                                 current_obj.parent = obj
                             else:
                                 for field in current_obj.scalarfields:
-                                    incoming = getattr(incoming_obj,field)
-                                    present = getattr(current_obj,field)
+                                    incoming = getattr(incoming_obj, field)
+                                    present = getattr(current_obj, field)
                                     if present != incoming:
                                         setattr(current_obj, field, incoming)
                                         pass

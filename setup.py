@@ -6,9 +6,10 @@ from setuptools import setup, find_packages
 __here__ = os.path.dirname(os.path.realpath(__file__))
 readme_filename = os.path.join(os.path.dirname(__file__), 'README.rst')
 with open(readme_filename, 'r') as f:
-  readme = f.read()
+    readme = f.read()
 try:
     import pypandoc
+
     readme = pypandoc.convert(readme, to='rst', format='md')
 except:
     print("Conversion of long_description from markdown to reStructuredText failed, skipping...")

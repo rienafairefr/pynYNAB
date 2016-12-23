@@ -5,23 +5,23 @@ from datetime import datetime
 
 import configargparse
 
-from live_tests.common_Live import commonLive
+from live_tests.common_Live import CommonLive
 from pynYNAB.Client import clientfromargs
 from pynYNAB.schema.Entity import ComplexEncoder
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.ofximport import do_ofximport
 
 
-class TestOFX(commonLive):
+class TestOFX(CommonLive):
     def testiimport(self):
         parser = configargparse.getArgumentParser('pynYNAB')
-        args=parser.parse_known_args()[0]
-        args.ofxfile = os.path.join(tempfile.gettempdir(),'data.ofx')
-        args.logginglevel= 'debug'
+        args = parser.parse_known_args()[0]
+        args.ofxfile = os.path.join(tempfile.gettempdir(), 'data.ofx')
+        args.logginglevel = 'debug'
 
-        self.client=clientfromargs(args)
+        self.client = clientfromargs(args)
 
-        content="""OFXHEADER:100
+        content = """OFXHEADER:100
 DATA:OFXSGML
 VERSION:102
 SECURITY:NONE
@@ -81,20 +81,20 @@ NEWFILEUID:NONE
 </STMTTRNRS>
 </BANKMSGSRSV1>
 </OFX>"""
-        with open(args.ofxfile,'w') as f:
+        with open(args.ofxfile, 'w') as f:
             f.writelines(content)
-        imported_date=datetime.now().date()
+        imported_date = datetime.now().date()
 
-        testaccount='TEST'
-        account=self.util_get_empty_account_by_name_if_doesnt_exist(testaccount)
+        testaccount = 'TEST'
+        account = self.util_get_empty_account_by_name_if_doesnt_exist(testaccount)
 
         key = '11706 41029 29939615002'
-        account.note='great note key[%s]key' %key
+        account.note = 'great note key[%s]key' % key
         self.client.sync()
 
-        def getTr(date,payee,amount,memo,account):
+        def get_tr(date, payee, amount, memo, accountparameter):
             return Transaction(
-                entities_account_id=account.id,
+                entities_account_id=accountparameter.id,
                 date=date,
                 entities_payee_id=self.util_add_payee_by_name_if_doesnt_exist(payee).id,
                 imported_payee=payee,
@@ -105,16 +105,19 @@ NEWFILEUID:NONE
                 cash_amount=amount,
                 imported_date=imported_date
             )
+
         Transactions = [
-            getTr(datetime(year=2013, month=3, day=12).date(),'CHEQUE',-491.09,'CHEQUE    13071099780237330004',account),
+            get_tr(datetime(year=2013, month=3, day=12).date(), 'CHEQUE', -491.09, 'CHEQUE    13071099780237330004',
+                   account),
         ]
 
         do_ofximport(args)
         self.reload()
         for tr in Transactions:
             print('Should have been imported:')
-            print(json.dumps(tr,cls=ComplexEncoder))
+            print(json.dumps(tr, cls=ComplexEncoder))
             print('Found in the register:')
-            print(json.dumps([tr2 for tr2 in self.client.budget.be_transactions if tr2.amount==tr.amount],cls=ComplexEncoder))
+            print(json.dumps([tr2 for tr2 in self.client.budget.be_transactions if tr2.amount == tr.amount],
+                             cls=ComplexEncoder))
             self.assertTrue(self.client.budget.be_transactions.containsduplicate(tr),
                             msg='couldnt find a transaction with the same hash after ofx import')

@@ -9,7 +9,7 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
 from pynYNAB.schema.Entity import Entity, AccountTypes, Base, RootEntity
-from pynYNAB.schema.types import AmountType, NYNAB_GUID
+from pynYNAB.schema.types import AmountType, nYnabGuid
 
 
 class BudgetEntity(Entity):
@@ -47,8 +47,8 @@ class Budget(Base, RootEntity):
     be_accounts = relationship('Account')
     last_month = Column(Date)
     first_month = Column(Date)
-    budget_version_id=Column(ForeignKey('budgetversion.id'), nullable=True)
-    calculated_entities_included=Column(Boolean, default=False)
+    budget_version_id = Column(ForeignKey('budgetversion.id'), nullable=True)
+    calculated_entities_included = Column(Boolean, default=False)
 
     def get_changed_entities(self):
         changed_entities = super(Budget, self).get_changed_entities()
@@ -152,7 +152,7 @@ class AccountMapping(Base, BudgetEntity):
     hash = Column(String)
     fid = Column(String)
     salt = Column(String)
-    shortened_account_id = Column(NYNAB_GUID)
+    shortened_account_id = Column(nYnabGuid)
     should_flip_payees_memos = Column(String)
     should_import_memos = Column(String)
     skip_import = Column(String)
@@ -182,15 +182,16 @@ class Subtransaction(Base, BudgetEntity):
 class ScheduledSubtransaction(Base, BudgetEntity):
     amount = Column(AmountType)
     entities_payee_id = Column(ForeignKey('payee.id'))
-    entities_payee = relationship('Payee',foreign_keys=entities_payee_id)
+    entities_payee = relationship('Payee', foreign_keys=entities_payee_id)
     entities_scheduled_transaction_id = Column(ForeignKey('scheduledtransaction.id'))
-    entities_scheduled_transaction = relationship('ScheduledTransaction', foreign_keys=entities_scheduled_transaction_id)
+    entities_scheduled_transaction = relationship('ScheduledTransaction',
+                                                  foreign_keys=entities_scheduled_transaction_id)
     entities_subcategory_id = Column(ForeignKey('subcategory.id'))
     entities_subcategory = relationship('SubCategory', foreign_keys=entities_subcategory_id)
     memo = Column(String)
     sortable_index = Column(Integer, default=0)
     transfer_account_id = Column(ForeignKey('account.id'))
-    transfer_account = relationship('Account',foreign_keys=transfer_account_id)
+    transfer_account = relationship('Account', foreign_keys=transfer_account_id)
 
 
 class MonthlyBudget(Base, BudgetEntity):
@@ -218,7 +219,7 @@ class SubCategory(Base, BudgetEntity):
 
 class PayeeLocation(Base, BudgetEntity):
     entities_payee_id = Column(ForeignKey('payee.id'))
-    entities_payee = relationship('Payee',foreign_keys=entities_payee_id)
+    entities_payee = relationship('Payee', foreign_keys=entities_payee_id)
     latitude = Column(String)
     longitude = Column(String)
 
@@ -226,7 +227,7 @@ class PayeeLocation(Base, BudgetEntity):
 class AccountCalculation(Base, BudgetEntity):
     cleared_balance = Column(AmountType)
     entities_account_id = Column(ForeignKey('account.id'))
-    entities_account = relationship('Account',foreign_keys=entities_account_id)
+    entities_account = relationship('Account', foreign_keys=entities_account_id)
     error_count = Column(String)
     info_count = Column(String)
     transaction_count = Column(String)
@@ -261,7 +262,8 @@ class MonthlySubcategoryBudgetCalculation(Base, BudgetEntity):
     cash_outflows = Column(AmountType)
     credit_outflows = Column(AmountType)
     entities_monthly_subcategory_budget_id = Column(ForeignKey('monthlysubcategorybudget.id'))
-    entities_monthly_subcategory_budget = relationship('MonthlySubcategoryBudget',foreign_keys=entities_monthly_subcategory_budget_id)
+    entities_monthly_subcategory_budget = relationship('MonthlySubcategoryBudget',
+                                                       foreign_keys=entities_monthly_subcategory_budget_id)
     goal_expected_completion = Column(String)
     goal_overall_funded = Column(AmountType)
     goal_overall_left = Column(AmountType)
@@ -288,13 +290,13 @@ class ScheduledTransaction(Base, BudgetEntity):
     amount = Column(AmountType)
     date = Column(Date)
     entities_account_id = Column(ForeignKey('account.id'))
-    entities_account = relationship('Account',foreign_keys=entities_account_id)
+    entities_account = relationship('Account', foreign_keys=entities_account_id)
     entities_payee_id = Column(ForeignKey('payee.id'))
-    entities_payee = relationship('Payee',foreign_keys=entities_payee_id)
+    entities_payee = relationship('Payee', foreign_keys=entities_payee_id)
     entities_subcategory_id = Column(ForeignKey('subcategory.id'))
     entities_subcategory = relationship('SubCategory', foreign_keys=entities_subcategory_id)
     transaction = relationship(Transaction, backref='entities_scheduled_transaction')
-    flag = Column(String,default=None)
+    flag = Column(String, default=None)
     frequency = Column(String)
     memo = Column(String)
     transfer_account_id = Column(ForeignKey('account.id'))
@@ -310,7 +312,7 @@ class Payee(Base, BudgetEntity):
     auto_fill_memo_enabled = Column(String)
     auto_fill_subcategory_enabled = Column(String)
     auto_fill_subcategory_id = Column(ForeignKey('subcategory.id'))
-    auto_fill_subcategory = relationship('SubCategory',foreign_keys=auto_fill_subcategory_id)
+    auto_fill_subcategory = relationship('SubCategory', foreign_keys=auto_fill_subcategory_id)
     enabled = Column(Boolean, default=True)
     entities_account_id = Column(ForeignKey('account.id'))
     entities_account = relationship('Account', foreign_keys=entities_account_id)
@@ -322,7 +324,7 @@ class Payee(Base, BudgetEntity):
 class MonthlySubcategoryBudget(Base, BudgetEntity):
     budgeted = Column(AmountType)
     entities_monthly_budget_id = Column(ForeignKey('monthlybudget.id'))
-    entities_monthly_budget = relationship('MonthlyBudget',foreign_keys = entities_monthly_budget_id)
+    entities_monthly_budget = relationship('MonthlyBudget', foreign_keys=entities_monthly_budget_id)
     entities_subcategory_id = Column(ForeignKey('subcategory.id'))
     entities_subcategory = relationship('SubCategory', foreign_keys=entities_subcategory_id)
     note = Column(String)
@@ -353,16 +355,16 @@ class Account(Base, BudgetEntity):
     last_reconciled_date = Column(Date)
     note = Column(String)
     sortable_index = Column(Integer, default=0)
-    on_budget = Column(Boolean,default=True)
+    on_budget = Column(Boolean, default=True)
 
     direct_connect_enabled = Column(Boolean, default=False)
-    direct_connect_account_id = Column(NYNAB_GUID)
-    direct_connect_institution_id = Column(NYNAB_GUID)
+    direct_connect_account_id = Column(nYnabGuid)
+    direct_connect_institution_id = Column(nYnabGuid)
     direct_connect_last_imported_at = Column(Date)
     direct_connect_last_error_code = Column(String)
 
     def get_dict(self):
-        super_dict = super(Account,self).get_dict()
+        super_dict = super(Account, self).get_dict()
         if not super_dict['direct_connect_enabled']:
             super_dict['direct_connect_enabled'] = False
             del super_dict['direct_connect_account_id']
@@ -370,4 +372,3 @@ class Account(Base, BudgetEntity):
             del super_dict['direct_connect_institution_id']
             del super_dict['direct_connect_last_imported_at']
         return super_dict
-

@@ -42,7 +42,7 @@ class User(Base, CatalogEntity):
 class UserSetting(Base, CatalogEntity):
     setting_name = Column(String)
     user_id = Column(ForeignKey('user.id'))
-    user = relationship('User',foreign_keys = user_id, backref='settings')
+    user = relationship('User', foreign_keys=user_id, backref='settings')
     setting_value = Column(String)
 
 
@@ -60,11 +60,6 @@ class BudgetVersion(Base, CatalogEntity):
     last_accessed_on = Column(String)
     currency_format = Column(String)
     budget_id = Column(ForeignKey('catalogbudget.id'))
-    budget = relationship('CatalogBudget',foreign_keys=budget_id)
+    budget = relationship('CatalogBudget', foreign_keys=budget_id)
     version_name = Column(String)
     source = Column(String)
-
-
-
-
-
