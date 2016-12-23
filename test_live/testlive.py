@@ -96,12 +96,13 @@ class LiveTests(CommonLive):
         )
         self.client.budget.be_transactions.append(transaction1)
         self.client.budget.be_transactions.append(transaction2)
+        self.client.sync()
         self.reload()
         self.assertIn(transaction1, self.client.budget.be_transactions)
         self.assertIn(transaction2, self.client.budget.be_transactions)
         self.client.budget.be_transactions.remove(transaction1)
         self.client.budget.be_transactions.remove(transaction2)
-        self.reload()
+        self.client.sync()
 
     @needs_account()
     def test_add_deletetransactions(self):
@@ -163,6 +164,7 @@ class LiveTests(CommonLive):
         self.client.budget.be_transactions.append(transaction)
         self.client.budget.be_subtransactions.append(sub1)
         self.client.budget.be_subtransactions.append(sub2)
+        self.client.sync()
         self.reload()
         self.assertIn(transaction, self.client.budget.be_transactions)
         self.assertIn(sub1, self.client.budget.be_subtransactions)

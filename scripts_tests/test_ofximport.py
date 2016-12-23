@@ -9,7 +9,7 @@ from pynYNAB.Client import clientfromargs
 from pynYNAB.schema.Entity import ComplexEncoder
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.ofximport import do_ofximport
-from test_live.common_Live import CommonLive
+from test_live.common import CommonLive
 
 
 class TestOFX(CommonLive):
@@ -92,32 +92,22 @@ NEWFILEUID:NONE
         account.note = 'great note key[%s]key' % key
         self.client.sync()
 
-        def get_tr(date, payee, amount, memo, accountparameter):
-            return Transaction(
-                entities_account_id=accountparameter.id,
-                date=date,
-                entities_payee_id=self.util_add_payee_by_name_if_doesnt_exist(payee).id,
-                imported_payee=payee,
-                source='Imported',
-                check_number='0003445',
-                memo=memo,
-                amount=amount,
-                cash_amount=amount,
-                imported_date=imported_date
-            )
+        payee = self.util_add_payee_by_name_if_doesnt_exist('CHEQUE')
+        amount = -491.09
 
-        Transactions = [
-            get_tr(datetime(year=2013, month=3, day=12).date(), 'CHEQUE', -491.09, 'CHEQUE    13071099780237330004',
-                   account),
-        ]
+        transaction = Transaction(
+            entities_account=account,
+            date=datetime(year=2013, month=3, day=12).date(),
+            entities_payee=payee,
+            imported_payee=payee,
+            source='Imported',
+            check_number='0003445',
+            memo='CHEQUE    13071099780237330004',
+            amount=amount,
+            imported_date=imported_date
+        )
 
         do_ofximport(args)
         self.reload()
-        for tr in Transactions:
-            print('Should have been imported:')
-            print(json.dumps(tr, cls=ComplexEncoder))
-            print('Found in the register:')
-            print(json.dumps([tr2 for tr2 in self.client.budget.be_transactions if tr2.amount == tr.amount],
-                             cls=ComplexEncoder))
-            self.assertTrue(self.client.budget.be_transactions.containsduplicate(tr),
-                            msg='couldnt find a transaction with the same hash after ofx import')
+        self.assertIn(transaction, self.client.budget.be_transactions,
+                      msg='couldnt find an imported transaction after ofx import')

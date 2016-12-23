@@ -104,7 +104,7 @@ def do_csvimport(args, client=None):
             logger.debug('searching for subcategory %s' % categoryname)
             return subcategories[categoryname]
         except KeyError:
-            get_logger(args).debug('Couldn''t find this category: %s' % categoryname)
+            logger.debug('Couldn''t find this category: %s' % categoryname)
             exit(-1)
 
     entities_account_id = None
@@ -125,22 +125,23 @@ def do_csvimport(args, client=None):
 
     imported_date = datetime.now().date()
 
-    get_logger(args).debug('OK starting the import from %s ' % os.path.abspath(args.csvfile))
+    logger.debug('OK starting the import from %s ' % os.path.abspath(args.csvfile))
     with open(args.csvfile, 'r') as inputfile:
         header = []
-        for i in range(0,nheaders):
+        for i in range(0, nheaders):
             header.append(inputfile.readline())
         for row in csv.reader(inputfile):
             if sys.version[0] == '2':
                 row = [cell.decode('utf-8') for cell in row]
             if all(map(lambda x: x.strip() == '', row)):
                 continue
-            get_logger(args).debug('read line %s' % row)
+            logger.debug('read line %s' % row)
             result = csvrow(*list(schema.convert_row(*row, fail_fast=True)))
             if 'account' in schema.headers:
                 entities_account_id = getaccount(result.account).id
             if entities_account_id is None:
-                get_logger(args).error('No account id, the account %s in the an account column was not recognized'%result.account)
+                logger.error(
+                    'No account id, the account %s in the an account column was not recognized' % result.account)
                 exit(-1)
             if 'inflow' in schema.headers and 'outflow' in schema.headers:
                 amount = result.inflow - result.outflow
@@ -172,11 +173,11 @@ def do_csvimport(args, client=None):
                 memo=memo,
                 source="Imported"
             )
-            if args.import_duplicates or (not client.budget.be_transactions.containsduplicate(transaction)):
-                get_logger(args).debug('Appending transaction %s ' % transaction.get_dict())
+            if args.import_duplicates or (not transaction in client.budget.be_transactions):
+                logger.debug('Appending transaction %s ' % transaction.get_dict())
                 transactions.append(transaction)
             else:
-                get_logger(args).debug('Duplicate transaction found %s ' % transaction.get_dict())
+                logger.debug('Duplicate transaction found %s ' % transaction.get_dict())
 
     client.add_transactions(transactions)
 

@@ -21,7 +21,8 @@ def ofximport_main():
     test_common_args(args)
     do_ofximport(args)
 
-def do_ofximport(args, client = None):
+
+def do_ofximport(args, client=None):
     if client is None:
         client = clientfromargs(args)
 
@@ -31,7 +32,7 @@ def do_ofximport(args, client = None):
     stmts = response.statements
 
     accounts = client.budget.be_accounts
-    accountvsnotes={account.note:account for account in accounts if account.note is not None}
+    accountvsnotes = {account.note: account for account in accounts if account.note is not None}
 
     for stmt in stmts:
         key = stmt.account.bankid + ' ' + stmt.account.branchid + ' ' + stmt.account.acctid
@@ -53,28 +54,28 @@ def do_ofximport(args, client = None):
         else:
             for note in accountvsnotes:
                 if key in note:
-                    account=accountvsnotes[note]
+                    account = accountvsnotes[note]
 
-                    imported_date=datetime.now().date()
+                    imported_date = datetime.now().date()
 
                     for ofx_transaction in stmt.transactions:
                         payee_name = ofx_transaction.name if ofx_transaction.payee is None else ofx_transaction.payee
                         try:
                             payee = next(p for p in client.budget.be_payees if p.name == payee_name)
                         except StopIteration:
-                            payee=Payee(
+                            payee = Payee(
                                 name=payee_name
                             )
                             client.budget.be_payees.append(payee)
                             client.sync()
 
                         # use ftid so we don't import duplicates
-                        if not any(ofx_transaction.fitid in transaction.memo for transaction in client.budget.be_transactions if
+                        if not any(ofx_transaction.fitid in transaction.memo for transaction in
+                                   client.budget.be_transactions if
                                    transaction.memo is not None and transaction.entities_account_id == account.id):
-
                             transaction = Transaction(
                                 date=ofx_transaction.dtposted,
-                                memo=ofx_transaction.memo + '    '+ofx_transaction.fitid,
+                                memo=ofx_transaction.memo + '    ' + ofx_transaction.fitid,
                                 imported_payee=payee_name,
                                 entities_payee_id=payee.id,
                                 imported_date=imported_date,
@@ -84,6 +85,7 @@ def do_ofximport(args, client = None):
                                 entities_account_id=account.id
                             )
                             client.add_transaction(transaction)
+
 
 if __name__ == "__main__":
     ofximport_main()
