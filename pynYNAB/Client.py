@@ -66,6 +66,8 @@ class nYnabClient(object):
     def from_obj(args, reset=False):
         connection = nYnabConnection(args.email, args.password)
         try:
+            if not hasattr(args,'logginglevel'):
+                setattr(args,'logginglevel','error')
             client = nYnabClient(nynabconnection=connection, budget_name=args.budgetname, logger=get_logger(args))
             if reset:
                 # deletes the budget
