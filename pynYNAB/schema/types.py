@@ -20,7 +20,7 @@ class ArrayType(TypeDecorator):
     def process_result_value(self, value, dialect):
         return json.loads(value)
 
-    def copy(self):
+    def copy(self, **kw):
         return ArrayType(self.impl.length)
 
 
