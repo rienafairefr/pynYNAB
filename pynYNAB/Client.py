@@ -24,11 +24,14 @@ class BudgetNotFound(Exception):
 
 # noinspection PyPep8Naming
 class nYnabClient(object):
-    def __init__(self, nynabconnection, budget_name):
+    def __init__(self, nynabconnection, budget_name, logger=None):
 
         self.delta_device_knowledge = 0
         self.budget_version_id = None
-        self.logger = get_logger()
+        if logger is None:
+            self.logger = get_logger()
+        else:
+            self.logger = logger
         if budget_name is None:
             logger.error('No budget name was provided')
             exit(-1)
@@ -63,7 +66,7 @@ class nYnabClient(object):
     def from_obj(args, reset=False):
         connection = nYnabConnection(args.email, args.password)
         try:
-            client = nYnabClient(nynabconnection=connection, budget_name=args.budgetname)
+            client = nYnabClient(nynabconnection=connection, budget_name=args.budgetname, logger=get_logger(args))
             if reset:
                 # deletes the budget
                 client.delete_budget(args.budgetname)
