@@ -24,7 +24,7 @@ class BudgetNotFound(Exception):
 
 # noinspection PyPep8Naming
 class nYnabClient(object):
-    def __init__(self, nynabconnection, budget_name, logger=None):
+    def __init__(self, nynabconnection, budget_name, engine=None, logger=None):
 
         self.delta_device_knowledge = 0
         self.budget_version_id = None
@@ -47,7 +47,8 @@ class nYnabClient(object):
         self.starting_device_knowledge = 0
         self.ending_device_knowledge = 0
 
-        engine = create_engine('sqlite://')
+        if engine is None:
+            engine = create_engine('sqlite://')
 
         Base.metadata.create_all(engine)
         self.Session = sessionmaker(bind=engine)
