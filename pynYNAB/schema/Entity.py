@@ -172,7 +172,7 @@ def default_listener(col_attr, default):
 
 class Entity(BaseModel):
     def get_apidict(self):
-        entityDict=self.get_dict()
+        entityDict = self.get_dict()
         for column in self.__table__.columns:
             if column.name in entityDict and entityDict[column.name] is not None:
                 columntype = column.type.__class__
@@ -182,7 +182,7 @@ class Entity(BaseModel):
                     entityDict[column.name] = str(entityDict[column.name])
                 elif columntype == AmountType:
                     entityDict[column.name] = int(100 * entityDict[column.name])
-                elif columntype == Enum:
+                elif columntype == sqlaEnum:
                     entityDict[column.name] = entityDict[column.name]._name_
         return entityDict
 
@@ -220,20 +220,21 @@ class Entity(BaseModel):
 
     @classmethod
     def from_apidict(cls,entityDict):
+        modified_dict = {}
         for column in cls.__table__.columns:
             if column.name in entityDict and entityDict[column.name] is not None:
                 columntype = column.type.__class__
                 if columntype == Date:
-                    entityDict[column.name] = datetime.strptime(entityDict[column.name], '%Y-%m-%d').date()
+                    modified_dict[column.name] = datetime.strptime(entityDict[column.name], '%Y-%m-%d').date()
                 elif columntype == nYnabGuid:
-                    entityDict[column.name] = UUID(entityDict[column.name].split('/')[-1])
+                    modified_dict[column.name] = UUID(entityDict[column.name].split('/')[-1])
                 elif columntype == AmountType:
-                    entityDict[column.name] = int(entityDict[column.name])/100
+                    modified_dict[column.name] = int(entityDict[column.name])/100
                 elif columntype == sqlaEnum:
-                    entityDict[column.name] = column.type.enum_class[entityDict[column.name]]
+                    modified_dict[column.name] = column.type.enum_class[entityDict[column.name]]
                 else:
-                    pass
-        return cls.from_dict(entityDict)
+                    modified_dict[column.name] = entityDict[column.name]
+        return cls.from_dict(modified_dict)
 
 Base = declarative_base(cls=Entity)
 

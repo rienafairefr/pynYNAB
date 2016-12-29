@@ -1,14 +1,19 @@
 import json
 import unittest
+from uuid import UUID
 
+import datetime
 from sqlalchemy import Column
+from sqlalchemy import Date
+from sqlalchemy import Enum
 from sqlalchemy import Integer
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from pynYNAB.Client import nYnabClient
-from pynYNAB.schema.Entity import Entity, ComplexEncoder, Base
+from pynYNAB.schema.Entity import Entity, ComplexEncoder, Base, AccountTypes
 from pynYNAB.schema.budget import Account, Transaction, Budget
+from pynYNAB.schema.types import AmountType
 
 
 class MyEntity(Base, Entity):
@@ -146,3 +151,37 @@ class TestOthers(unittest.TestCase):
         objc = obj.copy()
         self.assertEqual(obj.id, objc.id)
         self.assertEqual(obj.get_dict(), objc.get_dict())
+
+
+class DummyEntity(Base, Entity):
+    account_type = Column(Enum(AccountTypes), default=AccountTypes.undef)
+    date = Column(Date)
+    balance = Column(AmountType)
+
+
+class TestApiDict(unittest.TestCase):
+    def test_input(self):
+        inputdict=dict(
+            id='ca85f126-04a1-4196-bbeb-a77acec4b28e',
+            account_type='Checking',
+            date='2016-10-01',
+            balance=100,
+            is_tombstone=False
+        )
+        dummy = DummyEntity.from_apidict(inputdict)
+        self.assertEqual(dummy.id,UUID(hex='ca85f12604a14196bbeba77acec4b28e'))
+        self.assertEqual(dummy.account_type,AccountTypes.Checking)
+        self.assertEqual(dummy.date, datetime.date(year=2016,month=10,day=1))
+        self.assertEqual(dummy.balance,1)
+
+    def test_output(self):
+        inputentity = DummyEntity(
+            account_type = AccountTypes.Checking,
+            date = datetime.date(year=2016,month=10,day=1),
+            balance = 1
+        )
+        entitydict = inputentity.get_apidict()
+        self.assertEqual(entitydict['id'], str(inputentity.id))
+        self.assertEqual(entitydict['account_type'], 'Checking')
+        self.assertEqual(entitydict['date'], '2016-10-01')
+        self.assertEqual(entitydict['balance'], 100)
