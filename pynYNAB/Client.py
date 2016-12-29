@@ -24,20 +24,20 @@ class BudgetNotFound(Exception):
 
 # noinspection PyPep8Naming
 class nYnabClient(object):
-    def __init__(self, nynabconnection, budget_name, engine=None, logger=None):
+    def __init__(self, **kwargs):
+        #nynabconnection, budgetname, engine=None, logger=None):
 
         self.delta_device_knowledge = 0
         self.budget_version_id = None
-        if logger is None:
+        self.logger=kwargs.get('logger',None)
+        if self.logger is None:
             self.logger = get_logger()
-        else:
-            self.logger = logger
-        if budget_name is None:
+
+        self.budget_name = kwargs.get('budgetname',None)
+        if self.budget_name is None:
             logger.error('No budget name was provided')
             exit(-1)
-        self.budget_name = budget_name
-        self.connection = nynabconnection
-        self.budget_name = budget_name
+        self.connection = kwargs.get('nynabconnection',None)
         self.catalog = Catalog()
         self.budget = Budget()
         self.budget_version = BudgetVersion()
@@ -47,8 +47,7 @@ class nYnabClient(object):
         self.starting_device_knowledge = 0
         self.ending_device_knowledge = 0
 
-        if engine is None:
-            engine = create_engine('sqlite://')
+        engine = kwargs.get('engine',create_engine('sqlite://'))
 
         Base.metadata.create_all(engine)
         self.Session = sessionmaker(bind=engine)
@@ -64,12 +63,18 @@ class nYnabClient(object):
             self.sync()
 
     @staticmethod
-    def from_obj(args, reset=False):
-        connection = nYnabConnection(args.email, args.password)
+    def from_obj(args, reset=False, **kwargs):
         try:
             if not hasattr(args,'logginglevel'):
                 setattr(args,'logginglevel','error')
-            client = nYnabClient(nynabconnection=connection, budget_name=args.budgetname, logger=get_logger(args))
+
+            kwargs['logger'] = get_logger(args)
+            kwargs['budgetname'] = args.budgetname
+            kwargs['nynabconnection'] = nYnabConnection(args.email, args.password)
+            if hasattr(args,'engine'):
+                kwargs['engine'] = args.engine
+
+            client = nYnabClient(**kwargs)
             if reset:
                 # deletes the budget
                 client.delete_budget(args.budgetname)
