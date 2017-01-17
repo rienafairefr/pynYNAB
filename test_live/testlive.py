@@ -42,7 +42,7 @@ class LiveTests(CommonLive):
             on_budget=True
         )
 
-        self.client.add_account(account, balance=random.randint(-10, 10), balance_date=datetime.now())
+        self.client.add_account(account, balance=123.45, balance_date=datetime.now())
         self.reload()
         self.assertIn(account, self.client.budget.be_accounts)
         self.client.delete_account(account)

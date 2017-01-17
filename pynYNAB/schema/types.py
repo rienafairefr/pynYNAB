@@ -66,7 +66,7 @@ class AmountType(types.TypeDecorator):
         return dialect.type_descriptor(types.Integer)
 
     def process_bind_param(self, value, dialect):
-        return int(value * 100) if value is not None else None
+        return int(value * 1000) if value is not None else None
 
     def process_result_value(self, value, dialect):
-        return float(value) / 100 if value is not None else None
+        return float(value) / 1000 if value is not None else None
