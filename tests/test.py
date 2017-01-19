@@ -61,7 +61,7 @@ class TestUpdateChangedEntities(CommonTest):
     def setUp(self):
         super(TestUpdateChangedEntities, self).setUp()
         self.account = Account()
-        self.client = nYnabClient(None, 'Mock Budget')
+        self.client = nYnabClient(budgetname='Mock Budget')
         self.obj = self.client.budget
         self.obj.be_accounts = [self.account]
         self.account2 = self.account.copy()

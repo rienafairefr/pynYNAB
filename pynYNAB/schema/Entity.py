@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 from uuid import UUID
 
+import re
 from sqlalchemy.sql.sqltypes import Enum as sqlaEnum
 from aenum import Enum
 from sqlalchemy import Boolean
@@ -169,6 +170,7 @@ def default_listener(col_attr, default):
         # return the value as well
         return value
 
+re_uuid = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 
 class Entity(BaseModel):
     def get_apidict(self):
@@ -219,6 +221,12 @@ class Entity(BaseModel):
         return cls(**entitydict)
 
     @classmethod
+    def uuid_from_api(self,string):
+        result = re_uuid.search(string)
+        if result is not None:
+            return UUID(result.group(0))
+
+    @classmethod
     def from_apidict(cls,entityDict):
         modified_dict = {}
         for column in cls.__table__.columns:
@@ -227,7 +235,7 @@ class Entity(BaseModel):
                 if columntype == Date:
                     modified_dict[column.name] = datetime.strptime(entityDict[column.name], '%Y-%m-%d').date()
                 elif columntype == nYnabGuid:
-                    modified_dict[column.name] = UUID(entityDict[column.name].split('/')[-1])
+                    modified_dict[column.name] = cls.uuid_from_api(entityDict[column.name])
                 elif columntype == AmountType:
                     modified_dict[column.name] = int(entityDict[column.name])/100
                 elif columntype == sqlaEnum:

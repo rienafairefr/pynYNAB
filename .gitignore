@@ -4,7 +4,6 @@ build/
 dist/
 pynYNAB.egg-info/
 .tox/
-tests/
 *.log
 ynab.conf
 .coverage
