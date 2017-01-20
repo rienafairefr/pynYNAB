@@ -165,7 +165,7 @@ class TestApiDict(unittest.TestCase):
             id='ca85f126-04a1-4196-bbeb-a77acec4b28e',
             account_type='Checking',
             date='2016-10-01',
-            balance=100,
+            balance=1000,
             is_tombstone=False
         )
         dummy = DummyEntity.from_apidict(inputdict)
@@ -184,4 +184,4 @@ class TestApiDict(unittest.TestCase):
         self.assertEqual(entitydict['id'], str(inputentity.id))
         self.assertEqual(entitydict['account_type'], 'Checking')
         self.assertEqual(entitydict['date'], '2016-10-01')
-        self.assertEqual(entitydict['balance'], 100)
+        self.assertEqual(entitydict['balance'], 1000)

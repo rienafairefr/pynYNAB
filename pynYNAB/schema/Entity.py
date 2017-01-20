@@ -171,21 +171,42 @@ def default_listener(col_attr, default):
         return value
 
 re_uuid = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
+re_date = re.compile(r'\d{4}[\/ .-]\d{2}[\/.-]\d{2}')
+
+
+def uuid_from_api(columntype,string):
+    result = re_uuid.search(string)
+    if result is not None:
+        return UUID(result.group(0))
+
+
+def date_from_api(columntype,string):
+    result = re_date.search(string)
+    if result is not None:
+        return datetime.strptime(result.group(0),'%Y-%m-%d').date()
+
+
+fromapi_conversion_functions_table = {
+            Date: date_from_api,
+            nYnabGuid: uuid_from_api,
+            AmountType: lambda t, x: x / 1000,
+            sqlaEnum: lambda t, x: t.enum_class[x]
+        }
+
+toapi_conversion_functions_table = {
+            Date: lambda t, x: x.strftime('%Y-%m-%d'),
+            nYnabGuid: lambda t, x: str(x),
+            AmountType: lambda t, x: int(x * 1000),
+            sqlaEnum: lambda t, x: x._name_
+        }
 
 class Entity(BaseModel):
     def get_apidict(self):
         entityDict = self.get_dict()
         for column in self.__table__.columns:
             if column.name in entityDict and entityDict[column.name] is not None:
-                columntype = column.type.__class__
-                if columntype == Date:
-                    entityDict[column.name] = entityDict[column.name].strftime('%Y-%m-%d')
-                elif columntype == nYnabGuid:
-                    entityDict[column.name] = str(entityDict[column.name])
-                elif columntype == AmountType:
-                    entityDict[column.name] = int(100 * entityDict[column.name])
-                elif columntype == sqlaEnum:
-                    entityDict[column.name] = entityDict[column.name]._name_
+                conversion_function = toapi_conversion_functions_table.get(column.type.__class__, lambda t, x: x)
+                entityDict[column.name] = conversion_function(column.type, entityDict[column.name])
         return entityDict
 
     def get_dict(self):
@@ -220,28 +241,15 @@ class Entity(BaseModel):
     def from_dict(cls, entitydict):
         return cls(**entitydict)
 
-    @classmethod
-    def uuid_from_api(self,string):
-        result = re_uuid.search(string)
-        if result is not None:
-            return UUID(result.group(0))
+
 
     @classmethod
     def from_apidict(cls,entityDict):
         modified_dict = {}
         for column in cls.__table__.columns:
             if column.name in entityDict and entityDict[column.name] is not None:
-                columntype = column.type.__class__
-                if columntype == Date:
-                    modified_dict[column.name] = datetime.strptime(entityDict[column.name], '%Y-%m-%d').date()
-                elif columntype == nYnabGuid:
-                    modified_dict[column.name] = cls.uuid_from_api(entityDict[column.name])
-                elif columntype == AmountType:
-                    modified_dict[column.name] = int(entityDict[column.name])/100
-                elif columntype == sqlaEnum:
-                    modified_dict[column.name] = column.type.enum_class[entityDict[column.name]]
-                else:
-                    modified_dict[column.name] = entityDict[column.name]
+                conversion_function = fromapi_conversion_functions_table.get(column.type.__class__, lambda t, x: x)
+                modified_dict[column.name] = conversion_function(column.type, entityDict[column.name])
         return cls.from_dict(modified_dict)
 
 Base = declarative_base(cls=Entity)
