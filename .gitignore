@@ -8,3 +8,4 @@ pynYNAB.egg-info/
 ynab.conf
 .coverage
 *.log
+*.env
