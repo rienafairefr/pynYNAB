@@ -95,11 +95,10 @@ class nYnabClient(object):
             self.first = False
 
             self.sync_obj(self.catalog, 'syncCatalogData', extra=dict(user_id=self.connection.user_id))
-            for catalogbudget in self.catalog.ce_budgets:
-                if catalogbudget.budget_name == self.budget_name:
-                    for budget_version in self.catalog.ce_budget_versions:
-                        if budget_version.budget_id == catalogbudget.id:
-                            self.budget_version_id = budget_version.id
+
+            for budget_version in self.catalog.ce_budget_versions:
+                if budget_version.version_name == self.budget_name:
+                    self.budget_version_id = budget_version.id
             if self.budget_version_id is None:
                 raise BudgetNotFound()
             self.sync_obj(self.budget, 'syncBudgetData',
