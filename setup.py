@@ -17,7 +17,7 @@ except:
 
 setup(
     name='pynYNAB',
-    version='0.3',
+    version=os.environ.get('TAG_NAME',os.environ.get('TRAVIS_TAG','dev')),
     # Note: change 'master' to the tag name when release a new verion
     download_url='https://github.com/rienafairefr/nYNABapi/tarball/master',
 
