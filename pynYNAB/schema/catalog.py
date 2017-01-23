@@ -19,12 +19,7 @@ class CatalogEntity(Entity):
         return relationship('Catalog')
 
 
-class Catalog(Base, RootEntity):
-    ce_user_budgets = relationship('UserBudget')
-    ce_user_settings = relationship('UserSetting')
-    ce_budget_versions = relationship('BudgetVersion')
-    ce_users = relationship('User')
-    ce_budgets = relationship('CatalogBudget')
+
 
 
 class CatalogBudget(Base, CatalogEntity):

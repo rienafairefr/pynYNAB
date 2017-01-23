@@ -85,29 +85,35 @@ class nYnabClient(object):
             print('No budget by the name %s found in nYNAB' % args.budgetname)
             exit(-1)
 
+
     def sync(self):
+        if self.connection is None:
+            return
+        self.logger.debug('sync')
+        self.first = False
+
+        self.sync_obj(self.catalog, 'syncCatalogData', extra=dict(user_id=self.connection.user_id))
+
+        for budget_version in self.catalog.ce_budget_versions:
+            if budget_version.version_name == self.budget_name:
+                self.budget_version_id = budget_version.id
+        if self.budget_version_id is None:
+            raise BudgetNotFound()
+        self.sync_obj(self.budget, 'syncBudgetData',
+                      extra=dict(
+                          calculated_entities_included=False,
+                          budget_version_id=self.budget_version_id)
+                      )
+        if self.budget_version_id is None and self.budget_name is not None:
+            raise BudgetNotFound()
+
+    def push(self):
         if self.connection is None:
             return
         # ending-starting represents the number of modifications that have been done to the data ?
         self.logger.debug('Client sync')
         if self.first:
-            self.logger.debug('First sync')
-            self.first = False
 
-            self.sync_obj(self.catalog, 'syncCatalogData', extra=dict(user_id=self.connection.user_id))
-
-            for budget_version in self.catalog.ce_budget_versions:
-                if budget_version.version_name == self.budget_name:
-                    self.budget_version_id = budget_version.id
-            if self.budget_version_id is None:
-                raise BudgetNotFound()
-            self.sync_obj(self.budget, 'syncBudgetData',
-                          extra=dict(
-                              calculated_entities_included=False,
-                              budget_version_id=self.budget_version_id)
-                          )
-            if self.budget_version_id is None and self.budget_name is not None:
-                raise BudgetNotFound()
         else:
             self.logger.debug('Not first sync')
             catalog_changed_entities = self.catalog.get_changed_apidict()
@@ -164,7 +170,40 @@ class nYnabClient(object):
     def update_from_sync_data(self, obj, sync_data):
         self.update_from_api_changed_entities(obj, sync_data['changed_entities'])
 
-    def sync_obj(self, obj, opname, knowledge=True, extra=None):
+    def push_change(self, obj, opname, extra=True):
+        if self.connection is None:
+            return
+        if extra is None:
+            extra = {}
+        changed_entities = obj.get_changed_apidict()
+        request_data = dict(starting_device_knowledge=self.starting_device_knowledge,
+                            ending_device_knowledge=self.ending_device_knowledge,
+                            device_knowledge_of_server=self.device_knowledge_of_server[opname],
+                            changed_entities=changed_entities)
+        sync_data = self.connection.dorequest(request_data, opname)
+        self.logger.debug('server_knowledge_of_device ' + str(sync_data['server_knowledge_of_device']))
+        self.logger.debug('current_server_knowledge ' + str(sync_data['current_server_knowledge']))
+        self.update_from_sync_data(obj, sync_data)
+        self.session.commit()
+        obj.clear_changed_entities()
+
+        server_knowledge_of_device = sync_data['server_knowledge_of_device']
+        current_server_knowledge = sync_data['current_server_knowledge']
+
+        change = current_server_knowledge - self.device_knowledge_of_server[opname]
+        if change > 0:
+            self.logger.debug('Server knowledge has gone up by ' + str(
+                change) + '. We should be getting back some entities from the server')
+        if self.current_device_knowledge[opname] < server_knowledge_of_device:
+            if self.current_device_knowledge[opname] != 0:
+                self.logger.error('The server knows more about this device than we know about ourselves')
+            self.current_device_knowledge[opname] = server_knowledge_of_device
+        self.device_knowledge_of_server[opname] = current_server_knowledge
+
+        self.logger.debug('current_device_knowledge %s' % self.current_device_knowledge[opname])
+        self.logger.debug('device_knowledge_of_server %s' % self.device_knowledge_of_server[opname])
+
+    def sync_obj(self, obj, opname, extra=None):
         if self.connection is None:
             return
         if extra is None:
@@ -173,15 +212,11 @@ class nYnabClient(object):
             self.current_device_knowledge[opname] = 0
         if opname not in self.device_knowledge_of_server:
             self.device_knowledge_of_server[opname] = 0
-        if knowledge:
-            changed_entities = obj.get_changed_apidict()
-        else:
-            changed_entities = {}
             # sync with disregard for knowledge, start from 0
         request_data = dict(starting_device_knowledge=self.starting_device_knowledge,
                             ending_device_knowledge=self.ending_device_knowledge,
                             device_knowledge_of_server=self.device_knowledge_of_server[opname],
-                            changed_entities=changed_entities)
+                            changed_entities={})
 
         request_data.update(extra)
 
