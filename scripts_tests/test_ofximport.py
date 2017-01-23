@@ -9,6 +9,7 @@ from pynYNAB.Client import clientfromargs
 from pynYNAB.schema.Entity import ComplexEncoder
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.ofximport import do_ofximport
+from pynYNAB.utils import util_get_empty_account_by_name_if_doesnt_exist, util_add_payee_by_name_if_doesnt_exist
 from test_live.common import CommonLive
 
 
@@ -86,13 +87,13 @@ NEWFILEUID:NONE
         imported_date = datetime.now().date()
 
         testaccount = 'TEST'
-        account = self.util_get_empty_account_by_name_if_doesnt_exist(testaccount)
+        account = util_get_empty_account_by_name_if_doesnt_exist(self.client,testaccount)
 
         key = '11706 41029 29939615002'
         account.note = 'great note key[%s]key' % key
         self.client.sync()
 
-        payee = self.util_add_payee_by_name_if_doesnt_exist('CHEQUE')
+        payee = util_add_payee_by_name_if_doesnt_exist(self.client,'CHEQUE')
         amount = -491.09
 
         transaction = Transaction(

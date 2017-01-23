@@ -79,32 +79,4 @@ class CommonLive(unittest.TestCase):
         )
         self.client.add_transaction(transaction)
 
-    def util_get_empty_account_by_name_if_doesnt_exist(self, name):
-        accounts = {a.account_name: a for a in self.client.budget.be_accounts if
-                    a.account_name == name}
-        if name in accounts:
-            account = accounts[name]
-            self.client.delete_account(account)
 
-        account = Account(
-            account_type=AccountTypes.Checking,
-            account_name=name
-        )
-
-        self.client.add_account(account, balance=random.randint(-10, 10), balance_date=datetime.now())
-        self.reload()
-        self.assertIn(account, self.client.budget.be_accounts)
-        return account
-
-    def util_add_payee_by_name_if_doesnt_exist(self, name):
-        payees = {p.name: p for p in self.client.budget.be_payees if
-                  p.name == name}
-        if name in payees:
-            return payees[name]
-        payee = Payee(
-            name=name
-        )
-
-        self.client.budget.be_payees.append(payee)
-        self.client.sync()
-        return payee
