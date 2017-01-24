@@ -12,7 +12,8 @@ from sqlalchemy.orm import sessionmaker
 
 from pynYNAB.Client import nYnabClient
 from pynYNAB.schema.Entity import Entity, ComplexEncoder, Base, AccountTypes
-from pynYNAB.schema.budget import Account, Transaction, Budget
+from pynYNAB.schema.budget import Account, Transaction
+from pynYNAB.schema.roots import Budget
 from pynYNAB.schema.types import AmountType
 
 

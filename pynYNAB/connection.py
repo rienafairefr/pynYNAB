@@ -14,6 +14,7 @@ from pynYNAB.utils import rate_limited
 class NYnabConnectionError(Exception):
     pass
 
+
 requests.packages.urllib3.disable_warnings()
 
 
@@ -42,7 +43,7 @@ class nYnabConnection(object):
         self.session = requests.Session()
         self.sessionToken = None
         self.id = str(generateuuid())
-        self.lastrequest_elapsed=None
+        self.lastrequest_elapsed = None
         self.logger = logging.getLogger('pynYNAB')
         self._init_session()
 
@@ -60,34 +61,33 @@ class nYnabConnection(object):
 
         json_request_dict = json.dumps(request_dic, cls=ComplexEncoder)
         params = {u'operation_name': opname, 'request_data': json_request_dict}
-        self.logger.debug('%s  ... %s ' % (opname,params))
+        self.logger.debug('%s  ... %s ' % (opname, params))
         r = self.session.post(self.urlCatalog, params, verify=False)
-        self.lastrequest_elapsed=r.elapsed
+        self.lastrequest_elapsed = r.elapsed
         js = r.json()
         if r.status_code != 200:
-             self.logger.debug('non-200 HTTP code: %s ' % r.text)
+            self.logger.debug('non-200 HTTP code: %s ' % r.text)
         if js['error'] is None:
             return js
         else:
-            error=js['error']
+            error = js['error']
             if r.status_code == 500:
                 raise NYnabConnectionError('Uunrecoverable server error, sorry YNAB')
             if 'id' not in error:
-                self.logger.error('API error, %s'%error['message'])
+                self.logger.error('API error, %s' % error['message'])
             if error['id'] == 'user_not_found':
-                 self.logger.error('API error, User Not Found')
+                self.logger.error('API error, User Not Found')
             elif error['id'] == 'id=user_password_invalid':
-                 self.logger.error('API error, User-Password combination invalid')
+                self.logger.error('API error, User-Password combination invalid')
             elif error['id'] == 'request_throttled':
-                 self.logger.debug('API Rrequest throttled')
-                 retyrafter=r.headers['Retry-After']
-                 self.logger.debug('Waiting for %s s' % retyrafter)
-                 sleep(float(retyrafter))
-                 return self.dorequest(request_dic,opname)
+                self.logger.debug('API Rrequest throttled')
+                retyrafter = r.headers['Retry-After']
+                self.logger.debug('Waiting for %s s' % retyrafter)
+                sleep(float(retyrafter))
+                return self.dorequest(request_dic, opname)
             else:
                 self.logger.debug('Unknown API error')
                 self.logger.debug('Request data:')
                 self.logger.debug(params)
-                raise NYnabConnectionError('Unknown Error \"%s\" was returned from the API when sending request (%s)'%(error['id'],params))
-
-
+                raise NYnabConnectionError(
+                    'Unknown Error \"%s\" was returned from the API when sending request (%s)' % (error['id'], params))

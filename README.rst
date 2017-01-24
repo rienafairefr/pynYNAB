@@ -39,25 +39,28 @@ using the same commands that the Javascript app at app.youneedabudget.com uses i
 The connection object needs email and password for the nYNAB account
 
 Once you have created your nYnabClient object, all data should have already been synced up with YNAB's servers. If you
-need fresh data, call reload on the nYnabClient.
+need the updated data from the server, call sync on the nYnabClient.
 
 All the entity handling is done through the Budget and Catalog objects, they contain collections such
 as be_accounts, be_transactions, ce_user_settings, etc. Look into the budget/catalog for the schema.
 
-In order to write some data to YNAB servers for your budget, you just need to modify a collection in those Budget/Catalog 
-objects then call nYnabobject.sync. To append a new entity, delete or modify an existing one, call the appropriate
-methods on a collection inside the budget or catalog objects.
-    
+In order to write some data to YNAB servers for your budget, you just need to modify those Budget/Catalog
+objects then call nYnabobject.push . all the subcollections like ce_budget_transactions support append, remove, etc,
+like normal lists.
+
+push takes an expected_delta argument, this is to safeguard modifying too much of your data on the server by error.
+Examples:
+* if you add two matched transactions to be_transactions, then the expected delta is 2
+* If you add a single payee, then the expected delta is 1
+
+
 I've provided some tested methods e.g. add_account, add_transaction, in the nYnabClient class to
 add/delete accounts and transactions as examples. Some actions are not always simple (e.g., to add an account, 
 you need to add a transfer payee, a starting balance transaction, otherwise the server refuses the request). You're welcome 
 to contribute new actions e.g. by catching the requests done in the UI with Fiddler to see what's done.
 
 Caution with add_transaction, it works even for large amount of transactions (tested up to 3000), but please 
-don't stress test the YNAB servers with it... 
-
-YNAB implemented throttling on their API, and pynYNAB honors it, by 
-catching the error id request_throttled and waiting the time specified in the Retry-After header by the server.
+don't stress test the YNAB servers with it...
 
 Approach of preventing Harm  
 ---------------------------

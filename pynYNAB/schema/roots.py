@@ -1,6 +1,11 @@
+from sqlalchemy import Boolean
+from sqlalchemy import Column
+from sqlalchemy import Date
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 
 from pynYNAB.schema.Entity import Base, RootEntity
+from pynYNAB.schema.budget import TransactionGroup
 
 
 class Catalog(Base, RootEntity):
@@ -38,3 +43,27 @@ class Budget(Base, RootEntity):
     first_month = Column(Date)
     budget_version_id = Column(ForeignKey('budgetversion.id'), nullable=True)
     calculated_entities_included = Column(Boolean, default=False)
+
+    def get_changed_entities(self):
+        changed_entities = super(Budget, self).get_changed_entities()
+        if 'be_transactions' in changed_entities:
+            changed_entities['be_transaction_groups'] = []
+            for tr in changed_entities.pop('be_transactions'):
+                subtransactions = []
+                if 'be_subtransactions' in changed_entities:
+                    for subtransaction in changed_entities['be_subtransactions']:
+                        if subtransaction.entities_transaction_id == tr.id:
+                            subtransactions.append(subtransaction)
+                    for subtransaction in subtransactions:
+                        changed_entities['be_subtransactions'].remove(subtransaction)
+                if not subtransactions:
+                    subtransactions = None
+                group = TransactionGroup(
+                    id=tr.id,
+                    be_transaction=tr,
+                    be_subtransactions=subtransactions,
+                    be_matched_transaction=None)
+                changed_entities['be_transaction_groups'].append(group)
+        if changed_entities.get('be_subtransactions') is not None:
+            del changed_entities['be_subtransactions']
+        return changed_entities

@@ -6,8 +6,10 @@ from sqlalchemy.orm import sessionmaker
 
 from pynYNAB.connection import nYnabConnection
 from pynYNAB.schema.Entity import Base
-from pynYNAB.schema.budget import Payee, Transaction, Budget
-from pynYNAB.schema.catalog import BudgetVersion, Catalog
+from pynYNAB.schema.budget import Payee, Transaction
+from pynYNAB.schema.catalog import BudgetVersion
+from pynYNAB.schema.roots import Budget
+from pynYNAB.schema.roots import Catalog
 from pynYNAB.scripts.config import get_logger
 from pynYNAB.utils import chunk
 
@@ -23,21 +25,41 @@ class BudgetNotFound(Exception):
 
 
 # noinspection PyPep8Naming
+class WrongPushException(Exception):
+    def __init__(self, expected_delta, delta):
+        self.expected_delta = expected_delta
+        self.delta = delta
+
+    string = 'tried to push a changed_entities with %d entities while we expected %d entities'
+
+    @property
+    def msg(self):
+        return self.string % (self.delta, self.expected_delta)
+
+
+def operation(expected_delta):
+    def operation_decorator(fn):
+        @wraps(fn)
+        def wrapped(self, *args, **kwargs):
+            fn(self, *args, **kwargs)
+            self.push(expected_delta)
+        return wrapped
+    return operation_decorator
+
+
 class nYnabClient(object):
     def __init__(self, **kwargs):
-        #nynabconnection, budgetname, engine=None, logger=None):
-
-        self.delta_device_knowledge = 0
+        self.server_entities = {}
         self.budget_version_id = None
-        self.logger=kwargs.get('logger',None)
+        self.logger = kwargs.get('logger', None)
         if self.logger is None:
             self.logger = get_logger()
 
-        self.budget_name = kwargs.get('budgetname',None)
+        self.budget_name = kwargs.get('budgetname', None)
         if self.budget_name is None:
             logger.error('No budget name was provided')
             exit(-1)
-        self.connection = kwargs.get('nynabconnection',None)
+        self.connection = kwargs.get('nynabconnection', None)
         self.catalog = Catalog()
         self.budget = Budget()
         self.budget_version = BudgetVersion()
@@ -47,7 +69,7 @@ class nYnabClient(object):
         self.starting_device_knowledge = 0
         self.ending_device_knowledge = 0
 
-        engine = kwargs.get('engine',create_engine('sqlite://'))
+        engine = kwargs.get('engine', create_engine('sqlite://'))
 
         Base.metadata.create_all(engine)
         self.Session = sessionmaker(bind=engine)
@@ -65,13 +87,13 @@ class nYnabClient(object):
     @staticmethod
     def from_obj(args, reset=False, **kwargs):
         try:
-            if not hasattr(args,'logginglevel'):
-                setattr(args,'logginglevel','error')
+            if not hasattr(args, 'logginglevel'):
+                setattr(args, 'logginglevel', 'error')
 
             kwargs['logger'] = get_logger(args)
             kwargs['budgetname'] = args.budgetname
             kwargs['nynabconnection'] = nYnabConnection(args.email, args.password)
-            if hasattr(args,'engine'):
+            if hasattr(args, 'engine'):
                 kwargs['engine'] = args.engine
 
             client = nYnabClient(**kwargs)
@@ -85,20 +107,14 @@ class nYnabClient(object):
             print('No budget by the name %s found in nYNAB' % args.budgetname)
             exit(-1)
 
-
     def sync(self):
         if self.connection is None:
             return
-        self.logger.debug('sync')
-        self.first = False
+        self.logger.debug('Client.sync')
 
         self.sync_obj(self.catalog, 'syncCatalogData', extra=dict(user_id=self.connection.user_id))
+        self.select_budget(self.budget_name)
 
-        for budget_version in self.catalog.ce_budget_versions:
-            if budget_version.version_name == self.budget_name:
-                self.budget_version_id = budget_version.id
-        if self.budget_version_id is None:
-            raise BudgetNotFound()
         self.sync_obj(self.budget, 'syncBudgetData',
                       extra=dict(
                           calculated_entities_included=False,
@@ -107,27 +123,29 @@ class nYnabClient(object):
         if self.budget_version_id is None and self.budget_name is not None:
             raise BudgetNotFound()
 
-    def push(self):
+    def push(self, expected_delta=1):
         if self.connection is None:
             return
         # ending-starting represents the number of modifications that have been done to the data ?
-        self.logger.debug('Client sync')
-        if self.first:
+        self.logger.debug('Client.push')
 
-        else:
-            self.logger.debug('Not first sync')
-            catalog_changed_entities = self.catalog.get_changed_apidict()
-            budget_changed_entities = self.budget.get_changed_apidict()
+        catalog_changed_entities = self.catalog.get_changed_apidict()
+        budget_changed_entities = self.budget.get_changed_apidict()
 
-            if any(catalog_changed_entities) or any(budget_changed_entities):
-                self.ending_device_knowledge = self.starting_device_knowledge + 1
-            self.sync_obj(self.catalog, 'syncCatalogData', extra=dict(user_id=self.connection.user_id))
-            self.sync_obj(self.budget, 'syncBudgetData',
-                          extra=dict(
-                              calculated_entities_included=False,
-                              budget_version_id=self.budget_version_id))
-            self.starting_device_knowledge = self.ending_device_knowledge
+        delta = sum(len(l) for k, l in catalog_changed_entities.items()) + \
+            sum(len(l) for k, l in budget_changed_entities.items())
 
+        if delta != expected_delta:
+            raise WrongPushException(expected_delta, delta)
+
+        if any(catalog_changed_entities) or any(budget_changed_entities):
+            self.ending_device_knowledge = self.starting_device_knowledge + 1
+        self._push_obj(self.catalog, 'syncCatalogData', extra=dict(user_id=self.connection.user_id))
+        self._push_obj(self.budget, 'syncBudgetData',
+                       extra=dict(
+                          calculated_entities_included=False,
+                          budget_version_id=self.budget_version_id))
+        self.starting_device_knowledge = self.ending_device_knowledge
         self.session.commit()
 
     def update_from_api_changed_entities(self, obj, changed_entities):
@@ -142,44 +160,47 @@ class nYnabClient(object):
 
     def update_from_changed_entities(self, obj, changed_entities):
         for name, value in changed_entities.items():
-            if isinstance(value, list):
-                list_of_entities = getattr(obj, name)
-                for incoming_obj in value:
-                    current_obj = self.session.query(obj.listfields[name]).get(incoming_obj.id)
-                    if current_obj is not None:
-                        if incoming_obj.is_tombstone:
-                            self.session.delete(current_obj)
-                        else:
-                            if current_obj not in list_of_entities:
-                                current_obj.parent = obj
-                            else:
-                                for field in current_obj.scalarfields:
-                                    incoming = getattr(incoming_obj, field)
-                                    present = getattr(current_obj, field)
-                                    if present != incoming:
-                                        setattr(current_obj, field, incoming)
-                                        pass
-                                pass
+            if not isinstance(value, list):
+                continue
+            list_of_entities = getattr(obj, name)
+            for incoming_obj in value:
+                current_obj = self.session.query(obj.listfields[name]).get(incoming_obj.id)
+                if current_obj is not None:
+                    if incoming_obj.is_tombstone:
+                        self.session.delete(current_obj)
                     else:
-                        if not incoming_obj.is_tombstone:
-                            self.session.add(incoming_obj)
-                            incoming_obj.parent = obj
+                        if current_obj not in list_of_entities:
+                            current_obj.parent = obj
+                        else:
+                            for field in current_obj.scalarfields:
+                                incoming = getattr(incoming_obj, field)
+                                present = getattr(current_obj, field)
+                                if present != incoming:
+                                    setattr(current_obj, field, incoming)
+                                    pass
+                            pass
+                else:
+                    if not incoming_obj.is_tombstone:
+                        self.session.add(incoming_obj)
+                        incoming_obj.parent = obj
         self.session.commit()
         pass
 
     def update_from_sync_data(self, obj, sync_data):
         self.update_from_api_changed_entities(obj, sync_data['changed_entities'])
 
-    def push_change(self, obj, opname, extra=True):
+    def _push_obj(self, obj, opname, extra=None):
         if self.connection is None:
             return
         if extra is None:
             extra = {}
+
         changed_entities = obj.get_changed_apidict()
         request_data = dict(starting_device_knowledge=self.starting_device_knowledge,
                             ending_device_knowledge=self.ending_device_knowledge,
                             device_knowledge_of_server=self.device_knowledge_of_server[opname],
                             changed_entities=changed_entities)
+        request_data.update(extra)
         sync_data = self.connection.dorequest(request_data, opname)
         self.logger.debug('server_knowledge_of_device ' + str(sync_data['server_knowledge_of_device']))
         self.logger.debug('current_server_knowledge ' + str(sync_data['current_server_knowledge']))
@@ -221,6 +242,7 @@ class nYnabClient(object):
         request_data.update(extra)
 
         sync_data = self.connection.dorequest(request_data, opname)
+        self.server_entities[opname] = sync_data['changed_entities']
         self.logger.debug('server_knowledge_of_device ' + str(sync_data['server_knowledge_of_device']))
         self.logger.debug('current_server_knowledge ' + str(sync_data['current_server_knowledge']))
         self.update_from_sync_data(obj, sync_data)
@@ -243,15 +265,7 @@ class nYnabClient(object):
         self.logger.debug('current_device_knowledge %s' % self.current_device_knowledge[opname])
         self.logger.debug('device_knowledge_of_server %s' % self.device_knowledge_of_server[opname])
 
-    def operation(fn):
-        @wraps(fn)
-        def wrapped(self, *args, **kwargs):
-            fn(self, *args, **kwargs)
-            self.sync()
-
-        return wrapped
-
-    @operation
+    @operation(3)
     def add_account(self, account, balance, balance_date):
         payee = Payee(
             entities_account_id=account.id,
@@ -283,17 +297,11 @@ class nYnabClient(object):
         self.budget.be_payees.append(payee)
         self.budget.be_transactions.append(transaction)
 
-    @operation
+    @operation(1)
     def delete_account(self, account):
         self.budget.be_accounts.remove(account)
-        for payee in list(self.budget.be_payees):
-            if payee.entities_account == account:
-                self.budget.be_payees.remove(payee)
-        for transaction in list(self.budget.be_transactions):
-            if transaction.entities_account == account:
-                self.budget.be_transactions.remove(transaction)
 
-    @operation
+    @operation(1)
     def add_transaction(self, transaction):
         self.budget.be_transactions.append(transaction)
 
@@ -301,56 +309,31 @@ class nYnabClient(object):
         for chunkelement in chunk(transaction_list, 50):
             self._add_transactions(chunkelement)
 
-    @operation
+    @property
     def _add_transactions(self, transaction_list):
-        for transaction in transaction_list:
-            self.budget.be_transactions.append(transaction)
+        @operation(len(transaction_list))
+        def _add_transactions_method(self, transaction_list):
+            for transaction in transaction_list:
+                self.budget.be_transactions.append(transaction)
+        return _add_transactions_method
 
-    @operation
+    @operation(1)
     def delete_transaction(self, transaction):
         self.budget.be_transactions.remove(transaction)
 
-    def select_account_ui(self, create=False):
-        accounts = list(self.budget.be_accounts)
-
-        iaccount = 0
-        if create:
-            print('#0 ###CREATE')
-            iaccount = 1
-
-        for account in accounts:
-            print('#%d %s' % (iaccount, account.account_name))
-            iaccount += 1
-        if create:
-            accounts = [None] + accounts
-
-        while True:
-            accountnumber = input('Which account? ')
-            try:
-                accountnumber = int(accountnumber)
-                if 0 <= accountnumber <= len(accounts) - 1:
-                    break
-            except ValueError:
-                pass
-            print('Please enter a number between %d and %d' % (0, len(accounts) - 1))
-            return accounts[accountnumber]
-
-    @operation
+    @operation(1)
     def delete_budget(self, budget_name):
         for budget in self.catalog.ce_budgets:
             if budget.budget_name == budget_name:
                 self.catalog.ce_budgets.remove(budget)
 
     def select_budget(self, budget_name):
-        self.logger.debug('Catalog sync')
-        self.catalog.sync(self.connection, 'syncCatalogData')
+        self.budget_version_id = None
         for budget_version in self.catalog.ce_budget_versions:
-            budget = self.catalog.ce_budgets.get(budget_version.budget_id)
-            if budget.budget_name == budget_name:
-                self.budget.budget_version_id = budget_version.id
-                self.logger.debug('Budget sync')
-                self.sync()
-                break
+            if budget_version.version_name == budget_name:
+                self.budget_version_id = budget_version.id
+        if self.budget_version_id is None:
+            raise BudgetNotFound()
 
     def create_budget(self, budget_name):
         import json
@@ -373,25 +356,3 @@ class nYnabClient(object):
                                       "currency_format": json.dumps(currency_format),
                                       "date_format": json.dumps(date_format)
                                   })
-
-    @operation
-    def clean_transactions(self):
-        for transaction in self.budget.be_transactions:
-            self.budget.be_transactions.delete(transaction)
-        for subtransaction in self.budget.be_subtransactions:
-            self.budget.be_subtransactions.delete(subtransaction)
-
-    @operation
-    def clean_budget(self):
-        self.clean_transactions()
-        for sub_category in [sub_category for sub_category in self.budget.be_subcategories if
-                             sub_category.internal_name is None]:
-            self.budget.be_subcategories.delete(sub_category)
-        for mastercategory in [mastercategory for mastercategory in self.budget.be_master_categories if
-                               mastercategory.deletable]:
-            self.budget.be_master_categories.delete(mastercategory)
-        self.clean_transactions()
-        for payee in [payee for payee in self.budget.be_payees if payee.internal_name is None]:
-            self.budget.be_payees.delete(payee)
-        for account in self.budget.be_accounts:
-            self.budget.be_accounts.delete(account)
