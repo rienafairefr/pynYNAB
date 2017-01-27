@@ -1,6 +1,5 @@
 import json
 import unittest
-from uuid import UUID
 
 import datetime
 from sqlalchemy import Column
@@ -163,14 +162,14 @@ class DummyEntity(Base, Entity):
 class TestApiDict(unittest.TestCase):
     def test_input(self):
         inputdict=dict(
-            id='ca85f126-04a1-4196-bbeb-a77acec4b28e',
+            id='dummyid/ca85f126-04a1-4196-bbeb-a77acec4b28e',
             account_type='Checking',
             date='2016-10-01',
             balance=1000,
             is_tombstone=False
         )
         dummy = DummyEntity.from_apidict(inputdict)
-        self.assertEqual(dummy.id,UUID(hex='ca85f12604a14196bbeba77acec4b28e'))
+        self.assertEqual(dummy.id,inputdict['id'])
         self.assertEqual(dummy.account_type,AccountTypes.Checking)
         self.assertEqual(dummy.date, datetime.date(year=2016,month=10,day=1))
         self.assertEqual(dummy.balance,1)

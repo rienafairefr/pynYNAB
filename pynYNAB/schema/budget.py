@@ -8,8 +8,8 @@ from sqlalchemy import String
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from pynYNAB.schema.Entity import Entity, AccountTypes, Base, RootEntity
-from pynYNAB.schema.types import AmountType, nYnabGuid
+from pynYNAB.schema.Entity import Entity, AccountTypes, Base
+from pynYNAB.schema.types import AmountType
 
 
 class BudgetEntity(Entity):
@@ -99,7 +99,7 @@ class AccountMapping(Base, BudgetEntity):
     hash = Column(String)
     fid = Column(String)
     salt = Column(String)
-    shortened_account_id = Column(nYnabGuid)
+    shortened_account_id = Column(String)
     should_flip_payees_memos = Column(String)
     should_import_memos = Column(String)
     skip_import = Column(String)
@@ -305,8 +305,8 @@ class Account(Base, BudgetEntity):
     on_budget = Column(Boolean, default=True)
 
     direct_connect_enabled = Column(Boolean, default=False)
-    direct_connect_account_id = Column(nYnabGuid)
-    direct_connect_institution_id = Column(nYnabGuid)
+    direct_connect_account_id = Column(String)
+    direct_connect_institution_id = Column(String)
     direct_connect_last_imported_at = Column(Date)
     direct_connect_last_error_code = Column(String)
 

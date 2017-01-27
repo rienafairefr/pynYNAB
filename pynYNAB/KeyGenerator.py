@@ -2,4 +2,4 @@ import uuid
 
 
 def generateuuid():
-    return uuid.uuid4()
+    return str(uuid.uuid4())

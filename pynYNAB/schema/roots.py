@@ -17,10 +17,6 @@ class Catalog(Base, RootEntity):
 
 
 class Budget(Base, RootEntity):
-    def __init__(self):
-        RootEntity.__init__(self)
-        self.budget_version_id = None
-
     be_transactions = relationship('Transaction')
     be_master_categories = relationship('MasterCategory')
     be_settings = relationship('Setting')
@@ -41,8 +37,6 @@ class Budget(Base, RootEntity):
     be_accounts = relationship('Account')
     last_month = Column(Date)
     first_month = Column(Date)
-    budget_version_id = Column(ForeignKey('budgetversion.id'), nullable=True)
-    calculated_entities_included = Column(Boolean, default=False)
 
     def get_changed_entities(self):
         changed_entities = super(Budget, self).get_changed_entities()
