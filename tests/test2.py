@@ -3,7 +3,7 @@ import uuid
 import re
 from datetime import datetime
 
-from pynYNAB.schema.Entity import date_from_api, uuid_from_api
+from pynYNAB.schema.Entity import date_from_api
 
 
 strdate0 = '2015-04-03'

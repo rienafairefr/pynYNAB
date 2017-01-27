@@ -62,8 +62,7 @@ class TestUpdateChangedEntities(CommonTest):
         super(TestUpdateChangedEntities, self).setUp()
         self.account = Account()
         self.client = nYnabClient(budgetname='Mock Budget')
-        self.obj = self.client.budget
-        self.obj.be_accounts = [self.account]
+        self.client.budget.be_accounts = [self.account]
         self.account2 = self.account.copy()
         self.client.session.commit()
 
@@ -72,17 +71,17 @@ class TestUpdateChangedEntities(CommonTest):
         changed_entities = dict(
             be_accounts=[new_account]
         )
-        self.client.update_from_changed_entities(self.obj, changed_entities)
-        self.assertEqual(len(self.obj.be_accounts), 2)
-        self.assertIn(new_account, self.obj.be_accounts)
+        self.client.budgetClient.update_from_changed_entities(changed_entities)
+        self.assertEqual(len(self.client.budget.be_accounts), 2)
+        self.assertIn(new_account, self.client.budget.be_accounts)
 
     def testupdateChangedEntities_delete(self):
         self.account2.is_tombstone = True
         changed_entities = dict(
             be_accounts=[self.account2]
         )
-        self.client.update_from_changed_entities(self.obj, changed_entities)
-        self.assertEqual(len(self.obj.be_accounts), 0)
+        self.client.budgetClient.update_from_changed_entities(changed_entities)
+        self.assertEqual(len(self.client.budget.be_accounts), 0)
 
     def testupdateChangedEntities_modify(self):
         self.account2 = self.account.copy()
@@ -91,9 +90,9 @@ class TestUpdateChangedEntities(CommonTest):
             be_accounts=[self.account2]
         )
 
-        self.client.update_from_changed_entities(self.obj, changed_entities)
-        self.assertEqual(len(self.obj.be_accounts), 1)
-        acc = self.obj.be_accounts[0]
+        self.client.budgetClient.update_from_changed_entities(changed_entities)
+        self.assertEqual(len(self.client.budget.be_accounts), 1)
+        acc = self.client.budget.be_accounts[0]
         self.assertEqual(acc, self.account2)
 
 
