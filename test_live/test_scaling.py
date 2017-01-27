@@ -1,5 +1,5 @@
+# -*- coding: utf-8 -*-
 import unittest
-
 from pynYNAB.Client import clientfromargs
 from pynYNAB.scripts.config import parser
 
