@@ -8,8 +8,8 @@ from sqlalchemy import String
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from pynYNAB.schema.Entity import Entity, AccountTypes, Base, RootEntity
-from pynYNAB.schema.types import AmountType, nYnabGuid
+from pynYNAB.schema.Entity import Entity, AccountTypes, Base
+from pynYNAB.schema.types import AmountType
 
 
 class BudgetEntity(Entity):
@@ -20,59 +20,6 @@ class BudgetEntity(Entity):
     @declared_attr
     def parent(self):
         return relationship('Budget', lazy=False)
-
-
-class Budget(Base, RootEntity):
-    def __init__(self):
-        RootEntity.__init__(self)
-        self.budget_version_id = None
-
-    be_transactions = relationship('Transaction')
-    be_master_categories = relationship('MasterCategory')
-    be_settings = relationship('Setting')
-    be_monthly_budget_calculations = relationship('MonthlyBudgetCalculation')
-    be_account_mappings = relationship('AccountMapping')
-    be_subtransactions = relationship('Subtransaction')
-    be_scheduled_subtransactions = relationship('ScheduledSubtransaction')
-    be_monthly_budgets = relationship('MonthlyBudget')
-    be_subcategories = relationship('SubCategory')
-    be_payee_locations = relationship('PayeeLocation')
-    be_account_calculations = relationship('AccountCalculation')
-    be_monthly_account_calculations = relationship('MonthlyAccountCalculation')
-    be_monthly_subcategory_budget_calculations = relationship('MonthlySubcategoryBudgetCalculation')
-    be_scheduled_transactions = relationship('ScheduledTransaction')
-    be_payees = relationship('Payee')
-    be_monthly_subcategory_budgets = relationship('MonthlySubcategoryBudget')
-    be_payee_rename_conditions = relationship('PayeeRenameCondition')
-    be_accounts = relationship('Account')
-    last_month = Column(Date)
-    first_month = Column(Date)
-    budget_version_id = Column(ForeignKey('budgetversion.id'), nullable=True)
-    calculated_entities_included = Column(Boolean, default=False)
-
-    def get_changed_entities(self):
-        changed_entities = super(Budget, self).get_changed_entities()
-        if 'be_transactions' in changed_entities:
-            changed_entities['be_transaction_groups'] = []
-            for tr in changed_entities.pop('be_transactions'):
-                subtransactions = []
-                if 'be_subtransactions' in changed_entities:
-                    for subtransaction in changed_entities['be_subtransactions']:
-                        if subtransaction.entities_transaction_id == tr.id:
-                            subtransactions.append(subtransaction)
-                    for subtransaction in subtransactions:
-                        changed_entities['be_subtransactions'].remove(subtransaction)
-                if not subtransactions:
-                    subtransactions = None
-                group = TransactionGroup(
-                    id=tr.id,
-                    be_transaction=tr,
-                    be_subtransactions=subtransactions,
-                    be_matched_transaction=None)
-                changed_entities['be_transaction_groups'].append(group)
-        if changed_entities.get('be_subtransactions') is not None:
-            del changed_entities['be_subtransactions']
-        return changed_entities
 
 
 class Transaction(Base, BudgetEntity):
@@ -152,7 +99,7 @@ class AccountMapping(Base, BudgetEntity):
     hash = Column(String)
     fid = Column(String)
     salt = Column(String)
-    shortened_account_id = Column(nYnabGuid)
+    shortened_account_id = Column(String)
     should_flip_payees_memos = Column(String)
     should_import_memos = Column(String)
     skip_import = Column(String)
@@ -358,8 +305,8 @@ class Account(Base, BudgetEntity):
     on_budget = Column(Boolean, default=True)
 
     direct_connect_enabled = Column(Boolean, default=False)
-    direct_connect_account_id = Column(nYnabGuid)
-    direct_connect_institution_id = Column(nYnabGuid)
+    direct_connect_account_id = Column(String)
+    direct_connect_institution_id = Column(String)
     direct_connect_last_imported_at = Column(Date)
     direct_connect_last_error_code = Column(String)
 

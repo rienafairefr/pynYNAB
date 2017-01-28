@@ -1,6 +1,5 @@
 import json
 import unittest
-from uuid import UUID
 
 import datetime
 from sqlalchemy import Column
@@ -12,7 +11,8 @@ from sqlalchemy.orm import sessionmaker
 
 from pynYNAB.Client import nYnabClient
 from pynYNAB.schema.Entity import Entity, ComplexEncoder, Base, AccountTypes
-from pynYNAB.schema.budget import Account, Transaction, Budget
+from pynYNAB.schema.budget import Account, Transaction
+from pynYNAB.schema.roots import Budget
 from pynYNAB.schema.types import AmountType
 
 
@@ -62,8 +62,7 @@ class TestUpdateChangedEntities(CommonTest):
         super(TestUpdateChangedEntities, self).setUp()
         self.account = Account()
         self.client = nYnabClient(budgetname='Mock Budget')
-        self.obj = self.client.budget
-        self.obj.be_accounts = [self.account]
+        self.client.budget.be_accounts = [self.account]
         self.account2 = self.account.copy()
         self.client.session.commit()
 
@@ -72,17 +71,17 @@ class TestUpdateChangedEntities(CommonTest):
         changed_entities = dict(
             be_accounts=[new_account]
         )
-        self.client.update_from_changed_entities(self.obj, changed_entities)
-        self.assertEqual(len(self.obj.be_accounts), 2)
-        self.assertIn(new_account, self.obj.be_accounts)
+        self.client.budgetClient.update_from_changed_entities(changed_entities)
+        self.assertEqual(len(self.client.budget.be_accounts), 2)
+        self.assertIn(new_account, self.client.budget.be_accounts)
 
     def testupdateChangedEntities_delete(self):
         self.account2.is_tombstone = True
         changed_entities = dict(
             be_accounts=[self.account2]
         )
-        self.client.update_from_changed_entities(self.obj, changed_entities)
-        self.assertEqual(len(self.obj.be_accounts), 0)
+        self.client.budgetClient.update_from_changed_entities(changed_entities)
+        self.assertEqual(len(self.client.budget.be_accounts), 0)
 
     def testupdateChangedEntities_modify(self):
         self.account2 = self.account.copy()
@@ -91,9 +90,9 @@ class TestUpdateChangedEntities(CommonTest):
             be_accounts=[self.account2]
         )
 
-        self.client.update_from_changed_entities(self.obj, changed_entities)
-        self.assertEqual(len(self.obj.be_accounts), 1)
-        acc = self.obj.be_accounts[0]
+        self.client.budgetClient.update_from_changed_entities(changed_entities)
+        self.assertEqual(len(self.client.budget.be_accounts), 1)
+        acc = self.client.budget.be_accounts[0]
         self.assertEqual(acc, self.account2)
 
 
@@ -162,14 +161,14 @@ class DummyEntity(Base, Entity):
 class TestApiDict(unittest.TestCase):
     def test_input(self):
         inputdict=dict(
-            id='ca85f126-04a1-4196-bbeb-a77acec4b28e',
+            id='dummyid/ca85f126-04a1-4196-bbeb-a77acec4b28e',
             account_type='Checking',
             date='2016-10-01',
             balance=1000,
             is_tombstone=False
         )
         dummy = DummyEntity.from_apidict(inputdict)
-        self.assertEqual(dummy.id,UUID(hex='ca85f12604a14196bbeba77acec4b28e'))
+        self.assertEqual(dummy.id,inputdict['id'])
         self.assertEqual(dummy.account_type,AccountTypes.Checking)
         self.assertEqual(dummy.date, datetime.date(year=2016,month=10,day=1))
         self.assertEqual(dummy.balance,1)

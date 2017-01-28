@@ -3,24 +3,7 @@ import uuid
 import re
 from datetime import datetime
 
-from pynYNAB.schema.Entity import date_from_api, uuid_from_api
-
-id0 = '619a0ea1-11e8-4f10-8b9f-096b6158b315'
-uuid0 = uuid.UUID(id0)
-idstrings = [id0+'-2017-_07_09','mcb/test/'+id0,'mcb/'+id0,id0,id0+'/tttt']
-
-
-class TestIdsCases(unittest.TestCase):
-    def do_test(self, x, test_name):
-        self.assertEqual(uuid_from_api(None, x), uuid0, msg=test_name)
-
-    def test_ids(self):
-        pass
-        # Test some other functionality here
-
-        for s in idstrings:
-            test_name = 'test_idfromapi_%s' % re.sub('[^a-zA-Z0-9]+', '', s)
-            self.do_test(s, test_name)
+from pynYNAB.schema.Entity import date_from_api
 
 
 strdate0 = '2015-04-03'

@@ -1,10 +1,9 @@
 import json
 import logging
 from datetime import datetime
-from uuid import UUID
 
 import re
-from sqlalchemy.sql.sqltypes import Enum as sqlaEnum
+from sqlalchemy.sql.sqltypes import Enum as sqlaEnum, String
 from aenum import Enum
 from sqlalchemy import Boolean
 from sqlalchemy import Column
@@ -16,11 +15,10 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm.base import ONETOMANY, MANYTOMANY
 
 from pynYNAB import KeyGenerator
-from pynYNAB.schema.types import nYnabGuid, AmountType
-
-logger = logging.getLogger('pynYNAB')
+from pynYNAB.schema.types import AmountType
 from sqlalchemy import inspect
 
+logger = logging.getLogger('pynYNAB')
 
 class AccountTypes(Enum):
     undef = 'undef'
@@ -58,9 +56,7 @@ class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Entity):
             return obj.get_apidict()
-        elif isinstance(obj, UUID):
-            return str(obj)
-        elif isinstance(obj,Enum):
+        elif isinstance(obj, Enum):
             return obj.value
         else:
             return json.JSONEncoder.default(self, obj)
@@ -70,27 +66,8 @@ class UnknowEntityFieldValueError(Exception):
     pass
 
 
-ignored_fields_for_hash = ['id', 'credit_amount', 'cash_amount', 'feature_flags']
-
-
-# adapted from http://stackoverflow.com/a/2954373/1685379
-def addprop(inst, name, method, setter=None, cleaner=None):
-    cls = type(inst)
-    if not hasattr(cls, '__perinstance'):
-        cls = type(cls.__name__, (cls,), {})
-        cls.__perinstance = True
-        inst.__class__ = cls
-    p = property(method)
-    setattr(cls, name, p)
-    if setter is not None:
-        setattr(cls, name, p.setter(setter))
-    if cleaner is not None:
-        setattr(cls, 'clean_' + name, cleaner)
-    return p
-
-
 class BaseModel(object):
-    id = Column(nYnabGuid, primary_key=True, default=KeyGenerator.generateuuid)
+    id = Column(String, primary_key=True, default=KeyGenerator.generateuuid)
     is_tombstone = Column(Boolean, default=False)
 
     @declared_attr
@@ -100,12 +77,13 @@ class BaseModel(object):
     @property
     def listfields(self):
         relations = inspect(self.__class__).relationships
-        return {k: relations[k].mapper.class_ for k in relations.keys() if relations[k].direction==ONETOMANY or relations[k].direction==MANYTOMANY}
+        return {k: relations[k].mapper.class_ for k in relations.keys() if
+                relations[k].direction == ONETOMANY or relations[k].direction == MANYTOMANY}
 
     @property
     def scalarfields(self):
         scalarcolumns = self.__table__.columns
-        return {k: scalarcolumns[k].type.__class__.__name__ for k in scalarcolumns.keys() if k!='parent_id'}
+        return {k: scalarcolumns[k].type.__class__.__name__ for k in scalarcolumns.keys() if k != 'parent_id'}
 
     @property
     def allfields(self):
@@ -130,7 +108,8 @@ def expectedtype_listener(rel_attr):
         expected_type = initiator.parent_token.mapper.class_
         value_type = type(value)
         if expected_type != value_type:
-            raise ValueError('type %s, attribute %s, expect a %s, received a %s ' % (type(target),rel_attr.key, expected_type, value_type))
+            raise ValueError('type %s, attribute %s, expect a %s, received a %s ' % (
+            type(target), rel_attr.key, expected_type, value_type))
 
 
 def default_listener(col_attr, default):
@@ -143,6 +122,7 @@ def default_listener(col_attr, default):
     user integrating this feature.
 
     """
+
     @event.listens_for(col_attr, "init_scalar", retval=True, propagate=True)
     def init_scalar(target, value, dict_):
 
@@ -170,35 +150,29 @@ def default_listener(col_attr, default):
         # return the value as well
         return value
 
+
 re_uuid = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 re_date = re.compile(r'\d{4}[\/ .-]\d{2}[\/.-]\d{2}')
 
 
-def uuid_from_api(columntype,string):
-    result = re_uuid.search(string)
-    if result is not None:
-        return UUID(result.group(0))
-
-
-def date_from_api(columntype,string):
+def date_from_api(columntype, string):
     result = re_date.search(string)
     if result is not None:
-        return datetime.strptime(result.group(0),'%Y-%m-%d').date()
+        return datetime.strptime(result.group(0), '%Y-%m-%d').date()
 
 
 fromapi_conversion_functions_table = {
-            Date: date_from_api,
-            nYnabGuid: uuid_from_api,
-            AmountType: lambda t, x: x / 1000,
-            sqlaEnum: lambda t, x: t.enum_class[x]
-        }
+    Date: date_from_api,
+    AmountType: lambda t, x: x / 1000,
+    sqlaEnum: lambda t, x: t.enum_class[x]
+}
 
 toapi_conversion_functions_table = {
-            Date: lambda t, x: x.strftime('%Y-%m-%d'),
-            nYnabGuid: lambda t, x: str(x),
-            AmountType: lambda t, x: int(x * 1000),
-            sqlaEnum: lambda t, x: x._name_
-        }
+    Date: lambda t, x: x.strftime('%Y-%m-%d'),
+    AmountType: lambda t, x: int(x * 1000),
+    sqlaEnum: lambda t, x: x._name_
+}
+
 
 class Entity(BaseModel):
     def get_apidict(self):
@@ -216,22 +190,28 @@ class Entity(BaseModel):
         return self.__str__()
 
     def __str__(self):
-        return (type(self),self.id).__str__()
+        return (type(self), self.id).__str__()
 
     def __repr__(self):
         return self.__str__()
 
     def __eq__(self, other):
         try:
-            return self.__key() == other.__key()
+            return self.key() == other.key()
         except:
             return False
 
-    def __key(self):
-        return tuple(self.get_dict().items())
+    def key(self):
+        t = tuple()
+        for k, v in self.get_dict().items():
+            if isinstance(v, list):
+                t += tuple(v)
+            else:
+                t += (v,)
+        return t
 
     def __hash__(self):
-        return hash(self.__key())
+        return hash(self.key())
 
     def copy(self):
         returnvalue = type(self)(**self.get_dict())
@@ -241,16 +221,15 @@ class Entity(BaseModel):
     def from_dict(cls, entitydict):
         return cls(**entitydict)
 
-
-
     @classmethod
-    def from_apidict(cls,entityDict):
+    def from_apidict(cls, entityDict):
         modified_dict = {}
         for column in cls.__table__.columns:
             if column.name in entityDict and entityDict[column.name] is not None:
                 conversion_function = fromapi_conversion_functions_table.get(column.type.__class__, lambda t, x: x)
                 modified_dict[column.name] = conversion_function(column.type, entityDict[column.name])
         return cls.from_dict(modified_dict)
+
 
 Base = declarative_base(cls=Entity)
 
@@ -287,7 +266,7 @@ class DictDiffer(object):
 class RootEntity(BaseModel):
     previous_map = {}
 
-    def _get_changed(self,fn):
+    def _get_changed(self, fn):
         changed_entities = self.get_changed_entities()
         changed_dict = {}
         for key in changed_entities:
@@ -338,7 +317,7 @@ class RootEntity(BaseModel):
     def clear_changed_entities(self):
         self.previous_map = self.getmaps()
 
-    def getmap(self,key):
+    def getmap(self, key):
         objs_dict = {}
         if getattr(self, key) is not None:
             for instance in getattr(self, key):

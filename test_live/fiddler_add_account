@@ -1,0 +1,74 @@
+{
+    "budget_version_id": "3238f900-9162-4d09-8c4b-56f6add00c1a",
+    "starting_device_knowledge": 1,
+    "ending_device_knowledge": 6,
+    "device_knowledge_of_server": 67,
+    "calculated_entities_included": false,
+    "changed_entities": {
+        "be_accounts": [{
+            "id": "c187effd-799f-4863-baae-9b898007bf70",
+            "is_tombstone": false,
+            "account_type": "Checking",
+            "account_name": "Test",
+            "note": null,
+            "last_entered_check_number": null,
+            "last_reconciled_date": null,
+            "last_reconciled_balance": null,
+            "hidden": false,
+            "sortable_index": 1073741824,
+            "on_budget": true,
+            "direct_connect_enabled": false
+        }],
+        "be_payees": [{
+            "id": "11058e2f-26f9-4d21-8c0b-aebc873992a3",
+            "is_tombstone": false,
+            "entities_account_id": "c187effd-799f-4863-baae-9b898007bf70",
+            "enabled": true,
+            "auto_fill_subcategory_id": null,
+            "auto_fill_memo": null,
+            "auto_fill_amount": null,
+            "auto_fill_subcategory_enabled": true,
+            "auto_fill_memo_enabled": false,
+            "auto_fill_amount_enabled": false,
+            "rename_on_import_enabled": false,
+            "name": "Transfer : Test",
+            "internal_name": null
+        }],
+        "be_transaction_groups": [{
+            "id": "37718a9d-d85a-4f8b-957a-0bc53a27f9ce",
+            "be_transaction": {
+                "id": "37718a9d-d85a-4f8b-957a-0bc53a27f9ce",
+                "is_tombstone": false,
+                "source": null,
+                "entities_account_id": "c187effd-799f-4863-baae-9b898007bf70",
+                "entities_payee_id": "dd7e4883-af5c-4f6b-ba6d-67b9f297c3cb",
+                "entities_subcategory_id": "9e26e3b8-f7eb-4300-b7e0-7e34bd173050",
+                "entities_scheduled_transaction_id": null,
+                "date": "2017-01-24",
+                "date_entered_from_schedule": null,
+                "amount": 10000,
+                "cash_amount": 0,
+                "credit_amount": 0,
+                "subcategory_credit_amount_preceding": 0,
+                "memo": null,
+                "cleared": "Cleared",
+                "accepted": true,
+                "check_number": null,
+                "flag": null,
+                "transfer_account_id": null,
+                "transfer_transaction_id": null,
+                "transfer_subtransaction_id": null,
+                "matched_transaction_id": null,
+                "ynab_id": null,
+                "imported_payee": null,
+                "imported_date": null
+            },
+            "be_subtransactions": null,
+            "be_matched_transaction": null
+        }]
+    },
+    "analytic_traits": {
+        "Number of Budget Accounts": 2,
+        "Number of Tracking Accounts": 0
+    }
+}
