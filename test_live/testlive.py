@@ -10,6 +10,22 @@ from test_live.common import needs_account
 
 # noinspection PyArgumentList
 class LiveTests(CommonLive):
+    @needs_account()
+    def test_add_deletetransaction(self):
+        from datetime import datetime
+        transaction = Transaction(
+            amount=1,
+            cleared='Uncleared',
+            date=datetime.now(),
+            entities_account_id=self.account.id,
+        )
+        self.client.add_transaction(transaction)
+        self.reload()
+        self.assertIn(transaction, self.client.budget.be_transactions)
+        self.client.delete_transaction(transaction)
+        self.reload()
+        self.assertNotIn(transaction, self.client.budget.be_transactions)
+
     def test_roundtrip(self):
         # 1. syncs data from server
         # 2. gets the pushed changed_entities that would be pushed as if all entities were modified
