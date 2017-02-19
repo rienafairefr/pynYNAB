@@ -27,7 +27,7 @@ class AccountTypes(Enum):
     CreditCard = 'CreditCard'
     Cash = 'Cash'
     LineOfCredit = 'LineOfCredit'
-    Paypal = 'Paypal'
+    PayPal = 'PayPal'
     MerchantAccount = 'MerchantAccount'
     InvestmentAccount = 'InvestmentAccount'
     Mortgage = 'Mortgage'
