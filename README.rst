@@ -17,7 +17,7 @@ a python client for the new YNAB API
 Installation
 ------------
 
-download the source, then call `python setup.py install`
+`pip install pynYNAB` or download the source, then call `python setup.py install`
 
 Usage
 -----
