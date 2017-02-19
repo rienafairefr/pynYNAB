@@ -17,7 +17,11 @@ a python client for the new YNAB API
 Installation
 ------------
 
-`pip install pynYNAB` or download the source, then call `python setup.py install`
+.. code-block:: bash
+
+    $ pip install pynYNAB
+
+Or you can download the source, then call `python setup.py install`
 
 Usage
 -----
@@ -27,7 +31,7 @@ Either code your own script that uses the pynYNAB api, or use the provided scrip
 Scripts Documentation
 ---------------------
 
-see appropriate `README`_
+See appropriate `README`_
 
 API Documentation
 -----------------
@@ -50,6 +54,7 @@ like normal lists.
 
 push takes an expected_delta argument, this is to safeguard modifying too much of your data on the server by error.
 Examples:
+
 * if you add two matched transactions to be_transactions, then the expected delta is 2
 * If you add a single payee, then the expected delta is 1
 
@@ -66,10 +71,9 @@ Approach of preventing Harm
 ---------------------------
 
 I've taken all precautionary steps so that this python Client can't affect YNAB even if used too widely. 
+
 * It honors requests by the server to throttle its requests  >  Same mechanisme that the JS app uses
 * It self-limits the requests to 5 request per second 
 * It clearly identifies itself by User-Agent > Easy to lock it out if it causes trouble
-
-
 
 .. _README: https://github.com/rienafairefr/nYNABapi/blob/master/scripts/README.rst
