@@ -201,6 +201,9 @@ class Entity(BaseModel):
         except:
             return False
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def key(self):
         t = tuple()
         for k, v in self.get_dict().items():
