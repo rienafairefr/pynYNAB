@@ -1,17 +1,22 @@
 import json
 import os
+import unittest
 from datetime import datetime
 from tempfile import gettempdir
 
 import configargparse
 
+from pynYNAB.Client import nYnabClient
 from pynYNAB.schema.Entity import ComplexEncoder
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.csvimport import do_csvimport
 from test_live.common import CommonLive, needs_account
 
 
-class TestCsv(CommonLive):
+class TestCsv(unittest.TestCase):
+    def SetUp(self):
+        self.client = nYnabClient()
+
     def getTr(self, date, payee, amount, memo, account):
         imported_date = datetime.now().date()
         return Transaction(
@@ -44,12 +49,9 @@ class TestCsv(CommonLive):
 
         transaction = self.getTr(datetime(year=2016, month=2, day=1).date(), 'Super Pants Inc.', -20, 'Buying pants',
                                  'Credit')
-
-        for i in range(2):
-            do_csvimport(args)
-            self.reload()
-            nduplicates = self.client.budget.be_transactions.count(transaction)
-            self.assertEqual(nduplicates, 1)
+        self.client.budget.be_transactions.append(transaction)
+        delta = do_csvimport(args, self.client)
+        self.assertEqual(delta, 0)
 
     @needs_account('Cash')
     def test_duplicateForced(self):
@@ -70,12 +72,10 @@ class TestCsv(CommonLive):
         transaction = self.getTr(datetime(year=2016, month=2, day=1).date(), 'Super Pants Inc.', -20, 'Buying pants',
                                  'Cash')
 
-        do_csvimport(args)
-        self.reload()
-        do_csvimport(args)
-        self.reload()
-        nduplicates = self.client.budget.be_transactions.count(transaction)
-        self.assertEqual(nduplicates, 2)
+        self.client.budget.be_transactions.append(transaction)
+        delta = do_csvimport(args)
+        self.assertEqual(delta, 1)
+        self.assertEqual(self.client.budget.be_transactions.count(transaction), 2)
 
     @needs_account('Cash')
     @needs_account('Checking Account')
@@ -104,6 +104,5 @@ class TestCsv(CommonLive):
         ]
 
         do_csvimport(args)
-        self.reload()
         for transaction in transactions:
             self.assertIn(transaction, self.client.budget.be_transactions)
