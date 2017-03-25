@@ -1,8 +1,8 @@
-.. image:: https://secure.travis-ci.org/rienafairefr/nYNABapi.png
-    :target: http://travis-ci.org/rienafairefr/pyNYNAB
+.. image:: https://travis-ci.org/rienafairefr/pynYNAB.svg?branch=master
+    :target: https://travis-ci.org/rienafairefr/pynYNAB
 
-.. image:: https://coveralls.io/repos/github/rienafairefr/nYNABapi/badge.svg?branch=master
-   :target: https://coveralls.io/github/rienafairefr/pyNYNAB?branch=master
+.. image:: https://coveralls.io/repos/github/rienafairefr/pynYNAB/badge.svg?branch=master
+:target: https://coveralls.io/github/rienafairefr/pynYNAB?branch=master
 
 .. image:: https://img.shields.io/badge/license-MIT-blue.svg
    :target:  https://pypi.python.org/pypi/pynYNAB
