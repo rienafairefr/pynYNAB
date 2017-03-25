@@ -204,14 +204,20 @@ class Entity(BaseModel):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def key(self):
+    def key(self,excludes=None):
         t = tuple()
         for k, v in self.get_dict().items():
+            if excludes and k in excludes:
+                continue
             if isinstance(v, list):
                 t += tuple(v)
             else:
                 t += (v,)
         return t
+
+    @property
+    def key2(self):
+        return self.key(excludes=['id'])
 
     def __hash__(self):
         return hash(self.key())

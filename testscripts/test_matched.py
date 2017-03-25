@@ -5,7 +5,7 @@ from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.config import parser
 from dotenv import load_dotenv,find_dotenv
 
-from pynYNAB.utils import util_add_payee_by_name_if_doesnt_exist
+from pynYNAB.utils import get_or_create_payee
 
 load_dotenv(find_dotenv())
 
@@ -32,7 +32,7 @@ transfer_payee_id = payees['Transfer : ' + account0.account_name].id
 imported_date = datetime.now().date()
 
 payee_name = 'Payee'
-payee = util_add_payee_by_name_if_doesnt_exist(client, payee_name)
+payee = get_or_create_payee(client, payee_name)
 payee_id = payee.id
 
 amount = 10

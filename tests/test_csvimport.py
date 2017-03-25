@@ -7,22 +7,21 @@ from tempfile import gettempdir
 import configargparse
 
 from pynYNAB.Client import nYnabClient
-from pynYNAB.schema.Entity import ComplexEncoder
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.csvimport import do_csvimport
+from pynYNAB.utils import get_or_create_account, get_or_create_payee
 from test_live.common import CommonLive, needs_account
+from tests.common_mock import TestCommonMock
 
 
-class TestCsv(unittest.TestCase):
-    def SetUp(self):
-        self.client = nYnabClient()
+class TestCsv(TestCommonMock):
 
     def getTr(self, date, payee, amount, memo, account):
         imported_date = datetime.now().date()
         return Transaction(
-            entities_account_id=self.util_get_empty_account_by_name_if_doesnt_exist(account).id,
+            entities_account_id=get_or_create_account(self.client, account).id,
             date=date,
-            entities_payee_id=self.util_add_payee_by_name_if_doesnt_exist(payee).id,
+            entities_payee_id=get_or_create_payee(self.client, payee).id,
             imported_payee=payee,
             source='Imported',
             memo=memo,
@@ -73,9 +72,10 @@ class TestCsv(unittest.TestCase):
                                  'Cash')
 
         self.client.budget.be_transactions.append(transaction)
-        delta = do_csvimport(args)
+        delta = do_csvimport(args, self.client)
         self.assertEqual(delta, 1)
-        self.assertEqual(self.client.budget.be_transactions.count(transaction), 2)
+
+        self.assertEqual(sum(1 for tr in self.client.budget.be_transactions if tr.key2==transaction.key2), 2)
 
     @needs_account('Cash')
     @needs_account('Checking Account')
@@ -103,6 +103,6 @@ class TestCsv(unittest.TestCase):
             self.getTr(datetime(year=2016, month=2, day=3).date(), '', 10, 'Saving!', 'Savings'),
         ]
 
-        do_csvimport(args)
+        do_csvimport(args,self.client)
         for transaction in transactions:
-            self.assertIn(transaction, self.client.budget.be_transactions)
+            self.assertIn(transaction.key2, [tr.key2 for tr in self.client.budget.be_transactions])

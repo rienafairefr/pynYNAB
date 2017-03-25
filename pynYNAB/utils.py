@@ -48,7 +48,7 @@ def equal_dicts(a, b, ignore_keys):
     return ka == kb and all(a[k] == b[k] for k in ka)
 
 
-def util_get_empty_account_by_name_if_doesnt_exist(client, name):
+def get_or_create_account(client, name):
     accounts = {a.account_name: a for a in client.budget.be_accounts if
                 a.account_name == name}
     if name in accounts:
@@ -61,11 +61,10 @@ def util_get_empty_account_by_name_if_doesnt_exist(client, name):
     )
 
     client.add_account(account, balance=random.randint(-10, 10), balance_date=datetime.now())
-    client.reload()
     return account
 
 
-def util_add_payee_by_name_if_doesnt_exist(client, name):
+def get_or_create_payee(client, name):
     payees = {p.name: p for p in client.budget.be_payees if
               p.name == name}
     if name in payees:
@@ -75,5 +74,5 @@ def util_add_payee_by_name_if_doesnt_exist(client, name):
     )
 
     client.budget.be_payees.append(payee)
-    client.sync()
+    client.push(1)
     return payee

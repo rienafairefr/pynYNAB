@@ -17,9 +17,6 @@ from pynYNAB.utils import chunk
 logger = logging.getLogger('pynYNAB')
 
 
-
-
-
 class BudgetNotFound(Exception):
     pass
 

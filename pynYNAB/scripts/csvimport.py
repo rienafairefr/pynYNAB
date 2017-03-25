@@ -17,7 +17,6 @@ from pynYNAB.scripts.config import get_logger, test_common_args
 scriptsdir = os.path.dirname(os.path.abspath(__file__))
 schemas_dir = os.path.join(scriptsdir, 'csv_schemas')
 
-
 def csvimport_main():
     print('pynYNAB CSV import')
     """Manually import a CSV into a nYNAB budget"""
@@ -100,7 +99,7 @@ def do_csvimport(args, client=None):
             logger.debug('Couldn''t find this payee: %s' % payeename)
             payee = Payee(name=payeename)
             client.budget.be_payees.append(payee)
-            delta+=1
+            delta += 1
             return payee
 
     def getsubcategory(categoryname):
@@ -167,6 +166,7 @@ def do_csvimport(args, client=None):
 
             transaction = Transaction(
                 entities_account_id=entities_account_id,
+                cash_amount=amount,
                 amount=amount,
                 date=result.date,
                 entities_payee_id=entities_payee_id,
@@ -176,10 +176,11 @@ def do_csvimport(args, client=None):
                 memo=memo,
                 source="Imported"
             )
-            if args.import_duplicates or (not transaction in client.budget.be_transactions):
+
+            if args.import_duplicates or not (transaction.key2 in [tr.key2 for tr in client.budget.be_transactions]):
                 logger.debug('Appending transaction %s ' % transaction.get_dict())
                 client.budget.be_transactions.append(transaction)
-                delta+=1
+                delta += 1
             else:
                 logger.debug('Duplicate transaction found %s ' % transaction.get_dict())
 

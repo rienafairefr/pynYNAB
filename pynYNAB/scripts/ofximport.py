@@ -89,6 +89,8 @@ def do_ofximport(args, client=None):
                             client.budget.be_transactions.append(transaction)
                             delta += 1
 
+    return delta
+
 
 if __name__ == "__main__":
     ofximport_main()
