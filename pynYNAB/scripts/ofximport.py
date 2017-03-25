@@ -1,10 +1,7 @@
-import configargparse
-import inspect
 from datetime import datetime
 from ofxtools import OFXTree
 
 from pynYNAB.Client import clientfromargs
-from pynYNAB.entrypoints import ofximport_main
 from pynYNAB.schema.budget import Transaction, Payee
 
 
@@ -77,4 +74,5 @@ def do_ofximport(args, client=None):
 
 
 if __name__ == "__main__":
+    from pynYNAB.entrypoints import ofximport_main
     ofximport_main()

@@ -1,16 +1,13 @@
-import json
 import os
-import unittest
 from datetime import datetime
 from tempfile import gettempdir
 
 import configargparse
 
-from pynYNAB.Client import nYnabClient
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.csvimport import do_csvimport
 from pynYNAB.utils import get_or_create_account, get_or_create_payee
-from test_live.common import CommonLive, needs_account
+from test_live.common import needs_account
 from tests.common_mock import TestCommonMock
 
 

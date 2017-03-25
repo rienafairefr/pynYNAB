@@ -65,8 +65,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'nynab-csvimport = pynYNAB.entrypoints:csvimport_main',
-            'nynab-ofximport = pynYNAB.entrypoints:ofximport_main',
+            'pynynab = pynYNAB.__main__:main',
         ],
     },
 

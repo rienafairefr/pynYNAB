@@ -11,10 +11,9 @@ from pynYNAB.schema.budget import Payee, Transaction
 from pynYNAB.schema.catalog import BudgetVersion
 from pynYNAB.schema.roots import Budget
 from pynYNAB.schema.roots import Catalog
-from pynYNAB.scripts.config import get_logger
 from pynYNAB.utils import chunk
 
-logger = logging.getLogger('pynYNAB')
+LOG = logging.getLogger(__name__)
 
 
 class BudgetNotFound(Exception):
@@ -50,8 +49,6 @@ class nYnabClient(object):
         self.server_entities = {}
         self.budget_version_id = None
         self.logger = kwargs.get('logger', None)
-        if self.logger is None:
-            self.logger = get_logger()
 
         self.budget_name = kwargs.get('budgetname', None)
         if self.budget_name is None:
@@ -84,10 +81,6 @@ class nYnabClient(object):
     @staticmethod
     def from_obj(args, reset=False, sync=True, **kwargs):
         try:
-            if not hasattr(args, 'logginglevel'):
-                setattr(args, 'logginglevel', 'error')
-
-            kwargs['logger'] = get_logger(args)
             kwargs['budgetname'] = args.budgetname
             kwargs['nynabconnection'] = nYnabConnection(args.email, args.password)
             if hasattr(args, 'engine'):

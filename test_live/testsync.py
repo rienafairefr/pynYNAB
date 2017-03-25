@@ -1,11 +1,7 @@
 import unittest
 
 from pynYNAB.Client import clientfromargs
-from pynYNAB.scripts.config import get_logger
 from pynYNAB.entrypoints import parser
-
-# sets up the logger
-logger = get_logger()
 
 
 # used to ping the nYNAB API to check that the sync works

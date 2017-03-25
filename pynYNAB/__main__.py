@@ -2,11 +2,19 @@ import inspect
 import os
 
 import configargparse
+import logging
+from appdirs import AppDirs
 
 from pynYNAB.Client import clientfromargs
-from pynYNAB.scripts.config import verify_common_args, get_logger, configfile
 from pynYNAB.scripts.csvimport import do_csvimport
 from pynYNAB.scripts.ofximport import do_ofximport
+
+configfile = 'ynab.conf'
+if not os.path.exists(configfile):
+    myAppdir = AppDirs('pynYNAB').user_config_dir
+    configfile = os.path.join(myAppdir, configfile)
+
+LOG = logging.getLogger(__name__)
 
 
 def csvimport_main():
@@ -27,12 +35,13 @@ def csvimport_main():
     verify_common_args(args)
 
     if not os.path.exists(args.csvfile):
-        get_logger().error('input CSV file does not exist')
+        LOG.error('input CSV file does not exist')
         exit(-1)
 
     client = clientfromargs(args)
     delta = do_csvimport(args,client)
     client.push(expected_delta=delta)
+
 
 def ofximport_main():
     print('pynYNAB OFX import')
@@ -48,6 +57,18 @@ def ofximport_main():
     client = clientfromargs(args)
     delta = do_ofximport(args,client)
     client.push(expected_delta=delta)
+
+
+def verify_common_args(args):
+    if args.email is None:
+        LOG.error('No email user ID provided, please specify it at the command line or in %s' % (configfile,))
+        exit(-1)
+    if args.password is None:
+        LOG.error('No password provided, please specify it at the command line or in %s' % (configfile,))
+        exit(-1)
+    if args.budgetname is None:
+        LOG.error('No budget name provided, please specify it at the command line or in %s' % (configfile,))
+        exit(-1)
 
 
 parser = configargparse.getArgumentParser('pynYNAB', default_config_files=[configfile],
