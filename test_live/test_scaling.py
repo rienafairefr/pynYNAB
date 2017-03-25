@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 from pynYNAB.Client import clientfromargs
-from pynYNAB.scripts.config import parser
+from pynYNAB.entrypoints import parser
 
 test_budget_name = 'Test Budget'
 

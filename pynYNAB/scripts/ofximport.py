@@ -4,24 +4,8 @@ from datetime import datetime
 from ofxtools import OFXTree
 
 from pynYNAB.Client import clientfromargs
+from pynYNAB.entrypoints import ofximport_main
 from pynYNAB.schema.budget import Transaction, Payee
-from pynYNAB.scripts.config import test_common_args
-
-
-def ofximport_main():
-    print('pynYNAB OFX import')
-    """Manually import an OFX into a nYNAB budget"""
-
-    parser = configargparse.getArgumentParser('pynYNAB')
-    parser.description = inspect.getdoc(ofximport_main)
-    parser.add_argument('ofxfile', metavar='OFXPath', type=str,
-                        help='The OFX file to import')
-
-    args = parser.parse_args()
-    test_common_args(args)
-    client = clientfromargs(args)
-    delta = do_ofximport(args,client)
-    client.push(expected_delta=delta)
 
 
 def do_ofximport(args, client=None):

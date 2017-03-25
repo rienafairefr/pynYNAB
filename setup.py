@@ -17,7 +17,7 @@ except:
 
 setup(
     name='pynYNAB',
-    version=os.environ.get('TAG_NAME',os.environ.get('TRAVIS_TAG','dev')),
+    version=os.environ.get('TAG_NAME', os.environ.get('TRAVIS_TAG', 'dev')),
     # Note: change 'master' to the tag name when release a new verion
     download_url='https://github.com/rienafairefr/nYNABapi/tarball/master',
 
@@ -62,6 +62,13 @@ setup(
         'appdirs',
         'six>=1.5'
     ],
+
+    entry_points={
+        'console_scripts': [
+            'nynab-csvimport = pynYNAB.entrypoints:csvimport_main',
+            'nynab-ofximport = pynYNAB.entrypoints:ofximport_main',
+        ],
+    },
 
     package_data={
         'pynYNAB': ['tests/*'],

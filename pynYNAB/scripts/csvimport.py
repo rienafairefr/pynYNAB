@@ -6,44 +6,18 @@ import sys
 from collections import namedtuple
 from datetime import datetime
 
-import configargparse
 from jsontableschema.exceptions import InvalidSchemaError
 from jsontableschema.model import SchemaModel
 
 from pynYNAB.Client import clientfromargs
+from pynYNAB.entrypoints import csvimport_main
 from pynYNAB.schema.budget import Payee, Transaction
-from pynYNAB.scripts.config import get_logger, test_common_args
+from pynYNAB.scripts.config import get_logger, verify_common_args
 
 scriptsdir = os.path.dirname(os.path.abspath(__file__))
 schemas_dir = os.path.join(scriptsdir, 'csv_schemas')
 
-def csvimport_main():
-    print('pynYNAB CSV import')
-    """Manually import a CSV into a nYNAB budget"""
-    parser = configargparse.getArgumentParser('pynYNAB')
-    parser.description = inspect.getdoc(csvimport_main)
-    parser.add_argument('csvfile', metavar='CSVpath', type=str,
-                        help='The CSV file to import')
-    parser.add_argument('schema', metavar='schemaName', type=str,
-                        help='The CSV schema to use (see csv_schemas directory)')
-    parser.add_argument('accountname', metavar='AccountName', type=str, nargs='?',
-                        help='The nYNAB account name  to use')
-    parser.add_argument('-import-duplicates', action='store_true',
-                        help='Forces the import even if a duplicate (same date, account, amount, memo, payee) is found')
 
-    args = parser.parse_args()
-    test_common_args(args)
-
-    if not os.path.exists(args.csvfile):
-        get_logger().error('input CSV file does not exist')
-        exit(-1)
-
-    client = clientfromargs(args)
-    delta = do_csvimport(args,client)
-    client.push(expected_delta=delta)
-
-
-# noinspection PyArgumentList
 def do_csvimport(args, client=None):
     delta = 0
     if client is None:

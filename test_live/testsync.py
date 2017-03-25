@@ -1,7 +1,8 @@
 import unittest
 
 from pynYNAB.Client import clientfromargs
-from pynYNAB.scripts.config import parser, get_logger
+from pynYNAB.scripts.config import get_logger
+from pynYNAB.entrypoints import parser
 
 # sets up the logger
 logger = get_logger()
