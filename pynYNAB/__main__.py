@@ -104,3 +104,6 @@ parser.add_argument('--password', metavar='Password', type=str, required=False,
                     help='The Password for nYNAB')
 parser.add_argument('--budgetname', metavar='BudgetName', type=str, required=False,
                     help='The nYNAB budget to use')
+
+def main():
+    MainCommands()
