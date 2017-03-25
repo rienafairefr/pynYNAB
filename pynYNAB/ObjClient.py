@@ -1,3 +1,7 @@
+import logging
+
+LOG = logging.getLogger(__name__)
+
 class RootObjClient(object):
     def __init__(self, obj, client, opname):
         self.obj = obj
@@ -51,8 +55,8 @@ class RootObjClient(object):
         sync_data = self.get_sync_data_obj(extra)
 
         self.client.server_entities[self.opname] = sync_data['changed_entities']
-        self.client.logger.debug('server_knowledge_of_device ' + str(sync_data['server_knowledge_of_device']))
-        self.client.logger.debug('current_server_knowledge ' + str(sync_data['current_server_knowledge']))
+        LOG.debug('server_knowledge_of_device ' + str(sync_data['server_knowledge_of_device']))
+        LOG.debug('current_server_knowledge ' + str(sync_data['current_server_knowledge']))
         self.update_from_sync_data(sync_data)
         self.session.commit()
         self.obj.clear_changed_entities()
@@ -62,16 +66,16 @@ class RootObjClient(object):
 
         change = current_server_knowledge - self.client.device_knowledge_of_server[self.opname]
         if change > 0:
-            self.client.logger.debug('Server knowledge has gone up by ' + str(
+            LOG.debug('Server knowledge has gone up by ' + str(
                 change) + '. We should be getting back some entities from the server')
         if self.client.current_device_knowledge[self.opname] < server_knowledge_of_device:
             if self.client.current_device_knowledge[self.opname] != 0:
-                self.client.logger.error('The server knows more about this device than we know about ourselves')
+                LOG.error('The server knows more about this device than we know about ourselves')
             self.client.current_device_knowledge[self.opname] = server_knowledge_of_device
         self.client.device_knowledge_of_server[self.opname] = current_server_knowledge
 
-        self.client.logger.debug('current_device_knowledge %s' % self.client.current_device_knowledge[self.opname])
-        self.client.logger.debug('device_knowledge_of_server %s' % self.client.device_knowledge_of_server[self.opname])
+        LOG.debug('current_device_knowledge %s' % self.client.current_device_knowledge[self.opname])
+        LOG.debug('device_knowledge_of_server %s' % self.client.device_knowledge_of_server[self.opname])
 
     def push(self, extra=None):
         if self.connection is None:
@@ -86,8 +90,8 @@ class RootObjClient(object):
                             changed_entities=changed_entities)
         request_data.update(extra)
         sync_data = self.connection.dorequest(request_data, self.opname)
-        self.client.logger.debug('server_knowledge_of_device ' + str(sync_data['server_knowledge_of_device']))
-        self.client.logger.debug('current_server_knowledge ' + str(sync_data['current_server_knowledge']))
+        LOG.debug('server_knowledge_of_device ' + str(sync_data['server_knowledge_of_device']))
+        LOG.debug('current_server_knowledge ' + str(sync_data['current_server_knowledge']))
         self.update_from_sync_data(sync_data)
         self.session.commit()
         self.obj.clear_changed_entities()
@@ -97,16 +101,16 @@ class RootObjClient(object):
 
         change = current_server_knowledge - self.client.device_knowledge_of_server[self.opname]
         if change > 0:
-            self.client.logger.debug('Server knowledge has gone up by ' + str(
+            LOG.debug('Server knowledge has gone up by ' + str(
                 change) + '. We should be getting back some entities from the server')
         if self.client.current_device_knowledge[self.opname] < server_knowledge_of_device:
             if self.client.current_device_knowledge[self.opname] != 0:
-                self.client.logger.error('The server knows more about this device than we know about ourselves')
+                LOG.error('The server knows more about this device than we know about ourselves')
             self.client.current_device_knowledge[self.opname] = server_knowledge_of_device
         self.client.device_knowledge_of_server[self.opname] = current_server_knowledge
 
-        self.client.logger.debug('current_device_knowledge %s' % self.client.current_device_knowledge[self.opname])
-        self.client.logger.debug('device_knowledge_of_server %s' % self.client.device_knowledge_of_server[self.opname])
+        LOG.debug('current_device_knowledge %s' % self.client.current_device_knowledge[self.opname])
+        LOG.debug('device_knowledge_of_server %s' % self.client.device_knowledge_of_server[self.opname])
 
     def get_sync_data_obj(self, extra=None):
         if self.connection is None:

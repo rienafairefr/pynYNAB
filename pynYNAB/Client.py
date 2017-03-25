@@ -38,7 +38,7 @@ def operation(expected_delta):
         @wraps(fn)
         def wrapped(self, *args, **kwargs):
             fn(self, *args, **kwargs)
-            self.logger.debug('push after '+fn.__name__)
+            LOG.debug('push after '+fn.__name__)
             self.push(expected_delta)
         return wrapped
     return operation_decorator
@@ -48,11 +48,10 @@ class nYnabClient(object):
     def __init__(self, **kwargs):
         self.server_entities = {}
         self.budget_version_id = None
-        self.logger = kwargs.get('logger', None)
 
         self.budget_name = kwargs.get('budgetname', None)
         if self.budget_name is None:
-            logger.error('No budget name was provided')
+            LOG.error('No budget name was provided')
             exit(-1)
         self.connection = kwargs.get('nynabconnection', None)
         self.catalog = Catalog()
@@ -116,7 +115,7 @@ class nYnabClient(object):
     def sync(self):
         if self.connection is None:
             return
-        self.logger.debug('Client.sync')
+        LOG.debug('Client.sync')
 
         self.sync_catalog()
         self.select_budget(self.budget_name)
@@ -135,7 +134,7 @@ class nYnabClient(object):
         if self.connection is None:
             return
         # ending-starting represents the number of modifications that have been done to the data ?
-        self.logger.debug('Client.push')
+        LOG.debug('Client.push')
 
         catalog_changed_entities = self.catalog.get_changed_apidict()
         budget_changed_entities = self.budget.get_changed_apidict()

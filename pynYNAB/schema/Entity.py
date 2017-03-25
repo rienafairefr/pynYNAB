@@ -18,7 +18,7 @@ from pynYNAB import KeyGenerator
 from pynYNAB.schema.types import AmountType
 from sqlalchemy import inspect
 
-logger = logging.getLogger('pynYNAB')
+LOG = logging.getLogger(__name__)
 
 class AccountTypes(Enum):
     undef = 'undef'
