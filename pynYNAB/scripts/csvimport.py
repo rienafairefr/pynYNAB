@@ -39,11 +39,14 @@ def csvimport_main():
         get_logger().error('input CSV file does not exist')
         exit(-1)
 
-    do_csvimport(args)
+    client = clientfromargs(args)
+    delta = do_csvimport(args,client)
+    client.push(expected_delta=delta)
 
 
 # noinspection PyArgumentList
 def do_csvimport(args, client=None):
+    delta = 0
     if client is None:
         client = clientfromargs(args)
     logger = get_logger(args)
@@ -97,6 +100,7 @@ def do_csvimport(args, client=None):
             logger.debug('Couldn''t find this payee: %s' % payeename)
             payee = Payee(name=payeename)
             client.budget.be_payees.append(payee)
+            delta+=1
             return payee
 
     def getsubcategory(categoryname):
@@ -121,7 +125,6 @@ def do_csvimport(args, client=None):
         exit(-1)
 
     csvrow = namedtuple('CSVrow', field_names=schema.headers)
-    transactions = []
 
     imported_date = datetime.now().date()
 
@@ -175,11 +178,12 @@ def do_csvimport(args, client=None):
             )
             if args.import_duplicates or (not transaction in client.budget.be_transactions):
                 logger.debug('Appending transaction %s ' % transaction.get_dict())
-                transactions.append(transaction)
+                client.budget.be_transactions.append(transaction)
+                delta+=1
             else:
                 logger.debug('Duplicate transaction found %s ' % transaction.get_dict())
 
-    client.add_transactions(transactions)
+    return delta
 
 
 if __name__ == "__main__":

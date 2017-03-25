@@ -19,10 +19,13 @@ def ofximport_main():
 
     args = parser.parse_args()
     test_common_args(args)
-    do_ofximport(args)
+    client = clientfromargs(args)
+    delta = do_ofximport(args,client)
+    client.push(expected_delta=delta)
 
 
 def do_ofximport(args, client=None):
+    delta = 0
     if client is None:
         client = clientfromargs(args)
 
@@ -50,7 +53,6 @@ def do_ofximport(args, client=None):
                 account.note += addon
             else:
                 account.note = addon
-            client.sync()
         else:
             for note in accountvsnotes:
                 if key in note:
@@ -67,7 +69,7 @@ def do_ofximport(args, client=None):
                                 name=payee_name
                             )
                             client.budget.be_payees.append(payee)
-                            client.sync()
+                            delta += 1
 
                         # use ftid so we don't import duplicates
                         if not any(ofx_transaction.fitid in transaction.memo for transaction in
@@ -84,7 +86,8 @@ def do_ofximport(args, client=None):
                                 amount=float(ofx_transaction.trnamt),
                                 entities_account_id=account.id
                             )
-                            client.add_transaction(transaction)
+                            client.budget.be_transactions.append(transaction)
+                            delta += 1
 
 
 if __name__ == "__main__":
