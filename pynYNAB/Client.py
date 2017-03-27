@@ -76,6 +76,7 @@ class nYnabClient(object):
             LOG.error('No budget name was provided')
             raise NoBudgetNameException
         self.connection = kwargs.get('nynabconnection', None)
+        self.connection.init_session()
         self.catalog = Catalog()
         self.budget = Budget()
 
