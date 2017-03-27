@@ -19,6 +19,23 @@ if not os.path.exists(configfile):
 
 LOG = logging.getLogger(__name__)
 
+parser = configargparse.getArgumentParser('pynYNAB', default_config_files=[configfile],
+                                          add_env_var_help=True,
+                                          add_config_file_help=True,
+                                          auto_env_var_prefix='NYNAB_')
+
+parser.add_argument('--email', metavar='Email', type=str, required=False,
+                    help='The Email User ID for nYNAB')
+parser.add_argument('--password', metavar='Password', type=str, required=False,
+                    help='The Password for nYNAB')
+parser.add_argument('--budgetname', metavar='BudgetName', type=str, required=False,
+                    help='The nYNAB budget to use')
+
+class classproperty(object):
+    def __init__(self, f):
+        self.f = f
+    def __get__(self, obj, owner):
+        return self.f(owner)
 
 class MainCommands(object):
     def __init__(self):
@@ -39,21 +56,27 @@ class MainCommands(object):
         # use dispatch pattern to invoke method with same name
         getattr(self, args.command)()
 
-    def csvimport(self):
-        print('pynYNAB CSV import')
-        """Manually import a CSV into a nYNAB budget"""
-        parser = configargparse.getArgumentParser('pynYNAB')
-        parser.description = inspect.getdoc(self.csvimport)
-        parser.add_argument('csvfile', metavar='CSVpath', type=str,
-                            help='The CSV file to import')
-        parser.add_argument('schema', metavar='schemaName', type=str,
-                            help='The CSV schema to use (see csv_schemas directory)')
-        parser.add_argument('accountname', metavar='AccountName', type=str, nargs='?',
-                            help='The nYNAB account name  to use')
-        parser.add_argument('-import-duplicates', action='store_true',
-                            help='Forces the import even if a duplicate (same date, account, amount, memo, payee) is found')
+    @classproperty
+    def csvimport_parser(cls):
+        csv_parser = argparse.ArgumentParser(parents=[parser],add_help=False)
+        csv_parser.description = inspect.getdoc(cls.csvimport)
+        csv_parser.add_argument('csvfile', metavar='CSVpath', type=str,
+                                      help='The CSV file to import')
+        csv_parser.add_argument('schema', metavar='schemaName', type=str,
+                                      help='The CSV schema to use (see csv_schemas directory)')
+        csv_parser.add_argument('accountname', metavar='AccountName', type=str, nargs='?',
+                                      help='The nYNAB account name  to use')
+        csv_parser.add_argument('-import-duplicates', action='store_true',
+                                      help='Forces the import even if a duplicate (same date, account, amount, memo, payee) is found')
+        return csv_parser
 
-        args = parser.parse_args()
+
+    @classmethod
+    def csvimport(cls):
+        """Manually import a CSV into a nYNAB budget"""
+        print('pynYNAB CSV import')
+
+        args = cls.csvimport_parser.parse_args()
         verify_common_args(args)
 
         if not os.path.exists(args.csvfile):
@@ -64,17 +87,20 @@ class MainCommands(object):
         delta = do_csvimport(args,client)
         client.push(expected_delta=delta)
 
-
-    def ofximport(self):
-        print('pynYNAB OFX import')
-        """Manually import an OFX into a nYNAB budget"""
-
-        parser = configargparse.getArgumentParser('pynYNAB')
-        parser.description = inspect.getdoc(self.ofximport)
-        parser.add_argument('ofxfile', metavar='OFXPath', type=str,
+    @classproperty
+    def ofximport_parser(cls):
+        ofx_parser = argparse.ArgumentParser(parents=[parser],add_help=False)
+        ofx_parser.description = inspect.getdoc(cls.ofximport)
+        ofx_parser.add_argument('ofxfile', metavar='OFXPath', type=str,
                             help='The OFX file to import')
+        return ofx_parser
 
-        args = parser.parse_args()
+    @classmethod
+    def ofximport(cls):
+        """Manually import an OFX into a nYNAB budget"""
+        print('pynYNAB OFX import')
+
+        args = cls.ofximport_parser.parse_args()
         verify_common_args(args)
         client = clientfromargs(args)
         delta = do_ofximport(args,client)
@@ -92,18 +118,6 @@ def verify_common_args(args):
         LOG.error('No budget name provided, please specify it at the command line or in %s' % (configfile,))
         exit(-1)
 
-
-parser = configargparse.getArgumentParser('pynYNAB', default_config_files=[configfile],
-                                          add_env_var_help=True,
-                                          add_config_file_help=True,
-                                          auto_env_var_prefix='NYNAB_')
-
-parser.add_argument('--email', metavar='Email', type=str, required=False,
-                    help='The Email User ID for nYNAB')
-parser.add_argument('--password', metavar='Password', type=str, required=False,
-                    help='The Password for nYNAB')
-parser.add_argument('--budgetname', metavar='BudgetName', type=str, required=False,
-                    help='The nYNAB budget to use')
 
 def main():
     MainCommands()

@@ -74,5 +74,5 @@ def do_ofximport(args, client=None):
 
 
 if __name__ == "__main__":
-    from pynYNAB.entrypoints import ofximport_main
-    ofximport_main()
+    from pynYNAB.__main__ import MainCommands
+    MainCommands.ofximport()

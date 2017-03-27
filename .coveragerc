@@ -3,4 +3,5 @@ source =
     pynYNAB
 
 [report]
-omit = */tests/*
+omit = */tests/*, \
+    */pynYNAB/__main__.py

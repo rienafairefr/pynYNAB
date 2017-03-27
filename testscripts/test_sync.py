@@ -1,5 +1,5 @@
 from pynYNAB.Client import clientfromargs
-from pynYNAB.entrypoints import parser
+from pynYNAB.__main__ import parser
 from dotenv import load_dotenv,find_dotenv
 load_dotenv(find_dotenv())
 

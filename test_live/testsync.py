@@ -1,7 +1,7 @@
 import unittest
 
 from pynYNAB.Client import clientfromargs
-from pynYNAB.entrypoints import parser
+from pynYNAB.__main__ import parser
 
 
 # used to ping the nYNAB API to check that the sync works

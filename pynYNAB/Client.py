@@ -32,6 +32,9 @@ class WrongPushException(Exception):
     def msg(self):
         return self.string % (self.delta, self.expected_delta)
 
+    def __repr__(self):
+        return self.msg
+
 
 def operation(expected_delta):
     def operation_decorator(fn):
@@ -43,6 +46,21 @@ def operation(expected_delta):
         return wrapped
     return operation_decorator
 
+
+class CatalogClient(RootObjClient):
+    @property
+    def extra(self):
+        return dict(user_id=self.client.connection.user_id)
+
+    opname = 'syncCatalogData'
+
+
+class BudgetClient(RootObjClient):
+    @property
+    def extra(self):
+        return dict(calculated_entities_included=False, budget_version_id=self.client.budget_version_id)
+
+    opname = 'syncBudgetData'
 
 class nYnabClient(object):
     def __init__(self, **kwargs):
@@ -63,7 +81,7 @@ class nYnabClient(object):
         self.starting_device_knowledge = 0
         self.ending_device_knowledge = 0
 
-        engine = kwargs.get('engine', create_engine('sqlite://'))
+        engine = create_engine(kwargs.get('engine', 'sqlite://'))
 
         Base.metadata.create_all(engine)
         self.Session = sessionmaker(bind=engine)
@@ -74,8 +92,8 @@ class nYnabClient(object):
         self.session.commit()
 
         self.online = self.connection is not None
-        self.catalogClient = RootObjClient(self.catalog, self, 'syncCatalogData')
-        self.budgetClient = RootObjClient(self.budget, self, 'syncBudgetData')
+        self.catalogClient = CatalogClient(self.catalog, self)
+        self.budgetClient = BudgetClient(self.budget, self)
 
     @staticmethod
     def from_obj(args, reset=False, sync=True, **kwargs):
@@ -98,41 +116,17 @@ class nYnabClient(object):
             print('No budget by the name %s found in nYNAB' % args.budgetname)
             exit(-1)
 
-    @property
-    def extra_catalog(self):
-        return dict(user_id=self.connection.user_id)
-
-    @property
-    def extra_budget(self):
-        return dict(calculated_entities_included=False, budget_version_id=self.budget_version_id)
-
-    def sync_catalog(self):
-        self.catalogClient.sync(extra=self.extra_catalog)
-
-    def sync_budget(self):
-        self.budgetClient.sync(extra=self.extra_budget)
-
     def sync(self):
-        if self.connection is None:
-            return
         LOG.debug('Client.sync')
 
-        self.sync_catalog()
+        self.catalogClient.sync()
         self.select_budget(self.budget_name)
-        self.sync_budget()
+        self.budgetClient.sync()
 
         if self.budget_version_id is None and self.budget_name is not None:
             raise BudgetNotFound()
 
-    def push_budget(self):
-        self.budgetClient.push(extra=self.extra_budget)
-
-    def push_catalog(self):
-        self.catalogClient.push(extra=self.extra_catalog)
-
     def push(self, expected_delta=1):
-        if self.connection is None:
-            return
         # ending-starting represents the number of modifications that have been done to the data ?
         LOG.debug('Client.push')
 
@@ -148,8 +142,8 @@ class nYnabClient(object):
         if any(catalog_changed_entities) or any(budget_changed_entities):
             self.ending_device_knowledge = self.starting_device_knowledge + 1
 
-        self.push_catalog()
-        self.push_budget()
+        self.catalogClient.push()
+        self.budgetClient.push()
 
         self.starting_device_knowledge = self.ending_device_knowledge
         self.session.commit()
@@ -185,6 +179,7 @@ class nYnabClient(object):
         self.budget.be_accounts.append(account)
         self.budget.be_payees.append(payee)
         self.budget.be_transactions.append(transaction)
+        pass
 
     @operation(1)
     def delete_account(self, account):

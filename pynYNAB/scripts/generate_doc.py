@@ -1,16 +1,21 @@
 import os
 import subprocess
 
+from pynYNAB.__main__ import MainCommands
+
 with open('README.rst', 'w') as readme:
-    for module in os.listdir(os.path.dirname(__file__)):
-        if module == os.path.basename(__file__) or module == '__init__.py' or module[-3:] != '.py':
-            continue
-        readme.write('\n')
-        readme.writelines('\n'.join([module, '-' * len(module), '.. code-block:: ', '']))
-        process = subprocess.Popen([module, '-h'], shell=True, stdout=subprocess.PIPE)
-        readme.write('\n')
-        for line in process.stdout:
-            readme.write('    ' + line)
+
+
+    module = 'csvimport.py'
+    readme.writelines('\n'.join([module, '-' * len(module), '.. code-block:: ', '']))
+    readme.writelines('    ' + line+'\r' for line in MainCommands.csvimport_parser.format_help().splitlines())
+
+    readme.write('\n')
+    module = 'ofximport.py'
+    readme.writelines('\n'.join([module, '-' * len(module), '.. code-block:: ', '']))
+    readme.writelines('    ' + line+'\r' for line in MainCommands.ofximport_parser.format_help().splitlines())
+
+    readme.write('\n')
 
     readme.writelines("""
 Command Line / Config File Arguments

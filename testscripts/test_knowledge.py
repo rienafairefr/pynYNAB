@@ -3,8 +3,8 @@ import random
 from datetime import datetime
 
 from pynYNAB.Client import clientfromargs
+from pynYNAB.__main__ import parser
 from pynYNAB.schema.budget import Transaction
-from pynYNAB.entrypoints import parser
 
 # used to ping the nYNAB API to check that the sync works
 

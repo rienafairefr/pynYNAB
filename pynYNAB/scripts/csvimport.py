@@ -160,5 +160,6 @@ def do_csvimport(args, client=None):
 
 
 if __name__ == "__main__":
-    from pynYNAB.entrypoints import csvimport_main
-    csvimport_main()
+    from pynYNAB.__main__ import MainCommands
+    MainCommands.csvimport()
+
