@@ -4,4 +4,6 @@ source =
 
 [report]
 omit = */tests/*, \
-    */pynYNAB/__main__.py
+    */pynYNAB/__main__.py, \
+    */test_live/*, \
+    */testscripts/*
