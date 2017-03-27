@@ -36,7 +36,7 @@ See appropriate `README`_
 API Documentation
 -----------------
 
-See the wiki 'WIKI'_ for an extended explanation and usage examples
+See the wiki `WIKI`_ for an extended explanation and usage examples
 
 Preventing harm to nYnab servers
 ---------------------------
