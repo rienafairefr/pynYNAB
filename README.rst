@@ -48,4 +48,4 @@ I've taken all precautionary steps so that this python Client can't affect YNAB 
 * It clearly identifies itself by User-Agent > Easy to lock it out if it causes trouble
 
 .. _README: https://github.com/rienafairefr/nYNABapi/blob/master/scripts/README.rst
-.. _WIKI https://github.com/rienafairefr/pynYNAB/wiki
+.. _WIKI: https://github.com/rienafairefr/pynYNAB/wiki
