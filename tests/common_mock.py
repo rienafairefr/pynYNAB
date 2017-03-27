@@ -19,7 +19,6 @@ class MockConnection(object):
             return {'changed_entities':{k:[] for k in self.budget.listfields},'server_knowledge_of_device':0,'current_server_knowledge':123}
 
 
-
 class TestCommonMock(unittest.TestCase):
     def setUp(self):
         self.client = nYnabClient(budgetname='TestBudget',nynabconnection=MockConnection())

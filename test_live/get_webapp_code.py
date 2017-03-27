@@ -1,3 +1,4 @@
+import os
 import re
 from lxml import html
 import requests
@@ -12,7 +13,7 @@ for src in parsed.xpath('//script/@src'):
     if file.startswith('before.'):
         before_response = requests.get(str(src))
         before_script = jsbeautifier.beautify(before_response.text)
-        with open('before.js','w',encoding='utf-8') as file_before:
+        with open(os.path.join('web_app','before.js'),'w',encoding='utf-8') as file_before:
             file_before.write(before_script)
         regex1 = re.compile('\s*(\d)\:\s\"appmain\"')
 
@@ -29,13 +30,13 @@ for src in parsed.xpath('//script/@src'):
         url_appmain = '/'.join(url_src.rsplit('/',1)[:-1]+['appmain.'+random_id+'.js'])
         appmain_response = requests.get(url_appmain)
         appmain_script = jsbeautifier.beautify(appmain_response.text)
-        with open('appmain.js','w',encoding='utf-8') as file_appmain:
+        with open(os.path.join('web_app','appmain.js'),'w',encoding='utf-8') as file_appmain:
             file_appmain.write(appmain_script)
 
     if file.startswith('index.'):
         script_response = requests.get(str(src))
         index_script = jsbeautifier.beautify(script_response.text)
-        with open('index.js','w',encoding='utf-8') as file_before:
+        with open(os.path.join('web_app','index.js'),'w',encoding='utf-8') as file_before:
             file_before.write(index_script)
 
 

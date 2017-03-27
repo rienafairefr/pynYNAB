@@ -2,6 +2,7 @@ import json
 import unittest
 
 import datetime
+
 from sqlalchemy import Column
 from sqlalchemy import Date
 from sqlalchemy import Enum
