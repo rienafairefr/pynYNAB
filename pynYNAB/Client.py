@@ -62,6 +62,11 @@ class BudgetClient(RootObjClient):
 
     opname = 'syncBudgetData'
 
+
+class NoBudgetNameException(Exception):
+    pass
+
+
 class nYnabClient(object):
     def __init__(self, **kwargs):
         self.server_entities = {}
@@ -70,11 +75,10 @@ class nYnabClient(object):
         self.budget_name = kwargs.get('budgetname', None)
         if self.budget_name is None:
             LOG.error('No budget name was provided')
-            exit(-1)
+            raise NoBudgetNameException
         self.connection = kwargs.get('nynabconnection', None)
         self.catalog = Catalog()
         self.budget = Budget()
-        self.budget_version = BudgetVersion()
 
         self.current_device_knowledge = {}
         self.device_knowledge_of_server = {}
@@ -96,21 +100,19 @@ class nYnabClient(object):
         self.budgetClient = BudgetClient(self.budget, self)
 
     @staticmethod
-    def from_obj(args, reset=False, sync=True, **kwargs):
+    def from_obj(args, sync=True, init_connection=True, **kwargs):
         try:
             kwargs['budgetname'] = args.budgetname
-            kwargs['nynabconnection'] = nYnabConnection(args.email, args.password)
+            if not hasattr(args,'nynabconnection'):
+                kwargs['nynabconnection'] = nYnabConnection(args.email, args.password, init_connection)
+            else:
+                kwargs['nynabconnection'] = args.nynabconnection
             if hasattr(args, 'engine'):
                 kwargs['engine'] = args.engine
 
             client = nYnabClient(**kwargs)
             if sync:
                 client.sync()
-            if reset:
-                # deletes the budget
-                client.delete_budget(args.budgetname)
-                client.create_budget(args.budgetname)
-                client.select_budget(args.budgetname)
             return client
         except BudgetNotFound:
             print('No budget by the name %s found in nYNAB' % args.budgetname)
@@ -242,5 +244,5 @@ class nYnabClient(object):
                                   })
 
 
-def clientfromargs(args, reset=False, sync=True):
-    return nYnabClient.from_obj(args, reset, sync)
+def clientfromargs(args, sync=True):
+    return nYnabClient.from_obj(args, sync)

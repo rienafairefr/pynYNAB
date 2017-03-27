@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import json
 import unittest
 
@@ -12,7 +13,8 @@ from sqlalchemy.orm import sessionmaker
 
 from pynYNAB.Client import nYnabClient
 from pynYNAB.schema.Entity import Entity, ComplexEncoder, Base, AccountTypes
-from pynYNAB.schema.budget import Account, Transaction
+from pynYNAB.schema.budget import Account, Transaction, Subtransaction
+from pynYNAB.schema.catalog import User
 from pynYNAB.schema.roots import Budget
 from pynYNAB.schema.types import AmountType
 
@@ -45,6 +47,34 @@ class TestGetChangedEntities(CommonTest):
         changed_entities = self.obj.get_changed_entities()
         self.assertEqual(changed_entities, {'be_accounts': [added_account]})
 
+    def testgetChangedEntities_addtransactionsubtransaction(self):
+        self.client = nYnabClient(budgetname='Mock Budget')
+        added_transaction = Transaction()
+        subtransaction1 = Subtransaction(entities_transaction=added_transaction)
+        subtransaction2 = Subtransaction(entities_transaction=added_transaction)
+
+        self.client.budget.be_transactions.append(added_transaction)
+        self.client.budget.be_subtransactions.append(subtransaction1)
+        self.client.budget.be_subtransactions.append(subtransaction2)
+
+        self.client.session.commit()
+
+        changed_entities = self.client.budget.get_changed_entities()
+        self.assertIsInstance(changed_entities,dict)
+        self.assertEqual(1, len(changed_entities.keys()))
+        self.assertEqual('be_transaction_groups',list(changed_entities.keys())[0])
+        transaction_groups = changed_entities['be_transaction_groups']
+
+        self.assertEqual(1, len(transaction_groups))
+        self.assertEqual(added_transaction, transaction_groups[0]['be_transaction'])
+
+        self.assertIsNotNone(transaction_groups[0]['be_subtransactions'])
+        try:
+            self.assertItemsEqual([subtransaction1,subtransaction2], set(transaction_groups[0]['be_subtransactions']))
+        except AttributeError:
+            self.assertCountEqual([subtransaction1,subtransaction2], set(transaction_groups[0]['be_subtransactions']))
+
+
     def testgetChangedEntities_delete(self):
         self.obj.be_accounts.remove(self.account)
         changed_entities = self.obj.get_changed_entities()
@@ -56,6 +86,15 @@ class TestGetChangedEntities(CommonTest):
         self.account.account_name = 'BLA'
         changed_entities = self.obj.get_changed_entities()
         self.assertEqual(changed_entities, {'be_accounts': [self.account]})
+
+    def test_arraytype(self):
+        user = User()
+        user.feature_flags = ['featureA','feature1']
+        self.session.add(user)
+        self.session.commit()
+
+        fetched_user = self.session.query(User).first()
+        self.assertEqual(user,fetched_user)
 
 
 class TestUpdateChangedEntities(CommonTest):

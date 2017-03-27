@@ -36,14 +36,15 @@ class nYnabConnection(object):
         self.session.headers['X-Session-Token'] = self.sessionToken
         self.user_id = firstlogin['user']['id']
 
-    def __init__(self, email, password):
+    def __init__(self, email, password, init_connection=True):
         self.email = email
         self.password = password
         self.session = requests.Session()
         self.sessionToken = None
         self.id = str(generateuuid())
         self.lastrequest_elapsed = None
-        self._init_session()
+        if init_connection:
+            self._init_session()
 
     @rate_limited(maxpersecond=5)
     def dorequest(self, request_dic, opname):
