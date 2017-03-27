@@ -17,6 +17,7 @@ from pynYNAB.schema.budget import Account, Transaction, Subtransaction
 from pynYNAB.schema.catalog import User
 from pynYNAB.schema.roots import Budget
 from pynYNAB.schema.types import AmountType
+from pynYNAB.utils import rate_limited
 
 
 class MyEntity(Base, Entity):
@@ -148,11 +149,15 @@ class OtherTests(CommonTest):
     def testequality(self):
         tr1 = Transaction(id='t')
         tr2 = Transaction(id='t')
-        self.assertEqual(tr1, tr2)
+        self.assertTrue(tr1 == tr2)
 
         tr1 = Transaction()
         tr2 = Transaction()
-        self.assertNotEqual(tr1, tr2)
+        self.assertFalse(tr1 == tr2)
+
+    def testrepr(self):
+        tr1 = Transaction(id='t')
+        self.assertEqual(tr1.__repr__(),tr1.__str__())
 
     def testappend(self):
         obj = Budget()
@@ -183,13 +188,23 @@ class OtherTests(CommonTest):
         encoded = json.dumps('test', cls=ComplexEncoder)
         self.assertEqual(encoded, 'test')
 
-
+import time
 class TestOthers(unittest.TestCase):
     def test_copy(self):
         obj = Account()
         objc = obj.copy()
         self.assertEqual(obj.id, objc.id)
         self.assertEqual(obj.get_dict(), objc.get_dict())
+
+    def test_rate(self):
+        times=[]
+        @rate_limited(100)
+        def func():
+            times.append(time.clock())
+
+        func()
+        func()
+        self.assertEqual(1,round((times[1]-times[0])*100))
 
 
 class DummyEntity(Base, Entity):

@@ -11,7 +11,6 @@ from pynYNAB.schema.budget import Payee, Transaction
 from pynYNAB.schema.catalog import BudgetVersion
 from pynYNAB.schema.roots import Budget
 from pynYNAB.schema.roots import Catalog
-from pynYNAB.utils import chunk
 
 LOG = logging.getLogger(__name__)
 
@@ -192,16 +191,12 @@ class nYnabClient(object):
         self.budget.be_transactions.append(transaction)
 
     def add_transactions(self, transaction_list):
-        for chunkelement in chunk(transaction_list, 50):
-            self._add_transactions(chunkelement)
-
-    @property
-    def _add_transactions(self, transaction_list):
         @operation(len(transaction_list))
-        def _add_transactions_method(self, transaction_list):
-            for transaction in transaction_list:
-                self.budget.be_transactions.append(transaction)
-        return _add_transactions_method
+        def _add_transactions_method(self, tr_list):
+            for tr in tr_list:
+                self.budget.be_transactions.append(tr)
+
+        return _add_transactions_method(transaction_list)
 
     @operation(1)
     def delete_transaction(self, transaction):

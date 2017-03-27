@@ -85,11 +85,6 @@ class BaseModel(object):
         scalarcolumns = self.__table__.columns
         return {k: scalarcolumns[k].type.__class__.__name__ for k in scalarcolumns.keys() if k != 'parent_id'}
 
-    @property
-    def allfields(self):
-        z = self.scalarfields.copy()
-        z.update(self.listfields)
-        return z
 
 
 def configure_listener(mapper, class_):
@@ -267,9 +262,6 @@ class DictDiffer(object):
 
     def changed(self):
         return set(o for o in self.intersect if self.past_dict[o] != self.current_dict[o])
-
-    def unchanged(self):
-        return set(o for o in self.intersect if self.past_dict[o] == self.current_dict[o])
 
 
 class RootEntity(BaseModel):
