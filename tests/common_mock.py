@@ -18,6 +18,9 @@ class MockConnection(object):
         if opname == 'syncBudgetData':
             return {'changed_entities':{k:[] for k in self.budget.listfields},'server_knowledge_of_device':0,'current_server_knowledge':123}
 
+    def init_session(self):
+        pass
+
 
 class TestCommonMock(unittest.TestCase):
     def setUp(self):

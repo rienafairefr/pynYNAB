@@ -76,7 +76,8 @@ class nYnabClient(object):
             LOG.error('No budget name was provided')
             raise NoBudgetNameException
         self.connection = kwargs.get('nynabconnection', None)
-        self.connection.init_session()
+        if self.connection is not None:
+            self.connection.init_session()
         self.catalog = Catalog()
         self.budget = Budget()
 
@@ -100,11 +101,11 @@ class nYnabClient(object):
         self.budgetClient = BudgetClient(self.budget, self)
 
     @staticmethod
-    def from_obj(args, sync=True, init_connection=True, **kwargs):
+    def from_obj(args, sync=True, **kwargs):
         try:
             kwargs['budgetname'] = args.budgetname
             if not hasattr(args,'nynabconnection'):
-                kwargs['nynabconnection'] = nYnabConnection(args.email, args.password, init_connection)
+                kwargs['nynabconnection'] = nYnabConnection(args.email, args.password)
             else:
                 kwargs['nynabconnection'] = args.nynabconnection
             if hasattr(args, 'engine'):

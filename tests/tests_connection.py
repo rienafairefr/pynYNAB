@@ -3,7 +3,10 @@ import unittest
 import re
 
 import time
-from unittest.mock import Mock
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
 
 from pynYNAB.connection import nYnabConnection, NYnabConnectionError
 
