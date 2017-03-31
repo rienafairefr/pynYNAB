@@ -196,16 +196,6 @@ class TestOthers(unittest.TestCase):
         self.assertEqual(obj.id, objc.id)
         self.assertEqual(obj.get_dict(), objc.get_dict())
 
-    def test_rate(self):
-        times=[]
-        @rate_limited(100)
-        def func():
-            times.append(time.clock())
-
-        func()
-        func()
-        self.assertEqual(1,round((times[1]-times[0])*100))
-
 
 class DummyEntity(Base, Entity):
     account_type = Column(Enum(AccountTypes), default=AccountTypes.undef)

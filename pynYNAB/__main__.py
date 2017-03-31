@@ -18,6 +18,13 @@ if not os.path.exists(configfile):
     configfile = os.path.join(myAppdir, configfile)
 
 LOG = logging.getLogger(__name__)
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.WARNING)
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+LOG.addHandler(ch)
 
 parser = configargparse.getArgumentParser('pynYNAB', default_config_files=[configfile],
                                           add_env_var_help=True,
