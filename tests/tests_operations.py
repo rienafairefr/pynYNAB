@@ -5,7 +5,7 @@ try:
     from unittest.mock import Mock
     from unittest import mock
 except ImportError:
-    from mock import Mock,mock
+    from mock import Mock
 
 from pynYNAB.Client import nYnabClient, NoBudgetNameException, BudgetNotFound
 from pynYNAB.connection import nYnabConnection
