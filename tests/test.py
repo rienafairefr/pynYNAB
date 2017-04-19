@@ -11,7 +11,8 @@ from sqlalchemy import Integer
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from pynYNAB.Client import nYnabClient
+from pynYNAB.Client import nYnabClient, nYnabClientFactory
+from pynYNAB.schema.ClientData import nYnabClientData
 from pynYNAB.schema.Entity import Entity, ComplexEncoder, Base, AccountTypes
 from pynYNAB.schema.budget import Account, Transaction, Subtransaction
 from pynYNAB.schema.catalog import User
@@ -33,6 +34,12 @@ class CommonTest(unittest.TestCase):
         self.session = self.Session()
 
 
+class Bunch(dict):
+    def __init__(self, *args, **kwds):
+        super(Bunch, self).__init__(*args, **kwds)
+        self.__dict__ = self
+
+
 class TestGetChangedEntities(CommonTest):
     def setUp(self):
         super(TestGetChangedEntities, self).setUp()
@@ -49,7 +56,8 @@ class TestGetChangedEntities(CommonTest):
         self.assertEqual(changed_entities, {'be_accounts': [added_account]})
 
     def testgetChangedEntities_addtransactionsubtransaction(self):
-        self.client = nYnabClient(budgetname='Mock Budget')
+        data = Bunch(budgetname = 'MockBudget',nynabconnection=None,email='email',password='password')
+        self.client = nYnabClientFactory.from_obj(data,sync=False)
         added_transaction = Transaction()
         subtransaction1 = Subtransaction(entities_transaction=added_transaction)
         subtransaction2 = Subtransaction(entities_transaction=added_transaction)

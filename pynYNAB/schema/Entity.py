@@ -3,6 +3,10 @@ import logging
 from datetime import datetime
 
 import re
+
+from sqlalchemy import ForeignKey
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql.sqltypes import Enum as sqlaEnum, String
 from aenum import Enum
 from sqlalchemy import Boolean
@@ -333,3 +337,11 @@ class RootEntity(BaseModel):
         for key in self.scalarfields:
             objs_dict[key] = getattr(self, key)
         return objs_dict
+
+    @declared_attr
+    def knowledge_id(self):
+        return Column(ForeignKey('knowledge.id'))
+
+    @declared_attr
+    def knowledge(self):
+        return relationship('Knowledge')

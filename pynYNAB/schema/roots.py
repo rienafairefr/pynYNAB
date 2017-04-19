@@ -38,6 +38,8 @@ class Budget(Base, RootEntity):
     last_month = Column(Date)
     first_month = Column(Date)
 
+    knowledge = relationship('Knowledge')
+
     def get_changed_entities(self):
         changed_entities = super(Budget, self).get_changed_entities()
         if 'be_transactions' in changed_entities:

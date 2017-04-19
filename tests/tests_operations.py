@@ -7,7 +7,8 @@ try:
 except ImportError:
     from mock import Mock
 
-from pynYNAB.Client import nYnabClient, NoBudgetNameException, BudgetNotFound
+from pynYNAB.Client import nYnabClient, NoBudgetNameException
+from pynYNAB.exceptions import BudgetNotFound
 from pynYNAB.connection import nYnabConnection
 from pynYNAB.schema.catalog import BudgetVersion, User
 from tests.common_mock import TestCommonMock

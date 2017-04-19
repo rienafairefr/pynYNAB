@@ -46,10 +46,10 @@ class TestCommonMock(unittest.TestCase):
         self.client.budget.clear_changed_entities()
         self.client.catalog.clear_changed_entities()
 
-        self.client.device_knowledge_of_server[self.client.budgetClient.opname] = 0
-        self.client.device_knowledge_of_server[self.client.catalogClient.opname] = 0
+        self.client.budgetClient.device_knowledge_of_server = 0
+        self.client.catalogClient.device_knowledge_of_server = 0
 
-        self.client.current_device_knowledge[self.client.budgetClient.opname] = 0
-        self.client.current_device_knowledge[self.client.catalogClient.opname] = 0
+        self.client.budgetClient.current_device_knowledge = 0
+        self.client.catalogClient.current_device_knowledge = 0
 
         pass
