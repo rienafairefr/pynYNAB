@@ -27,8 +27,8 @@ class nYnabClientData(Base):
     budget = relationship(Budget)
     budget_version_id = Column(String)
     budget_name = Column(String)
-    starting_device_knowledge = Column(Integer)
-    ending_device_knowledge = Column(Integer)
+    starting_device_knowledge = Column(Integer,default=0)
+    ending_device_knowledge = Column(Integer,default=0)
 
     @property
     def online(self):
