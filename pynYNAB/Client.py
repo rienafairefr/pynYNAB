@@ -94,7 +94,7 @@ class nYnabClientFactory(object):
             exit(-1)
 
 def get_id(email,password):
-    return bcrypt.hashpw(email+password,bcrypt.gensalt())
+    return bcrypt.hashpw((email+password).encode('utf-8'),bcrypt.gensalt())
 
 
 class nYnabClient(object):
