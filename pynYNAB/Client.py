@@ -108,6 +108,8 @@ class nYnabClient(object):
         self.budgetClient = BudgetClient(data.budget, self)
         self.budget = data.budget
         self.server_entities=None
+        self.starting_device_knowledge = data.starting_device_knowledge
+        self.ending_device_knowledge = data.ending_device_knowledge
 
         if self.budget_name is None:
             LOG.error('No budget name was provided')
