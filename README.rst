@@ -2,10 +2,10 @@
     :target: https://travis-ci.org/rienafairefr/pynYNAB
 
 .. image:: https://coveralls.io/repos/github/rienafairefr/pynYNAB/badge.svg?branch=master
-:target: https://coveralls.io/github/rienafairefr/pynYNAB?branch=master
+    :target: https://coveralls.io/github/rienafairefr/pynYNAB?branch=master
 
 .. image:: https://img.shields.io/badge/license-MIT-blue.svg
-   :target:  https://pypi.python.org/pypi/pynYNAB
+    :target:  https://pypi.python.org/pypi/pynYNAB
 
 
 ========

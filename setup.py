@@ -60,7 +60,9 @@ setup(
         'jsontableschema',
         'unicodecsv',
         'appdirs',
-        'six>=1.5'
+        'six>=1.5',
+        'aenum',
+        'sqlalchemy'
     ],
 
     entry_points={
