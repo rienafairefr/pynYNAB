@@ -1,6 +1,13 @@
 import unittest
 
-from pynYNAB.Client import nYnabClient
+import mock
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
+
+from pynYNAB.Client import nYnabClient, nYnabClientFactory
+from pynYNAB.connection import nYnabConnection
+from pynYNAB.schema import Base, nYnabClientData
 from pynYNAB.schema.budget import SubCategory, Payee, MasterCategory
 from pynYNAB.schema.catalog import BudgetVersion
 from pynYNAB.schema.roots import Catalog, Budget
@@ -22,9 +29,32 @@ class MockConnection(object):
         pass
 
 
+
+class MockClientData(object):
+    nynabconnection = MockConnection()
+    budget_name = 'budgetname'
+    budget_version_id = '12345'
+    engine = 'sqlite:///:memory:'
+    email = 'email'
+    password = 'password'
+    catalog = Catalog()
+    budget = Budget()
+    starting_device_knowledge = 0
+    ending_device_knowledge = 0
+    user_id = 'user_id'
+
+class Args(object):
+    budgetname = 'budgetname'
+    nynabconnection = MockConnection()
+    engine = 'sqlite://'
+    email = 'email'
+    password = 'password'
+
+mockSession=mock.Mock(spec=Session)
+
 class TestCommonMock(unittest.TestCase):
     def setUp(self):
-        self.client = nYnabClient(budgetname='TestBudget',nynabconnection=MockConnection())
+        self.client = nYnabClientFactory.from_obj(Args(),sync=False)
 
         session = self.client.session
 

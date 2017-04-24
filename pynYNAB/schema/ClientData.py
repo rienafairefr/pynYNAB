@@ -8,27 +8,28 @@ from sqlalchemy.orm import relationship
 
 from pynYNAB import KeyGenerator
 from pynYNAB.schema.Entity import Base
-from pynYNAB.schema.roots import Catalog, Budget
 
 
 class Knowledge(Base):
     __tablename__ = 'knowledge'
 
     obj_id = Column(String,primary_key=True,default=KeyGenerator.generateuuid)
-    current_device_knowledge = Column(Integer)
-    device_knowledge_of_server = Column(Integer)
+    current_device_knowledge = Column(Integer,default=0)
+    device_knowledge_of_server = Column(Integer,default=0)
+
 
 class nYnabClientData(Base):
     __tablename__ = "nynabclientsdata"
     id = Column(String, primary_key=True)
     catalog_id = Column(ForeignKey('catalog.id'))
-    catalog = relationship(Catalog)
+    catalog = relationship('Catalog')
     budget_id = Column(ForeignKey('budget.id'))
-    budget = relationship(Budget)
+    budget = relationship('Budget')
     budget_version_id = Column(String)
     budget_name = Column(String)
     starting_device_knowledge = Column(Integer,default=0)
     ending_device_knowledge = Column(Integer,default=0)
+    user_id = Column(String)
 
     @property
     def online(self):

@@ -3,7 +3,7 @@ import unittest
 from pynYNAB.Client import clientfromargs
 from pynYNAB.__main__ import parser
 
-test_budget_name = 'Test Budget'
+test_budget_name = 'Test Budget - Dont Remove'
 
 
 # this test cases expect that

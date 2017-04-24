@@ -77,7 +77,7 @@ class RootObjClient():
         server_knowledge_of_device = sync_data['server_knowledge_of_device']
         current_server_knowledge = sync_data['current_server_knowledge']
 
-        change = current_server_knowledge - self.client.device_knowledge_of_server
+        change = current_server_knowledge - self.obj.knowledge.device_knowledge_of_server
         if change > 0:
             LOG.debug('Server knowledge has gone up by ' + str(
                 change) + '. We should be getting back some entities from the server')
