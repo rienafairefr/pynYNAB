@@ -7,7 +7,7 @@ install:
 - TAG_NAME=v$PACKAGE_VERSION
 - pip install .
 - pip install -r requirements.txt
-- pip install coveralls
+- pip install -r test_requirements.txt
 before_install:
 - export TRAVIS_COMMIT_MESSAGE=$(git log --format=%B -n 1 $TRAVIS_COMMIT)
 - echo "$TRAVIS_COMMIT_MESSAGE"
