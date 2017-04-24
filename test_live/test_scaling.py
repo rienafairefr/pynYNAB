@@ -2,6 +2,8 @@
 import unittest
 from pynYNAB.Client import clientfromargs
 from pynYNAB.__main__ import parser
+from pynYNAB.schema.Entity import toapi_conversion_functions_table, fromapi_conversion_functions_table
+from pynYNAB.schema.types import AmountType
 
 test_budget_name = 'Test Budget'
 
@@ -24,12 +26,12 @@ class LiveTestBudget(unittest.TestCase):
         self.client.catalogClient.sync()
         self.client.select_budget(test_budget_name)
 
-    def test_api_scaling_is_1000(self):
+    def test_api_scaling_is_ok(self):
         sync_data = self.client.budgetClient.get_sync_data_obj()
         server_entities = sync_data['changed_entities']
         transactions = server_entities['be_transactions']
         amount = None
         for transaction in transactions:
             if transaction['memo'] == 'TEST TRANSACTION':
-                amount = transaction['amount']/1000
+                amount = fromapi_conversion_functions_table[AmountType](transaction['amount'])
         self.assertEqual(12.34,amount)
