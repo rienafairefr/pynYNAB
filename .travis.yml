@@ -7,14 +7,13 @@ install:
 - TAG_NAME=v$PACKAGE_VERSION
 - pip install .
 - pip install -r requirements.txt
-- pip install -r test_requirements.txt
+- pip install coveralls
 before_install:
 - export TRAVIS_COMMIT_MESSAGE=$(git log --format=%B -n 1 $TRAVIS_COMMIT)
 - echo "$TRAVIS_COMMIT_MESSAGE"
 script:
 - 'export NYNAB_LOGGINGLEVEL=error;
   coverage run -m unittest discover tests;
-  python test_live\\test_live.py LiveTests.test_add_deletetransaction;
   if [[ "$TRAVIS_EVENT_TYPE" = "cron" || "$TRAVIS_COMMIT_MESSAGE" == *"[ci-cron]"* ]]; then
     python -m unittest discover test_live;
   fi
