@@ -158,13 +158,13 @@ def date_from_api(columntype, string):
 
 fromapi_conversion_functions_table = {
     Date: date_from_api,
-    AmountType: lambda t, x: x / 1000,
+    AmountType: lambda t, x: float(x) / 1000,
     sqlaEnum: lambda t, x: t.enum_class[x]
 }
 
 toapi_conversion_functions_table = {
     Date: lambda t, x: x.strftime('%Y-%m-%d'),
-    AmountType: lambda t, x: int(x * 1000),
+    AmountType: lambda t, x: int(float(x) * 1000),
     sqlaEnum: lambda t, x: x._name_
 }
 
