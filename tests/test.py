@@ -1,8 +1,8 @@
 from __future__ import absolute_import
-
-import datetime
 import json
 import unittest
+
+import datetime
 
 from sqlalchemy import Column
 from sqlalchemy import Date
@@ -11,13 +11,13 @@ from sqlalchemy import Integer
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from pynYNAB.Client import nYnabClient, nYnabClientFactory
+from pynYNAB.Client import nYnabClient
 from pynYNAB.schema.Entity import Entity, ComplexEncoder, Base, AccountTypes
 from pynYNAB.schema.budget import Account, Transaction, Subtransaction
 from pynYNAB.schema.catalog import User
 from pynYNAB.schema.roots import Budget
 from pynYNAB.schema.types import AmountType
-from tests.common_mock import mockSession, MockClientData
+from pynYNAB.utils import rate_limited
 
 
 class MyEntity(Base, Entity):
@@ -31,12 +31,6 @@ class CommonTest(unittest.TestCase):
         Base.metadata.create_all(engine)
         self.Session = sessionmaker(bind=engine)
         self.session = self.Session()
-
-
-class Bunch(dict):
-    def __init__(self, *args, **kwds):
-        super(Bunch, self).__init__(*args, **kwds)
-        self.__dict__ = self
 
 
 class TestGetChangedEntities(CommonTest):
@@ -55,13 +49,7 @@ class TestGetChangedEntities(CommonTest):
         self.assertEqual(changed_entities, {'be_accounts': [added_account]})
 
     def testgetChangedEntities_addtransactionsubtransaction(self):
-        class Args(object):
-            budgetname = 'budgetname'
-            nynabconnection = None
-            engine = 'sqlite://'
-            email='email'
-            password='password'
-        self.client = nYnabClientFactory.from_obj(Args(),sync=False)
+        self.client = nYnabClient(budgetname='Mock Budget')
         added_transaction = Transaction()
         subtransaction1 = Subtransaction(entities_transaction=added_transaction)
         subtransaction2 = Subtransaction(entities_transaction=added_transaction)
@@ -110,25 +98,16 @@ class TestGetChangedEntities(CommonTest):
         self.assertEqual(user,fetched_user)
 
 
-class Args(object):
-    budgetname = 'budgetname'
-    nynabconnection = None
-    engine = 'sqlite://'
-    email='email'
-    password='password'
-
-
 class TestUpdateChangedEntities(CommonTest):
     def setUp(self):
         super(TestUpdateChangedEntities, self).setUp()
         self.account = Account()
-        self.client = nYnabClientFactory.from_obj(Args(),sync=False)
+        self.client = nYnabClient(budgetname='Mock Budget')
         self.client.budget.be_accounts = [self.account]
         self.account2 = self.account.copy()
         self.client.session.commit()
 
     def testupdateChangedEntities_add(self):
-        self.client = nYnabClientFactory.from_obj(Args(),sync=False)
         new_account = Account()
         changed_entities = dict(
             be_accounts=[new_account]
@@ -209,7 +188,7 @@ class OtherTests(CommonTest):
         encoded = json.dumps('test', cls=ComplexEncoder)
         self.assertEqual(encoded, 'test')
 
-
+import time
 class TestOthers(unittest.TestCase):
     def test_copy(self):
         obj = Account()
