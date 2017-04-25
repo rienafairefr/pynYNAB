@@ -116,15 +116,16 @@ class nYnabClient(Base):
         self.catalogClient = CatalogClient(self)
         self.budgetClient = BudgetClient(self)
 
+        if self.budget_name is None:
+            LOG.error('No budget name was provided')
+            raise NoBudgetNameException
+
         if self.budget.knowledge is None:
             self.budget.knowledge = Knowledge()
         if self.catalog.knowledge is None:
             self.catalog.knowledge = Knowledge()
         self.server_entities=None
 
-        if self.budget_name is None:
-            LOG.error('No budget name was provided')
-            raise NoBudgetNameException
         if self.connection is not None:
             self.connection.init_session()
             self.user_id = self.connection.user_id

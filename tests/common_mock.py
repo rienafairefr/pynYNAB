@@ -1,6 +1,6 @@
 import unittest
 
-from pynYNAB.Client import nYnabClient
+from pynYNAB.Client import nYnabClient, nYnabClientFactory
 from pynYNAB.schema.budget import SubCategory, Payee, MasterCategory
 from pynYNAB.schema.catalog import BudgetVersion
 from pynYNAB.schema.roots import Catalog, Budget
@@ -24,7 +24,15 @@ class MockConnection(object):
 
 class TestCommonMock(unittest.TestCase):
     def setUp(self):
-        self.client = nYnabClient(budgetname='TestBudget',nynabconnection=MockConnection())
+        class Args(object):
+            nynabconnection=MockConnection()
+            budgetname='budgetname'
+            engine='sqlite:///:memory:'
+            email = 'email'
+            password = 'password'
+
+
+        self.client = nYnabClientFactory.from_obj(Args(),sync=False)
 
         session = self.client.session
 
@@ -46,10 +54,10 @@ class TestCommonMock(unittest.TestCase):
         self.client.budget.clear_changed_entities()
         self.client.catalog.clear_changed_entities()
 
-        self.client.device_knowledge_of_server[self.client.budgetClient.opname] = 0
-        self.client.device_knowledge_of_server[self.client.catalogClient.opname] = 0
+        self.client.budgetClient.device_knowledge_of_server = 0
+        self.client.catalogClient.device_knowledge_of_server = 0
 
-        self.client.current_device_knowledge[self.client.budgetClient.opname] = 0
-        self.client.current_device_knowledge[self.client.catalogClient.opname] = 0
+        self.client.budgetClient.current_device_knowledge = 0
+        self.client.catalogClient.current_device_knowledge = 0
 
         pass

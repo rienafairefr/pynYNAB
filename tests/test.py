@@ -11,13 +11,14 @@ from sqlalchemy import Integer
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from pynYNAB.Client import nYnabClient
+from pynYNAB.Client import nYnabClient, nYnabClientFactory
 from pynYNAB.schema.Entity import Entity, ComplexEncoder, Base, AccountTypes
 from pynYNAB.schema.budget import Account, Transaction, Subtransaction
 from pynYNAB.schema.catalog import User
 from pynYNAB.schema.roots import Budget
 from pynYNAB.schema.types import AmountType
 from pynYNAB.utils import rate_limited
+from tests.common_mock import MockConnection
 
 
 class MyEntity(Base, Entity):
@@ -42,6 +43,15 @@ class TestGetChangedEntities(CommonTest):
         self.obj.clear_changed_entities()
         self.account2 = Account(id=self.account)
 
+        class Args(object):
+            nynabconnection=MockConnection()
+            budgetname='budgetname'
+            engine='sqlite:///:memory:'
+            email = 'email'
+            password = 'password'
+
+        self.client = nYnabClientFactory.from_obj(Args(),sync=False)
+
     def testgetChangedEntities_add(self):
         added_account = Account()
         self.obj.be_accounts.append(added_account)
@@ -49,7 +59,6 @@ class TestGetChangedEntities(CommonTest):
         self.assertEqual(changed_entities, {'be_accounts': [added_account]})
 
     def testgetChangedEntities_addtransactionsubtransaction(self):
-        self.client = nYnabClient(budgetname='Mock Budget')
         added_transaction = Transaction()
         subtransaction1 = Subtransaction(entities_transaction=added_transaction)
         subtransaction2 = Subtransaction(entities_transaction=added_transaction)
@@ -102,7 +111,14 @@ class TestUpdateChangedEntities(CommonTest):
     def setUp(self):
         super(TestUpdateChangedEntities, self).setUp()
         self.account = Account()
-        self.client = nYnabClient(budgetname='Mock Budget')
+        class Args(object):
+            nynabconnection=MockConnection()
+            budgetname='Mock Budget'
+            engine='sqlite:///:memory:'
+            email = 'email'
+            password = 'password'
+
+        self.client = nYnabClientFactory.from_obj(Args(),sync=False)
         self.client.budget.be_accounts = [self.account]
         self.account2 = self.account.copy()
         self.client.session.commit()

@@ -7,7 +7,7 @@ try:
 except ImportError:
     from mock import Mock,mock
 
-from pynYNAB.Client import nYnabClient, NoBudgetNameException, BudgetNotFound
+from pynYNAB.Client import nYnabClient, NoBudgetNameException, BudgetNotFound, nYnabClientFactory
 from pynYNAB.connection import nYnabConnection
 from pynYNAB.schema.catalog import BudgetVersion, User
 from tests.common_mock import TestCommonMock
@@ -37,30 +37,49 @@ class TestOperations(TestCommonMock):
             self.assertEqual(request_dic['currency_format'], json.dumps(currency_format))
             self.assertEqual(request_dic['date_format'], json.dumps(date_format))
 
-        mock = MockConnection()
-        mock.dorequest=dorequest
+        mock_connection = MockConnection()
+        mock_connection.dorequest=dorequest
 
-        self.client = nYnabClient(budgetname='TestBudget', nynabconnection=mock)
+        class Args(object):
+            email = 'email'
+            password = 'password'
+            nynabconnection = mock_connection
+            budgetname = 'Test Budget'
+
+
+        self.client = nYnabClientFactory.from_obj(Args(),sync=False)
         self.client.create_budget(budget_name='New Budget')
 
     def test_client_nobudget(self):
-        self.assertRaises(NoBudgetNameException,lambda:nYnabClient())
+        def create_client_no_budget():
+            client = nYnabClient()
+            client.connect(None,None)
+        self.assertRaises(NoBudgetNameException, create_client_no_budget)
 
     def test_select_budget(self):
-        self.client = nYnabClient(budgetname='TestBudget')
+        class Args(object):
+            email = 'email'
+            password = 'password'
+            budgetname = 'budgetname'
+            nynabconnection = MockConnection()
+            budget_name = 'Test Budget'
+
+        client = nYnabClientFactory.from_obj(Args(), sync=False)
         budget_version1 = BudgetVersion(version_name='TestBudget')
         budget_version2 = BudgetVersion(version_name='NewTestBudget')
-        self.client.catalog.ce_budget_versions= [budget_version1,budget_version2]
+        client.catalog.ce_budget_versions= [budget_version1, budget_version2]
 
-        self.client.select_budget(budget_name='NewTestBudget')
-        self.assertEqual(budget_version2.id,self.client.budget_version_id)
+        client.select_budget(budget_name='NewTestBudget')
+        self.assertEqual(budget_version2.id, client.budget_version_id)
 
     def test_create_client(self):
         class Args(object):
-            nynabconnection=MockConnection()
-            budgetname='budgetname'
-            engine='sqlite:///:memory:'
-        client = nYnabClient.from_obj(Args(),sync=False)
+            nynabconnection = MockConnection()
+            budgetname = 'budgetname'
+            engine = 'sqlite:///:memory:'
+            email = 'email'
+            password = 'password'
+        client = nYnabClientFactory.from_obj(Args(),sync=False)
         self.assertEqual(Args.nynabconnection,client.connection)
         self.assertEqual(Args.budgetname, client.budget_name)
         self.assertEqual(Args.engine, str(client.session.bind.url))
@@ -69,8 +88,10 @@ class TestOperations(TestCommonMock):
         class Args(object):
             nynabconnection = MockConnection()
             budgetname = 'budgetname'
+            email = 'email'
+            password = 'password'
 
-        client = nYnabClient.from_obj(Args(), sync=False)
+        client = nYnabClientFactory.from_obj(Args(), sync=False)
         self.assertEqual(Args.nynabconnection, client.connection)
         self.assertEqual(Args.budgetname, client.budget_name)
         self.assertEqual('sqlite://', str(client.session.bind.url))
