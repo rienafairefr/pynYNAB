@@ -57,12 +57,12 @@ class nYnabConnection(object):
         # Available operations :
 
         def errorout(message):
-            LOG.error(message)
+            LOG.error(message.replace(self.password,'********'))
             raise NYnabConnectionError(message)
 
         json_request_dict = json.dumps(request_dic, cls=ComplexEncoder)
         params = {u'operation_name': opname, 'request_data': json_request_dict}
-        LOG.debug('%s  ... %s ' % (opname, params))
+        LOG.debug(('%s  ... %s ' % (opname, params)).replace(self.password,'********'))
         r = self.session.post(self.urlCatalog, params)
         self.lastrequest_elapsed = r.elapsed
         js = r.json()
