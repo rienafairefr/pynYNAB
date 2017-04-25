@@ -1,6 +1,7 @@
 import argparse
 import inspect
 import os
+from getpass import getpass
 
 import configargparse
 import logging
@@ -34,7 +35,7 @@ parser = configargparse.getArgumentParser('pynYNAB', default_config_files=[confi
 parser.add_argument('--email', metavar='Email', type=str, required=False,
                     help='The Email User ID for nYNAB')
 parser.add_argument('--password', metavar='Password', type=str, required=False,
-                    help='The Password for nYNAB')
+                    help='**insecure** The Password for nYNAB, just omit it to enter it securely in a prompt')
 parser.add_argument('--budgetname', metavar='BudgetName', type=str, required=False,
                     help='The nYNAB budget to use')
 
@@ -60,6 +61,8 @@ class MainCommands(object):
             print('Unrecognized command')
             parser.print_help()
             exit(1)
+        if args.password is None:
+            args.password = getpass('YNAB password:')
         # use dispatch pattern to invoke method with same name
         getattr(self, args.command)()
 
