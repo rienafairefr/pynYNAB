@@ -9,3 +9,4 @@ ynab.conf
 .coverage
 *.log
 *.env
+nosetests*.xml

@@ -24,7 +24,7 @@ class MockConnection(object):
 
 class TestCommonMock(unittest.TestCase):
     def setUp(self):
-        self.client = nYnabClient(budgetname='TestBudget',nynabconnection=MockConnection())
+        self.client = nYnabClient(budgetname='TestBudget',nynabconnection=MockConnection(),sync=False)
 
         session = self.client.session
 
