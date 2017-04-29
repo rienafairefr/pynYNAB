@@ -69,21 +69,23 @@ class nYnabClientFactory(object):
             client_id = connection.user_id
 
             def postprocessed_client(cl):
+                cl.connection = connection
                 cl.catalogClient = CatalogClient(cl)
                 cl.budgetClient = BudgetClient(cl)
-                cl.connection = connection
-                cl.session = self.session
                 return cl
 
             previous_client = self.session.query(nYnabClient_).get(client_id)
             if previous_client is not None:
+                previous_client.session = self.session
                 return postprocessed_client(previous_client)
 
             client = nYnabClient_(id=client_id, budget_name=args.budget_name)
             client.engine = self.engine
+            client.session = self.session
+            client.add_missing()
             client = postprocessed_client(client)
 
-            client.add_missing()
+
 
             self.session.add(client)
             client.session.commit()

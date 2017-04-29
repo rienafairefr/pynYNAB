@@ -33,9 +33,12 @@ class nYnabClient_(Base):
     budget_name = Column(String)
     starting_device_knowledge = Column(Integer, default=0)
     ending_device_knowledge = Column(Integer, default=0)
-    user_id = Column(String)
     connection = None
     session = None
+
+    @property
+    def user_id(self):
+        return self.id
 
     @property
     def online(self):

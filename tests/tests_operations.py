@@ -66,6 +66,8 @@ class TestOperations(TestCommonMock):
             budgetname = 'budgetname'
         client = factory.create_client(Args, sync=False)
         self.assertEqual(Args.nynabconnection,client.connection)
+        self.assertEqual(Args.nynabconnection, client.catalogClient.connection)
+        self.assertEqual(Args.nynabconnection, client.budgetClient.connection)
         self.assertEqual(Args.budgetname, client.budget_name)
 
     def test_create_client_nynabconnectionparameter(self):
