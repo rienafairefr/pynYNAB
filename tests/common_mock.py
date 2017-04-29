@@ -1,6 +1,5 @@
 import unittest
 
-from pynYNAB.Client import nYnabClient_
 from pynYNAB.ClientFactory import nYnabClientFactory
 from pynYNAB.schema.budget import SubCategory, Payee, MasterCategory
 from pynYNAB.schema.catalog import BudgetVersion
@@ -21,7 +20,9 @@ class MockConnection(object):
 
     def init_session(self):
         pass
-factory = nYnabClientFactory('sqlite:///:memory:')
+
+    user_id = '1'
+factory = nYnabClientFactory()
 
 class TestCommonMock(unittest.TestCase):
     def setUp(self):

@@ -32,7 +32,7 @@ class CommonTest(unittest.TestCase):
         self.Session = sessionmaker(bind=engine)
         self.session = self.Session()
 
-factory = nYnabClientFactory('sqlite:///:memory:')
+factory = nYnabClientFactory()
 
 
 class TestGetChangedEntities(CommonTest):
@@ -44,13 +44,7 @@ class TestGetChangedEntities(CommonTest):
         self.obj.clear_changed_entities()
         self.account2 = Account(id=self.account)
 
-        class Args(object):
-            nynabconnection=MockConnection()
-            budgetname='budgetname'
-            email = 'email'
-            password = 'password'
-
-        self.client = factory.create_client(Args(), sync=False)
+        self.client = factory.create_client(budget_name='budgetname', nynabconnection = MockConnection(),sync=False)
 
     def testgetChangedEntities_add(self):
         added_account = Account()
@@ -109,15 +103,9 @@ class TestGetChangedEntities(CommonTest):
 
 class TestUpdateChangedEntities(CommonTest):
     def setUp(self):
-        super(TestUpdateChangedEntities, self).setUp()
         self.account = Account()
-        class Args(object):
-            nynabconnection=MockConnection()
-            budgetname='Mock Budget'
-            email = 'email'
-            password = 'password'
 
-        self.client = factory.create_client(Args(), sync=False)
+        self.client = factory.create_client(budgetname='budgetname', nynabconnection = MockConnection(),sync=False)
         self.client.budget.be_accounts = [self.account]
         self.account2 = self.account.copy()
         self.client.session.commit()

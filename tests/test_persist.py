@@ -8,16 +8,11 @@ factory = nYnabClientFactory('sqlite://')
 
 
 class Args(object):
-    email = 'email'
-    password = 'password'
-    budgetname = 'budgetname'
     nynabconnection = MockConnection()
     budget_name = 'Test Budget'
 
 
 class TestPersist(unittest.TestCase):
     def test_client_persist(self):
-        args = Args()
-
-        cl1 = factory.create_client(args, sync=False)
-        cl2 = factory.create_client(args, sync=False)
+        cl1 = factory.create_client(Args, sync=False)
+        cl2 = factory.create_client(Args, sync=False)

@@ -1,4 +1,4 @@
-from pynYNAB.Client import nYnabClient_
+from pynYNAB.schema.Client import nYnabClient_
 from pynYNAB.schema.budget import Account
 from pynYNAB.schema.roots import Budget
 from tests.test import CommonTest

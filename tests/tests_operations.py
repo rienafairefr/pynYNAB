@@ -29,28 +29,21 @@ date_format = dict(
     format='MM/DD/YYYY'
 )
 
-MockConnection = Mock(spec=nYnabConnection)
+class MockConnection2(object):
+    user_id='12345'
 
 factory = nYnabClientFactory('sqlite://')
 
 class TestOperations(TestCommonMock):
     def test_create_budget(self):
-        def dorequest( request_dic, opname):
-            self.assertEqual(opname, opname)
-            self.assertEqual(request_dic['currency_format'], json.dumps(currency_format))
-            self.assertEqual(request_dic['date_format'], json.dumps(date_format))
+        class MockConnection2(object):
+            def dorequest(this,request_dic, opname):
+                self.assertEqual(opname, opname)
+                self.assertEqual(request_dic['currency_format'], json.dumps(currency_format))
+                self.assertEqual(request_dic['date_format'], json.dumps(date_format))
+            user_id='1234'
 
-        mock_connection = MockConnection()
-        mock_connection.dorequest=dorequest
-
-        class Args(object):
-            email = 'email'
-            password = 'password'
-            nynabconnection = mock_connection
-            budgetname = 'Test Budget'
-
-
-        self.client = factory.create_client(Args(), sync=False)
+        self.client = factory.create_client(budgetname='', nynabconnection=MockConnection2(), sync=False)
         self.client.create_budget(budget_name='New Budget')
 
     def test_client_nobudget(self):
@@ -59,14 +52,7 @@ class TestOperations(TestCommonMock):
         self.assertRaises(NoBudgetNameException, create_client_no_budget)
 
     def test_select_budget(self):
-        class Args(object):
-            email = 'email'
-            password = 'password'
-            budgetname = 'budgetname'
-            nynabconnection = MockConnection()
-            budget_name = 'Test Budget'
-
-        client = factory.create_client(Args(), sync=False)
+        client = factory.create_client(budget_name='',nynabconnection=MockConnection2(), sync=False)
         budget_version1 = BudgetVersion(version_name='TestBudget')
         budget_version2 = BudgetVersion(version_name='NewTestBudget')
         client.catalog.ce_budget_versions= [budget_version1, budget_version2]
@@ -76,22 +62,18 @@ class TestOperations(TestCommonMock):
 
     def test_create_client(self):
         class Args(object):
-            nynabconnection = MockConnection()
+            nynabconnection = MockConnection2()
             budgetname = 'budgetname'
-            email = 'email'
-            password = 'password'
-        client = factory.create_client(Args(), sync=False)
+        client = factory.create_client(Args, sync=False)
         self.assertEqual(Args.nynabconnection,client.connection)
         self.assertEqual(Args.budgetname, client.budget_name)
 
     def test_create_client_nynabconnectionparameter(self):
         class Args(object):
-            nynabconnection = MockConnection()
+            nynabconnection = MockConnection2()
             budgetname = 'budgetname'
-            email = 'email'
-            password = 'password'
 
-        client = factory.create_client(Args(), sync=False)
+        client = factory.create_client(Args, sync=False)
         self.assertEqual(Args.nynabconnection, client.connection)
         self.assertEqual(Args.budgetname, client.budget_name)
         self.assertEqual('sqlite://', str(client.session.bind.url))
