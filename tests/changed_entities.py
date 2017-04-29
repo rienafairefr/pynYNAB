@@ -1,4 +1,4 @@
-from pynYNAB.Client import nYnabClient
+from pynYNAB.schema.Client import nYnabClient_
 from pynYNAB.schema.budget import Account
 from pynYNAB.schema.roots import Budget
 from tests.test import CommonTest
@@ -36,7 +36,7 @@ class TestUpdateChangedEntities(CommonTest):
     def setUp(self):
         super(TestUpdateChangedEntities, self).setUp()
         self.account = Account()
-        self.client = nYnabClient(budgetname='Mock Budget')
+        self.client = nYnabClient_(budgetname='Mock Budget')
         self.client.budget.be_accounts = [self.account]
         self.account2 = self.account.copy()
         self.client.session.commit()

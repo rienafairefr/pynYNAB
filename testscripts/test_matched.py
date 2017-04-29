@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pynYNAB.Client import clientfromargs
+from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.__main__ import parser
 from dotenv import load_dotenv,find_dotenv

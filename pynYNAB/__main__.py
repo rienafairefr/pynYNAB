@@ -9,7 +9,7 @@ import logging
 import sys
 from appdirs import AppDirs
 
-from pynYNAB.Client import clientfromargs
+from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.scripts.csvimport import do_csvimport
 from pynYNAB.scripts.ofximport import do_ofximport
 

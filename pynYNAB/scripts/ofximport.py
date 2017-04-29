@@ -1,7 +1,7 @@
 from datetime import datetime
 from ofxtools import OFXTree
 
-from pynYNAB.Client import clientfromargs
+from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.schema.budget import Transaction, Payee
 
 

@@ -19,7 +19,6 @@ class NYnabConnectionError(Exception):
 
 # noinspection PyPep8Naming
 class nYnabConnection(object):
-    url = 'https://app.youneedabudget.com/users/login'
     urlCatalog = 'https://app.youneedabudget.com/api/v1/catalog'
 
     def init_session(self):

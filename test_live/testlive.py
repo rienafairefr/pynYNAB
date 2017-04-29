@@ -1,4 +1,5 @@
 import random
+import unittest
 from datetime import datetime, timedelta
 
 from pynYNAB import KeyGenerator
@@ -73,3 +74,7 @@ class LiveTests(CommonLive):
         except TypeError as e:
             pass
         raise AssertionError(msg)
+
+
+if __name__ == "__main__":
+    unittest.main()

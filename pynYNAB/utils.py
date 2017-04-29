@@ -2,6 +2,9 @@ import random
 import time
 from datetime import datetime
 
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
+
 from pynYNAB.schema.Entity import AccountTypes
 from pynYNAB.schema.budget import Account, Payee
 
@@ -55,3 +58,21 @@ def get_or_create_payee(client, name):
     client.budget.be_payees.append(payee)
     client.push(1)
     return payee
+
+def get_one_or_create(session,
+                      model,
+                      create_method='',
+                      create_method_kwargs=None,
+                      **kwargs):
+    try:
+        return session.query(model).filter_by(**kwargs).one(), False
+    except NoResultFound:
+        kwargs.update(create_method_kwargs or {})
+        created = getattr(model, create_method, model)(**kwargs)
+        try:
+            session.add(created)
+            session.flush()
+            return created, True
+        except IntegrityError:
+            session.rollback()
+            return session.query(model).filter_by(**kwargs).one(), True

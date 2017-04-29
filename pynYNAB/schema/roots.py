@@ -1,8 +1,11 @@
-from sqlalchemy import Boolean
+from sqlalchemy import Boolean, Column, String, Integer
 from sqlalchemy import Column
 from sqlalchemy import Date
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
+
+from pynYNAB import KeyGenerator
+from pynYNAB.schema import Base
 
 from pynYNAB.schema.Entity import Base, RootEntity
 from pynYNAB.schema.budget import TransactionGroup
@@ -38,6 +41,8 @@ class Budget(Base, RootEntity):
     last_month = Column(Date)
     first_month = Column(Date)
 
+    knowledge = relationship('Knowledge')
+
     def get_changed_entities(self):
         changed_entities = super(Budget, self).get_changed_entities()
         if 'be_transactions' in changed_entities:
@@ -61,3 +66,11 @@ class Budget(Base, RootEntity):
         if changed_entities.get('be_subtransactions') is not None:
             del changed_entities['be_subtransactions']
         return changed_entities
+
+
+class Knowledge(Base):
+    __tablename__ = 'knowledge'
+
+    obj_id = Column(String,primary_key=True,default=KeyGenerator.generateuuid)
+    current_device_knowledge = Column(Integer,default=0)
+    device_knowledge_of_server = Column(Integer,default=0)

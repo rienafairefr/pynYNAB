@@ -66,6 +66,24 @@ class TestConnection(unittest.TestCase):
         new_post.side_effect=[MockResponse(status_code=500)]
         self.assertRaises(NYnabConnectionError, lambda:connection.dorequest(request_dict,opname))
 
+    def test_connection_fail_throttle(self):
+        new_post.side_effect=[MockResponse({'error':  {'id':'request_throttled','message':'throttled'}},429,{'Retry-After':0.01}),
+            MockResponse()]
+
+        original_dorequest = connection.dorequest
+        times=[]
+
+        def new_dorequest(request_dic, opname):
+            times.append(time.clock())
+            return original_dorequest(request_dict,opname)
+
+        connection.dorequest = new_dorequest
+
+        connection.dorequest(request_dict, opname)
+        delta = round( 100 * (times[1] - times[0]))
+        self.assertEqual(delta, 1)
+        pass
+
     def test_connect_error_no_id(self):
         new_post.side_effect=[MockResponse({'error':{'message':'meh'}})]
         self.assertRaises(NYnabConnectionError, lambda:connection.dorequest(request_dict,opname))

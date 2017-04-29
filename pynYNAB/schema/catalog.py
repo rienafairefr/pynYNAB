@@ -19,9 +19,6 @@ class CatalogEntity(Entity):
         return relationship('Catalog')
 
 
-
-
-
 class CatalogBudget(Base, CatalogEntity):
     budget_name = Column(String)
 
