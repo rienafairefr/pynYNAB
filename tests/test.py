@@ -1,8 +1,8 @@
 from __future__ import absolute_import
-import json
-import unittest
 
 import datetime
+import json
+import unittest
 
 from sqlalchemy import Column
 from sqlalchemy import Date
@@ -11,13 +11,12 @@ from sqlalchemy import Integer
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from pynYNAB.Client import nYnabClient, nYnabClientFactory
+from pynYNAB.ClientFactory import nYnabClientFactory
 from pynYNAB.schema.Entity import Entity, ComplexEncoder, Base, AccountTypes
 from pynYNAB.schema.budget import Account, Transaction, Subtransaction
 from pynYNAB.schema.catalog import User
 from pynYNAB.schema.roots import Budget
 from pynYNAB.schema.types import AmountType
-from pynYNAB.utils import rate_limited
 from tests.common_mock import MockConnection
 
 
@@ -33,6 +32,8 @@ class CommonTest(unittest.TestCase):
         self.Session = sessionmaker(bind=engine)
         self.session = self.Session()
 
+factory = nYnabClientFactory('sqlite:///:memory:')
+
 
 class TestGetChangedEntities(CommonTest):
     def setUp(self):
@@ -46,11 +47,10 @@ class TestGetChangedEntities(CommonTest):
         class Args(object):
             nynabconnection=MockConnection()
             budgetname='budgetname'
-            engine='sqlite:///:memory:'
             email = 'email'
             password = 'password'
 
-        self.client = nYnabClientFactory.from_obj(Args(),sync=False)
+        self.client = factory.create_client(Args(), sync=False)
 
     def testgetChangedEntities_add(self):
         added_account = Account()
@@ -114,11 +114,10 @@ class TestUpdateChangedEntities(CommonTest):
         class Args(object):
             nynabconnection=MockConnection()
             budgetname='Mock Budget'
-            engine='sqlite:///:memory:'
             email = 'email'
             password = 'password'
 
-        self.client = nYnabClientFactory.from_obj(Args(),sync=False)
+        self.client = factory.create_client(Args(), sync=False)
         self.client.budget.be_accounts = [self.account]
         self.account2 = self.account.copy()
         self.client.session.commit()
@@ -204,7 +203,7 @@ class OtherTests(CommonTest):
         encoded = json.dumps('test', cls=ComplexEncoder)
         self.assertEqual(encoded, 'test')
 
-import time
+
 class TestOthers(unittest.TestCase):
     def test_copy(self):
         obj = Account()

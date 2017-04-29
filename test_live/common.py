@@ -4,7 +4,7 @@ from datetime import datetime
 from functools import wraps
 
 from pynYNAB import KeyGenerator
-from pynYNAB.Client import clientfromargs
+from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.schema.Entity import AccountTypes
 from pynYNAB.schema.budget import Account, Payee
 from pynYNAB.__main__ import parser

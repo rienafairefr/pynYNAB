@@ -1,6 +1,6 @@
 import unittest
 
-from pynYNAB.Client import clientfromargs
+from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.__main__ import parser
 
 

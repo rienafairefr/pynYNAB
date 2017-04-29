@@ -17,5 +17,6 @@ class WrongPushException(Exception):
         return self.msg
 
 
-class NoBudgetNameException(Exception):
-    pass
+class NoBudgetNameException(ValueError):
+    def __init__(self):
+        super(NoBudgetNameException,self).__init__('you should pass a budget_name ')

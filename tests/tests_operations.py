@@ -1,15 +1,17 @@
 import json
 
-import atexit
+from pynYNAB.exceptions import NoBudgetNameException
+
 try:
     from unittest.mock import Mock
     from unittest import mock
 except ImportError:
     from mock import Mock,mock
 
-from pynYNAB.Client import nYnabClient, NoBudgetNameException, BudgetNotFound, nYnabClientFactory
+from pynYNAB.Client import nYnabClient
+from pynYNAB.ClientFactory import nYnabClientFactory
 from pynYNAB.connection import nYnabConnection
-from pynYNAB.schema.catalog import BudgetVersion, User
+from pynYNAB.schema.catalog import BudgetVersion
 from tests.common_mock import TestCommonMock
 
 
@@ -29,6 +31,7 @@ date_format = dict(
 
 MockConnection = Mock(spec=nYnabConnection)
 
+factory = nYnabClientFactory('sqlite://')
 
 class TestOperations(TestCommonMock):
     def test_create_budget(self):
@@ -47,13 +50,12 @@ class TestOperations(TestCommonMock):
             budgetname = 'Test Budget'
 
 
-        self.client = nYnabClientFactory.from_obj(Args(),sync=False)
+        self.client = factory.create_client(Args(), sync=False)
         self.client.create_budget(budget_name='New Budget')
 
     def test_client_nobudget(self):
         def create_client_no_budget():
             client = nYnabClient()
-            client.connect(None,None)
         self.assertRaises(NoBudgetNameException, create_client_no_budget)
 
     def test_select_budget(self):
@@ -64,7 +66,7 @@ class TestOperations(TestCommonMock):
             nynabconnection = MockConnection()
             budget_name = 'Test Budget'
 
-        client = nYnabClientFactory.from_obj(Args(), sync=False)
+        client = factory.create_client(Args(), sync=False)
         budget_version1 = BudgetVersion(version_name='TestBudget')
         budget_version2 = BudgetVersion(version_name='NewTestBudget')
         client.catalog.ce_budget_versions= [budget_version1, budget_version2]
@@ -76,13 +78,11 @@ class TestOperations(TestCommonMock):
         class Args(object):
             nynabconnection = MockConnection()
             budgetname = 'budgetname'
-            engine = 'sqlite:///:memory:'
             email = 'email'
             password = 'password'
-        client = nYnabClientFactory.from_obj(Args(),sync=False)
+        client = factory.create_client(Args(), sync=False)
         self.assertEqual(Args.nynabconnection,client.connection)
         self.assertEqual(Args.budgetname, client.budget_name)
-        self.assertEqual(Args.engine, str(client.session.bind.url))
 
     def test_create_client_nynabconnectionparameter(self):
         class Args(object):
@@ -91,7 +91,7 @@ class TestOperations(TestCommonMock):
             email = 'email'
             password = 'password'
 
-        client = nYnabClientFactory.from_obj(Args(), sync=False)
+        client = factory.create_client(Args(), sync=False)
         self.assertEqual(Args.nynabconnection, client.connection)
         self.assertEqual(Args.budgetname, client.budget_name)
         self.assertEqual('sqlite://', str(client.session.bind.url))

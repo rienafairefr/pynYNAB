@@ -9,7 +9,7 @@ import logging
 from jsontableschema.exceptions import InvalidSchemaError
 from jsontableschema.model import SchemaModel
 
-from pynYNAB.Client import clientfromargs
+from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.schema.budget import Payee, Transaction
 
 scriptsdir = os.path.dirname(os.path.abspath(__file__))

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from pynYNAB.Client import clientfromargs
+from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.__main__ import parser
 from pynYNAB.schema.Entity import toapi_conversion_functions_table, fromapi_conversion_functions_table
 from pynYNAB.schema.types import AmountType

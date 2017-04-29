@@ -4,11 +4,11 @@ import bcrypt as bcrypt
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from pynYNAB.ClientFactory import nYnabClientFactory
 from pynYNAB.ObjClient import RootObjClient
-from pynYNAB.connection import nYnabConnection
-from pynYNAB.exceptions import BudgetNotFound, WrongPushException, NoBudgetNameException
+from pynYNAB.exceptions import BudgetNotFound, WrongPushException
 from pynYNAB.schema import *
-from pynYNAB.utils import get_one_or_create
+from pynYNAB.schema import Base
 
 LOG = logging.getLogger(__name__)
 
@@ -46,54 +46,25 @@ class BudgetClient(RootObjClient):
         super(BudgetClient, self).__init__(client.budget, client)
 
 
-class nYnabClientFactory(object):
-    @staticmethod
-    def from_obj(args, sync=True, **kwargs):
-        try:
-            kwargs['budgetname'] = args.budgetname
-            if kwargs['budgetname'] is None:
-                raise NoBudgetNameException()
-            if not hasattr(args, 'nynabconnection'):
-                nynabconnection = nYnabConnection(args.email, args.password)
-            else:
-                nynabconnection = args.nynabconnection
-            if hasattr(args, 'engine'):
-                kwargs['engine'] = args.engine
-
-            client_id = get_id(args.email,args.password)
-
-            engine = create_engine(kwargs.get('engine', 'sqlite://'))
-
-            Base.metadata.create_all(engine)
-            Session = sessionmaker(bind=engine)
-            session = Session()
-
-            client, created = get_one_or_create(session,nYnabClient,
-                                                    id=client_id,
-                                                    budget_name = args.budgetname)
-            if created:
-                client.catalog = Catalog()
-                client.catalog.knowledge = Knowledge()
-                client.budget = Budget()
-                client.budget.knowledge = Knowledge()
-
-                session.add(client.catalog)
-                session.add(client.budget)
-
-            client.connect(nynabconnection,session)
-            if sync:
-                client.sync()
-            return client
-        except BudgetNotFound:
-            print('No budget by the name %s found in nYNAB' % args.budgetname)
-            exit(-1)
-
-
 def get_id(email,password):
     return bcrypt.hashpw((email+password).encode('utf-8'),bcrypt.gensalt())
 
 
-class nYnabClient(Base):
+class nYnabClient(object):
+    def __new__(cls, sync=True, *args, **kwargs):
+        connection = kwargs.pop('nynabconnection',None)
+
+        class Args(object):
+            budget_name = kwargs.pop('budgetname',None)
+            email = connection.email if hasattr(connection,'email') else kwargs.pop('email', '')
+            password = connection.password if hasattr(connection,'password') else kwargs.pop('password', '')
+
+        passed = Args()
+        factory = nYnabClientFactory()
+        return factory.create_client(passed)
+
+
+class nYnabClient_(Base):
     __tablename__ = "nynabclients"
     id = Column(String, primary_key=True)
     catalog_id = Column(ForeignKey('catalog.id'))
@@ -110,25 +81,21 @@ class nYnabClient(Base):
     def online(self):
         return self.connection is not None
 
-    def connect(self, connection, session):
-        self.session = session
-        self.connection = connection
+    def add_missing(self):
+        self.catalog = Catalog()
+        self.catalog.knowledge = Knowledge()
+        self.budget = Budget()
+        self.budget.knowledge = Knowledge()
+        self.session.add(self.catalog)
+        self.session.add(self.budget)
+        self.session.commit()
         self.catalogClient = CatalogClient(self)
         self.budgetClient = BudgetClient(self)
 
-        if self.budget_name is None:
-            LOG.error('No budget name was provided')
-            raise NoBudgetNameException
-
-        if self.budget.knowledge is None:
-            self.budget.knowledge = Knowledge()
-        if self.catalog.knowledge is None:
-            self.catalog.knowledge = Knowledge()
-        self.server_entities=None
-
-        if self.connection is not None:
-            self.connection.init_session()
-            self.user_id = self.connection.user_id
+    def init_internal_db(self):
+        Base.metadata.create_all(self.engine)
+        self.Session = sessionmaker(bind=self.engine)
+        self.session = self.Session()
 
     def sync(self):
         LOG.debug('Client.sync')
@@ -252,5 +219,3 @@ class nYnabClient(Base):
                                   })
 
 
-def clientfromargs(args, sync=True):
-    return nYnabClientFactory.from_obj(args, sync)
