@@ -33,5 +33,5 @@ class LiveTestBudget(unittest.TestCase):
         amount = None
         for transaction in transactions:
             if transaction['memo'] == 'TEST TRANSACTION':
-                amount = fromapi_conversion_functions_table[AmountType](transaction['amount'])
+                amount = fromapi_conversion_functions_table[AmountType](AmountType,transaction['amount'])
         self.assertEqual(12.34,amount)
