@@ -39,7 +39,7 @@ class LiveTests(CommonLive):
                     continue
 
                 if isinstance(value,list):
-                    returnvalue[k] = list(set(v for v in value if not v.is_tombstone))
+                    returnvalue[k] = list(set(v for v in value if not v['is_tombstone']))
             return returnvalue
 
         server_catalog_changed_entities = clean_id_tombstoned(self.client.server_entities['syncCatalogData'])
