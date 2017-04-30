@@ -231,12 +231,16 @@ class Entity(BaseModel):
 
     @classmethod
     def from_apidict(cls, entityDict):
+        return cls.from_dict(cls.apidict_toinsertdict(entityDict))
+
+    @classmethod
+    def apidict_toinsertdict(cls, entityDict):
         modified_dict = {}
         for column in cls.__table__.columns:
             if column.name in entityDict and entityDict[column.name] is not None:
                 conversion_function = fromapi_conversion_functions_table.get(column.type.__class__, lambda t, x: x)
                 modified_dict[column.name] = conversion_function(column.type, entityDict[column.name])
-        return cls.from_dict(modified_dict)
+        return modified_dict
 
 
 Base = declarative_base(cls=Entity)

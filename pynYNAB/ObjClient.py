@@ -21,18 +21,38 @@ class RootObjClient():
         self.connection = client.connection
         self.session = client.session
 
-    def update_from_api_changed_entities(self, changed_entities):
-        for name in self.obj.listfields:
-            if changed_entities[name] is None:
-                continue
+    def update_from_api_changed_entitydicts(self, changed_entitydicts):
+        modified_entitydicts = {}
+        for name in changed_entitydicts:
             newlist = []
-            for entitydict in changed_entities[name]:
+            for entitydict in changed_entitydicts[name]:
                 newlist.append(self.obj.listfields[name].from_apidict(entitydict))
-            changed_entities[name] = newlist
-        self.update_from_changed_entities(changed_entities)
+            modified_entitydicts[name] = newlist
+        self.update_from_changed_entities(modified_entitydicts)
+
+    def update_from_changed_entitydict(self, changed_entitiydicts):
+        for name in changed_entitiydicts:
+            value = changed_entitiydicts[name]
+            if not isinstance(value, list):
+                continue
+
+            for incoming_obj_dict in value:
+                incoming_obj_dict['parent_id'] = self.obj.id
+                current_obj = self.session.query(self.obj.listfields[name]).get(incoming_obj_dict['id'])
+                if current_obj is not None:
+                    if incoming_obj_dict['is_tombstone']:
+                        self.session.delete(current_obj)
+                        continue
+                else:
+                    incoming_obj = self.obj.listfields[name].from_dict(incoming_obj_dict)
+                    self.session.merge(incoming_obj)
+        self.session.commit()
+        self.session.expire(self.obj)
+        pass
 
     def update_from_changed_entities(self, changed_entities):
-        for name, value in changed_entities.items():
+        for name in changed_entities:
+            value = changed_entities[name]
             if not isinstance(value, list):
                 continue
             list_of_entities = getattr(self.obj, name)
@@ -60,7 +80,7 @@ class RootObjClient():
         pass
 
     def update_from_sync_data(self, sync_data):
-        self.update_from_api_changed_entities(sync_data['changed_entities'])
+        self.update_from_api_changed_entitydicts(sync_data['changed_entities'])
 
     def sync(self):
         if self.connection is None:
