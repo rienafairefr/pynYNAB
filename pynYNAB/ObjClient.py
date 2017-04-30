@@ -28,8 +28,9 @@ class RootObjClient():
         modified_entitydicts = {}
         for listfield_name in self.obj.listfields:
             newlist = []
-            for entitydict in changed_entitydicts[listfield_name]:
-                newlist.append(self.obj.listfields[listfield_name].from_apidict(entitydict))
+            if changed_entitydicts[listfield_name] is not None:
+                for entitydict in changed_entitydicts[listfield_name]:
+                    newlist.append(self.obj.listfields[listfield_name].from_apidict(entitydict))
             modified_entitydicts[listfield_name] = newlist
         for scalarfield_name in self.obj.scalarfields:
             if scalarfield_name in changed_entitydicts:
@@ -95,7 +96,7 @@ class RootObjClient():
             return
         sync_data = self.get_sync_data_obj()
 
-        self.client.server_entities = sync_data['changed_entities']
+        self.client.server_entities[self.opname] = sync_data['changed_entities']
         LOG.debug('server_knowledge_of_device ' + str(sync_data['server_knowledge_of_device']))
         LOG.debug('current_server_knowledge ' + str(sync_data['current_server_knowledge']))
         self.update_from_sync_data(sync_data)
