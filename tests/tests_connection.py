@@ -2,16 +2,9 @@ import unittest
 
 import re
 
-import time
-try:
-    from unittest.mock import Mock
-except ImportError:
-    from mock import Mock, mock
-
 from pynYNAB.connection import nYnabConnection, NYnabConnectionError
 
 noerror = {'error':None}
-opname = 'opname'
 
 new_post= Mock()
 
@@ -35,7 +28,7 @@ connection.session.post = new_post
 
 class TestConnection(unittest.TestCase):
     def test_init_session_fail_first_login(self):
-        connection.dorequest = Mock(side_effect=[None])
+        connection.dorequest = lambda : None
         self.assertRaises(NYnabConnectionError,lambda:connection.init_session())
 
     def test_init_session(self):

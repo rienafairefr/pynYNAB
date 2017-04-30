@@ -30,7 +30,7 @@ class LiveTests(CommonLive):
 
         def get_changed_entities_current(obj):
             current_map = obj.getmaps()
-            return {k: list(v.values()) if isinstance(v,dict) else v  for k,v in current_map.items()}
+            return {k: list(v.values()) if isinstance(v,dict) else v for k,v in current_map.items()}
 
         def clean_id_tombstoned(ce):
             returnvalue = {}
