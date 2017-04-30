@@ -5,9 +5,8 @@ from datetime import datetime
 import re
 
 from sqlalchemy import ForeignKey
-from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql.sqltypes import Enum as sqlaEnum, String
+from sqlalchemy.sql.sqltypes import Enum as sqlaEnum, String, DateTime
 from aenum import Enum
 from sqlalchemy import Boolean
 from sqlalchemy import Column
@@ -87,7 +86,7 @@ class BaseModel(object):
     @property
     def scalarfields(self):
         scalarcolumns = self.__table__.columns
-        return {k: scalarcolumns[k].type.__class__ for k in scalarcolumns.keys() if k != 'parent_id'}
+        return {k: scalarcolumns[k].type.__class__ for k in scalarcolumns.keys() if k != 'parent_id' and k != 'knowledge_id'}
 
 
 
@@ -154,6 +153,7 @@ re_uuid = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 re_date = re.compile(r'\d{4}[\/ .-]\d{2}[\/.-]\d{2}')
 
 
+
 def date_from_api(columntype, string):
     result = re_date.search(string)
     if result is not None:
@@ -162,12 +162,14 @@ def date_from_api(columntype, string):
 
 fromapi_conversion_functions_table = {
     Date: date_from_api,
+    DateTime: lambda t,x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f'),
     AmountType: lambda t, x: float(x) / 1000,
     sqlaEnum: lambda t, x: t.enum_class[x]
 }
 
 toapi_conversion_functions_table = {
     Date: lambda t, x: x.strftime('%Y-%m-%d'),
+    DateTime: lambda t, x: x.strftime('%Y-%m-%dT%H:%M:%S.%f'),
     AmountType: lambda t, x: int(float(x) * 1000),
     sqlaEnum: lambda t, x: x._name_
 }

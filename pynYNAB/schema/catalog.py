@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean
 from sqlalchemy import Column
+from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import String
 from sqlalchemy.ext.declarative import declared_attr
@@ -21,6 +22,7 @@ class CatalogEntity(Entity):
 
 class CatalogBudget(Base, CatalogEntity):
     budget_name = Column(String)
+    created_at = Column(DateTime)
 
 
 class User(Base, CatalogEntity):
