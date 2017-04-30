@@ -87,7 +87,7 @@ class BaseModel(object):
     @property
     def scalarfields(self):
         scalarcolumns = self.__table__.columns
-        return {k: scalarcolumns[k].type.__class__.__name__ for k in scalarcolumns.keys() if k != 'parent_id'}
+        return {k: scalarcolumns[k].type.__class__ for k in scalarcolumns.keys() if k != 'parent_id'}
 
 
 

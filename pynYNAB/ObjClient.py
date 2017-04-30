@@ -1,5 +1,8 @@
 import logging
 from abc import abstractproperty,ABCMeta
+
+from pynYNAB.schema import fromapi_conversion_functions_table
+
 LOG = logging.getLogger(__name__)
 
 
@@ -23,11 +26,16 @@ class RootObjClient():
 
     def update_from_api_changed_entitydicts(self, changed_entitydicts):
         modified_entitydicts = {}
-        for name in changed_entitydicts:
+        for listfield_name in self.obj.listfields:
             newlist = []
-            for entitydict in changed_entitydicts[name]:
-                newlist.append(self.obj.listfields[name].from_apidict(entitydict))
-            modified_entitydicts[name] = newlist
+            for entitydict in changed_entitydicts[listfield_name]:
+                newlist.append(self.obj.listfields[listfield_name].from_apidict(entitydict))
+            modified_entitydicts[listfield_name] = newlist
+        for scalarfield_name in self.obj.scalarfields:
+            if scalarfield_name in changed_entitydicts:
+                typ = self.obj.scalarfields[scalarfield_name]
+                conversion_function = fromapi_conversion_functions_table.get(typ, lambda t, x: x)
+                modified_entitydicts[scalarfield_name] = conversion_function(typ, changed_entitydicts[scalarfield_name])
         self.update_from_changed_entities(modified_entitydicts)
 
     def update_from_changed_entitydict(self, changed_entitiydicts):
