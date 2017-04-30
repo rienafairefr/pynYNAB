@@ -45,7 +45,7 @@ class nYnabClientFactory(object):
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
 
-    def create_client(self, args=None, sync=True, **kwargs):
+    def create_client(self, args=None, sync=True, new=False, **kwargs):
         from pynYNAB.schema.Client import nYnabClient_
         from pynYNAB.Client import nYnabClient
         if args is None:
@@ -77,10 +77,11 @@ class nYnabClientFactory(object):
                 cl.budgetClient = BudgetClient(cl)
                 return cl
 
-            previous_client = self.session.query(nYnabClient_).get(client_id)
-            if previous_client is not None:
-                previous_client.session = self.session
-                return postprocessed_client(previous_client)
+            if not new:
+                previous_client = self.session.query(nYnabClient_).get(client_id)
+                if previous_client is not None:
+                    previous_client.session = self.session
+                    return postprocessed_client(previous_client)
 
             client = nYnabClient_(id=client_id, budget_name=args.budget_name)
             client.engine = self.engine
@@ -88,10 +89,9 @@ class nYnabClientFactory(object):
             client.add_missing()
             client = postprocessed_client(client)
 
-
-
-            self.session.add(client)
-            client.session.commit()
+            if not new:
+                self.session.add(client)
+                client.session.commit()
             if sync:
                 client.sync()
             return client

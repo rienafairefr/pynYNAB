@@ -15,22 +15,23 @@ class RootObjClient():
     def opname(self):
         return ''
 
-    def __init__(self, obj, client):
+    def __init__(self, obj, client, strategy='1'):
         self.obj = obj
         self.client = client
         self.connection = client.connection
         self.session = client.session
+        self.strategy = strategy
 
     def update_from_api_changed_entitydicts(self, changed_entitydicts):
-        modified_entitydicts = {}
-        for name in changed_entitydicts:
-            newlist = []
-            for entitydict in changed_entitydicts[name]:
-                newlist.append(self.obj.listfields[name].from_apidict(entitydict))
-            modified_entitydicts[name] = newlist
+        modified_entitydicts = {
+            name:[self.obj.listfields[name].from_apidict(entitydict) for entitydict in changed_entitydicts[name]]
+            for name in changed_entitydicts
+        }
         self.update_from_changed_entities(modified_entitydicts)
 
-    def update_from_changed_entitydict(self, changed_entitiydicts):
+
+    def update_from_changed_entitydict_bulk(self, changed_entitiydicts):
+        to_add = []
         for name in changed_entitiydicts:
             value = changed_entitiydicts[name]
             if not isinstance(value, list):
@@ -43,9 +44,11 @@ class RootObjClient():
                     if incoming_obj_dict['is_tombstone']:
                         self.session.delete(current_obj)
                         continue
-                else:
                     incoming_obj = self.obj.listfields[name].from_dict(incoming_obj_dict)
                     self.session.merge(incoming_obj)
+                else:
+                    to_add.append(self.obj.listfields[name].from_dict(incoming_obj_dict))
+        self.session.bulk_save_objects(to_add)
         self.session.commit()
         self.session.expire(self.obj)
         pass
