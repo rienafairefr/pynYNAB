@@ -3,6 +3,7 @@ import unittest
 import re
 
 from pynYNAB.connection import nYnabConnection, NYnabConnectionError
+from mock import Mock
 
 noerror = {'error':None}
 
