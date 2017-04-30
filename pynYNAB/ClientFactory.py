@@ -34,9 +34,12 @@ class BudgetClient(RootObjClient):
 
 
 class nYnabClientFactory(object):
-    def __init__(self, engine_url='sqlite://'):
+    def __init__(self, engine_url='sqlite://', engine=None):
         self.engine_url = engine_url
-        self.engine = create_engine(engine_url)
+        if engine is None:
+            self.engine = create_engine(engine_url)
+        else:
+            self.engine = engine
 
         Base.metadata.create_all(self.engine)
         Session = sessionmaker(bind=self.engine)

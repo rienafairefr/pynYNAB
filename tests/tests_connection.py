@@ -32,6 +32,7 @@ opname = 'opname'
 request_dict = {}
 connection.session.post = new_post
 
+
 class TestConnection(unittest.TestCase):
     def test_init_session_fail_first_login(self):
         connection.dorequest = Mock(side_effect=[None])

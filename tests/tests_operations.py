@@ -29,10 +29,12 @@ date_format = dict(
     format='MM/DD/YYYY'
 )
 
+
 class MockConnection2(object):
     user_id='12345'
 
 factory = nYnabClientFactory('sqlite://')
+
 
 class TestOperations(TestCommonMock):
     def test_create_budget(self):
