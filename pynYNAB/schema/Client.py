@@ -45,7 +45,6 @@ class nYnabClient_(Base):
         return self.connection is not None
 
     def add_missing(self):
-        self.server_entities = {}
         self.catalog = Catalog()
         self.catalog.knowledge = Knowledge()
         self.budget = Budget()

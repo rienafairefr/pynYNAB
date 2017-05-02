@@ -1,5 +1,8 @@
 import unittest
 
+from pynYNAB.ClientFactory import clientfromargs
+from pynYNAB.__main__ import parser
+from pynYNAB.schema import DictDiffer
 from pynYNAB.schema.budget import Transaction
 from test_live.common import CommonLive
 from test_live.common import needs_account
@@ -23,53 +26,44 @@ class LiveTests(CommonLive):
         self.reload()
         self.assertNotIn(transaction, self.client.budget.be_transactions)
 
+
+class LiveTests2(unittest.TestCase):
     def test_roundtrip(self):
-        # 1. syncs data from server
-        # 2. gets the pushed changed_entities that would be pushed as if all entities were modified
-        # 3 the pushed changed_entities should be strictly identical to the changed_entities that was received
+        args = parser.parse_known_args()[0]
 
-        def get_changed_entities_current(obj):
-            current_map = obj.getmaps()
-            return {k: list(v.values()) if isinstance(v,dict) else v for k,v in current_map.items()}
+        # 1. gets sync data from server
+        # 2. tests that to_api(from_api(data)) is the same thing
 
-        def clean_id_tombstoned(ce):
-            returnvalue = {}
-            for k, value in ce.items():
-                if k == 'is_tombstone' or k == 'id':
-                    continue
 
-                if isinstance(value,list):
-                    returnvalue[k] = list(set(v for v in value if not v['is_tombstone']))
-            return returnvalue
+        client = clientfromargs(args, sync=False)
+        sync_data = client.catalogClient.get_sync_data_obj()
+        budget_version_id = next(d['id'] for d in sync_data['changed_entities']['ce_budget_versions'] if
+                                 d['version_name'] == args.budgetname)
+        client.budget_version_id = budget_version_id
 
-        server_catalog_changed_entities = clean_id_tombstoned(self.client.server_entities['syncCatalogData'])
-        server_budget_changed_entities = clean_id_tombstoned(self.client.server_entities['syncBudgetData'])
+        for objclient in (client.budgetClient, client.catalogClient):
+            sync_data = objclient.get_sync_data_obj()
+            server_changed_entities = sync_data['changed_entities']
 
-        pushed_catalog_changed_entities = clean_id_tombstoned(get_changed_entities_current(self.client.catalog))
-        pushed_budget_changed_entities = clean_id_tombstoned(get_changed_entities_current(self.client.budget))
+            for key in server_changed_entities:
+                if key in objclient.obj.listfields:
+                    if len(server_changed_entities[key]) == 0:
+                        continue
+                    obj_dict = server_changed_entities[key][0]
+                    typ = objclient.obj.listfields[key]
+                    obj_dict2 = typ.from_apidict(obj_dict).get_apidict()
 
-        self.checkEqual(pushed_catalog_changed_entities.keys(), server_catalog_changed_entities.keys(),
-                        'catalog changed entities roundtrip keys %s and %s not equal')
-        self.checkEqual(pushed_budget_changed_entities.keys(), server_budget_changed_entities.keys(),
-                        'budget changed entities roundtrip keys not equal')
-
-        for key in server_catalog_changed_entities:
-            self.checkEqual(pushed_catalog_changed_entities[key], server_catalog_changed_entities[key],
-                            'catalog changed entities roundtrip value for key %s not equal' % key)
-        for key in server_budget_changed_entities:
-            self.checkEqual(pushed_budget_changed_entities[key], server_budget_changed_entities[key],
-                            'budget changed entities roundtrip value for key %s not equal' % key)
-
-    @staticmethod
-    def checkEqual(l1, l2, msg):
-        ll1 = list(l1)
-        ll2 = list(l2)
-        try:
-            if len(ll1) == len(ll2) and len(set(ll1) - set(ll2)) == 0:
-                return True
-        except TypeError as e:
-            pass
-        raise AssertionError(msg)
+                    diff = DictDiffer(obj_dict2, obj_dict)
+                    for k in diff.changed():
+                        AssertionError('changed {}: {}->{}'.format(k, obj_dict[k], obj_dict2[k]))
+                    for k in diff.removed():
+                        AssertionError('removed {}: {}'.format(k, obj_dict[k]))
+                    for k in diff.added():
+                        AssertionError('added {}: {}'.format(k, obj_dict2[k]))
+                elif key in objclient.obj.scalarfields:
+                    obj_dict2 = objclient.obj.from_apidict(server_changed_entities).get_apidict()
+                    if server_changed_entities[key] != obj_dict2[key]:
+                        AssertionError('changed {}: {}->{}'.format(key, server_changed_entities[key], obj_dict2[key]))
 
 
 if __name__ == "__main__":

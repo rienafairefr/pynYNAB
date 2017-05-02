@@ -23,6 +23,7 @@ class RootObjClient():
         self.client = client
         self.connection = client.connection
         self.session = client.session
+        self.server_entities = {}
 
     def update_from_api_changed_entitydicts(self, changed_entitydicts):
         modified_entitydicts = {}
@@ -96,7 +97,7 @@ class RootObjClient():
             return
         sync_data = self.get_sync_data_obj()
 
-        self.client.server_entities[self.opname] = sync_data['changed_entities']
+        self.server_entities[self.opname] = sync_data['changed_entities']
         LOG.debug('server_knowledge_of_device ' + str(sync_data['server_knowledge_of_device']))
         LOG.debug('current_server_knowledge ' + str(sync_data['current_server_knowledge']))
         self.update_from_sync_data(sync_data)

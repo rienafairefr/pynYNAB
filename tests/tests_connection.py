@@ -28,10 +28,6 @@ connection.session.post = new_post
 
 
 class TestConnection(unittest.TestCase):
-    def test_init_session_fail_first_login(self):
-        connection.dorequest = lambda : None
-        self.assertRaises(NYnabConnectionError,lambda:connection.init_session())
-
     def test_init_session(self):
         uuidhex = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', re.I)
         user_id = '123456'
