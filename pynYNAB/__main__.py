@@ -39,11 +39,13 @@ parser.add_argument('--password', metavar='Password', type=str, required=False,
 parser.add_argument('--budgetname', metavar='BudgetName', type=str, required=False,
                     help='The nYNAB budget to use')
 
+
 class classproperty(object):
     def __init__(self, f):
         self.f = f
     def __get__(self, obj, owner):
         return self.f(owner)
+
 
 class MainCommands(object):
     def __init__(self):

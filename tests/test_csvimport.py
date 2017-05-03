@@ -12,7 +12,6 @@ from tests.common_mock import TestCommonMock
 
 
 class TestCsv(TestCommonMock):
-
     def getTr(self, date, payee, amount, memo, account):
         imported_date = datetime.now().date()
         return Transaction(
@@ -72,7 +71,7 @@ class TestCsv(TestCommonMock):
         delta = do_csvimport(args, self.client)
         self.assertEqual(delta, 1)
 
-        self.assertEqual(sum(1 for tr in self.client.budget.be_transactions if tr.key2==transaction.key2), 2)
+        self.assertEqual(sum(1 for tr in self.client.budget.be_transactions if tr.key2 == transaction.key2), 2)
 
     @needs_account('Cash')
     @needs_account('Checking Account')
@@ -100,6 +99,6 @@ class TestCsv(TestCommonMock):
             self.getTr(datetime(year=2016, month=2, day=3).date(), '', 10, 'Saving!', 'Savings'),
         ]
 
-        do_csvimport(args,self.client)
+        do_csvimport(args, self.client)
         for transaction in transactions:
             self.assertIn(transaction.key2, [tr.key2 for tr in self.client.budget.be_transactions])
