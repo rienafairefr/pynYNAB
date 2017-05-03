@@ -1,10 +1,20 @@
 from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.__main__ import parser
 from dotenv import load_dotenv,find_dotenv
+
+from pynYNAB.connection import nYnabConnection
+from pynYNAB.schema import Transaction
+from pynYNAB.ClientFactory import nYnabClientFactory
+
 load_dotenv(find_dotenv())
 
 print('test_sync')
 args = parser.parse_known_args()[0]
-client = clientfromargs(args)
+
+client = nYnabClientFactory().create_client(args)
 client.sync()
+
+for i in range(0,1000):
+    client.budget.be_transactions.append(Transaction())
+client.push(1000)
 print('OK')

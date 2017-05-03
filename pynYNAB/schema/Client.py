@@ -58,12 +58,12 @@ class nYnabClient_(Base):
         self.Session = sessionmaker(bind=self.engine)
         self.session = self.Session()
 
-    def sync(self):
+    def sync(self, update_keys=None):
         LOG.debug('Client.sync')
 
-        self.catalogClient.sync()
+        self.catalogClient.sync(update_keys)
         self.select_budget(self.budget_name)
-        self.budgetClient.sync()
+        self.budgetClient.sync(update_keys)
 
         if self.budget_version_id is None and self.budget_name is not None:
             raise BudgetNotFound()

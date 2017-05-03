@@ -10,3 +10,5 @@ ynab.conf
 *.log
 *.env
 nosetests*.xml
+tests/*.json
+testscripts/*.json

@@ -1,30 +1,15 @@
+# coding=utf-8
 import unittest
+from dotenv import load_dotenv,find_dotenv
 
 from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.__main__ import parser
 from pynYNAB.schema import DictDiffer
-from pynYNAB.schema.budget import Transaction
-from test_live.common import CommonLive
-from test_live.common import needs_account
+from pynYNAB.schema.Entity import fromapi_conversion_functions_table
+from pynYNAB.schema.types import AmountType
+## these test cases are live, but designed to be very short in time !
 
-
-# noinspection PyArgumentList
-class LiveTests(CommonLive):
-    @needs_account()
-    def test_add_deletetransaction(self):
-        from datetime import datetime
-        transaction = Transaction(
-            amount=1,
-            cleared='Uncleared',
-            date=datetime.now(),
-            entities_account_id=self.account.id,
-        )
-        self.client.add_transaction(transaction)
-        self.reload()
-        self.assertIn(transaction, self.client.budget.be_transactions)
-        self.client.delete_transaction(transaction)
-        self.reload()
-        self.assertNotIn(transaction, self.client.budget.be_transactions)
+load_dotenv(find_dotenv())
 
 
 class LiveTests2(unittest.TestCase):
@@ -33,7 +18,6 @@ class LiveTests2(unittest.TestCase):
 
         # 1. gets sync data from server
         # 2. tests that to_api(from_api(data)) is the same thing
-
 
         client = clientfromargs(args, sync=False)
         sync_data = client.catalogClient.get_sync_data_obj()
@@ -65,6 +49,32 @@ class LiveTests2(unittest.TestCase):
                     if server_changed_entities[key] != obj_dict2[key]:
                         AssertionError('changed {}: {}->{}'.format(key, server_changed_entities[key], obj_dict2[key]))
 
+test_budget_name = 'Test Budget - Dont Remove'
 
-if __name__ == "__main__":
-    unittest.main()
+# this test cases expect that
+# a budget named "Test Budget" exists
+# in it, there is an account named "Account"
+# in it there is a transaction date 27/01/2017 that has inflow == 12.34 € with a memo "TEST TRANSACTION"
+# We check the API dict we fetch when syncing budget
+class LiveTestBudget(unittest.TestCase):
+    def __init__(self, *args, **kwargs):
+        super(LiveTestBudget, self).__init__(*args, **kwargs)
+        self.transaction = None
+        self.client = None
+
+    def setUp(self):
+        args = parser.parse_known_args()[0]
+        args.budgetname = test_budget_name
+        self.client = clientfromargs(args, sync=False)
+        self.client.catalogClient.sync()
+        self.client.select_budget(test_budget_name)
+
+    def test_api_scaling_is_ok(self):
+        sync_data = self.client.budgetClient.get_sync_data_obj()
+        server_entities = sync_data['changed_entities']
+        transactions = server_entities['be_transactions']
+        amount = None
+        for transaction in transactions:
+            if transaction['memo'] == 'TEST TRANSACTION':
+                amount = fromapi_conversion_functions_table[AmountType](AmountType,transaction['amount'])
+        self.assertEqual(12.34,amount)

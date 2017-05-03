@@ -1,16 +1,8 @@
 import json
 
-from pynYNAB.exceptions import NoBudgetNameException
-
-try:
-    from unittest.mock import Mock
-    from unittest import mock
-except ImportError:
-    from mock import Mock,mock
-
 from pynYNAB.Client import nYnabClient
 from pynYNAB.ClientFactory import nYnabClientFactory
-from pynYNAB.connection import nYnabConnection
+from pynYNAB.exceptions import NoBudgetNameException
 from pynYNAB.schema.catalog import BudgetVersion
 from tests.common_mock import TestCommonMock
 
@@ -29,10 +21,12 @@ date_format = dict(
     format='MM/DD/YYYY'
 )
 
+
 class MockConnection2(object):
     user_id='12345'
 
 factory = nYnabClientFactory('sqlite://')
+
 
 class TestOperations(TestCommonMock):
     def test_create_budget(self):

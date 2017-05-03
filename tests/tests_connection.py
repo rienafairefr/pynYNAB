@@ -2,16 +2,10 @@ import unittest
 
 import re
 
-import time
-try:
-    from unittest.mock import Mock
-except ImportError:
-    from mock import Mock
-
 from pynYNAB.connection import nYnabConnection, NYnabConnectionError
+from mock import Mock
 
 noerror = {'error':None}
-opname = 'opname'
 
 new_post= Mock()
 
@@ -32,11 +26,8 @@ opname = 'opname'
 request_dict = {}
 connection.session.post = new_post
 
-class TestConnection(unittest.TestCase):
-    def test_init_session_fail_first_login(self):
-        connection.dorequest = Mock(side_effect=[None])
-        self.assertRaises(NYnabConnectionError,lambda:connection.init_session())
 
+class TestConnection(unittest.TestCase):
     def test_init_session(self):
         uuidhex = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', re.I)
         user_id = '123456'
@@ -65,24 +56,6 @@ class TestConnection(unittest.TestCase):
     def test_dorequest_fail(self):
         new_post.side_effect=[MockResponse(status_code=500)]
         self.assertRaises(NYnabConnectionError, lambda:connection.dorequest(request_dict,opname))
-
-    def test_connection_fail_throttle(self):
-        new_post.side_effect=[MockResponse({'error':  {'id':'request_throttled','message':'throttled'}},429,{'Retry-After':0.01}),
-            MockResponse()]
-
-        original_dorequest = connection.dorequest
-        times=[]
-
-        def new_dorequest(request_dic, opname):
-            times.append(time.clock())
-            return original_dorequest(request_dict,opname)
-
-        connection.dorequest = new_dorequest
-
-        connection.dorequest(request_dict, opname)
-        delta = round( 100 * (times[1] - times[0]))
-        self.assertEqual(delta, 1)
-        pass
 
     def test_connect_error_no_id(self):
         new_post.side_effect=[MockResponse({'error':{'message':'meh'}})]

@@ -19,13 +19,6 @@ if not os.path.exists(configfile):
     configfile = os.path.join(myAppdir, configfile)
 
 LOG = logging.getLogger(__name__)
-# create console handler with a higher log level
-ch = logging.StreamHandler()
-ch.setLevel(logging.WARNING)
-# create formatter and add it to the handlers
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-ch.setFormatter(formatter)
-LOG.addHandler(ch)
 
 parser = configargparse.getArgumentParser('pynYNAB', default_config_files=[configfile],
                                           add_env_var_help=True,
@@ -39,11 +32,13 @@ parser.add_argument('--password', metavar='Password', type=str, required=False,
 parser.add_argument('--budgetname', metavar='BudgetName', type=str, required=False,
                     help='The nYNAB budget to use')
 
+
 class classproperty(object):
     def __init__(self, f):
         self.f = f
     def __get__(self, obj, owner):
         return self.f(owner)
+
 
 class MainCommands(object):
     def __init__(self):

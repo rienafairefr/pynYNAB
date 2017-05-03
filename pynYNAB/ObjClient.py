@@ -1,5 +1,8 @@
 import logging
 from abc import abstractproperty,ABCMeta
+
+from pynYNAB.schema import fromapi_conversion_functions_table
+
 LOG = logging.getLogger(__name__)
 
 
@@ -20,14 +23,26 @@ class RootObjClient():
         self.client = client
         self.connection = client.connection
         self.session = client.session
+        self.server_entities = {}
+        self.synced = False
 
-    def update_from_api_changed_entitydicts(self, changed_entitydicts):
+    def update_from_api_changed_entitydicts(self, changed_entitydicts, update_keys=None):
+        if update_keys is None:
+            update_keys = list(self.obj.listfields.keys())
+        else:
+            update_keys = [k for k in update_keys if k in self.obj.listfields]
         modified_entitydicts = {}
-        for name in changed_entitydicts:
+        for listfield_name in update_keys:
             newlist = []
-            for entitydict in changed_entitydicts[name]:
-                newlist.append(self.obj.listfields[name].from_apidict(entitydict))
-            modified_entitydicts[name] = newlist
+            if changed_entitydicts[listfield_name] is not None:
+                for entitydict in changed_entitydicts[listfield_name]:
+                    newlist.append(self.obj.listfields[listfield_name].from_apidict(entitydict))
+            modified_entitydicts[listfield_name] = newlist
+        for scalarfield_name in self.obj.scalarfields:
+            if scalarfield_name in changed_entitydicts:
+                typ = self.obj.scalarfields[scalarfield_name]
+                conversion_function = fromapi_conversion_functions_table.get(typ, lambda t, x: x)
+                modified_entitydicts[scalarfield_name] = conversion_function(typ, changed_entitydicts[scalarfield_name])
         self.update_from_changed_entities(modified_entitydicts)
 
     def update_from_changed_entitydict(self, changed_entitiydicts):
@@ -79,18 +94,19 @@ class RootObjClient():
         self.session.commit()
         pass
 
-    def update_from_sync_data(self, sync_data):
-        self.update_from_api_changed_entitydicts(sync_data['changed_entities'])
+    def update_from_sync_data(self, sync_data, update_keys=None):
+        self.update_from_api_changed_entitydicts(sync_data['changed_entities'],update_keys)
 
-    def sync(self):
+
+    def sync(self, update_keys=None):
         if self.connection is None:
             return
         sync_data = self.get_sync_data_obj()
 
-        self.client.server_entities = sync_data['changed_entities']
+        self.server_entities[self.opname] = sync_data['changed_entities']
         LOG.debug('server_knowledge_of_device ' + str(sync_data['server_knowledge_of_device']))
         LOG.debug('current_server_knowledge ' + str(sync_data['current_server_knowledge']))
-        self.update_from_sync_data(sync_data)
+        self.update_from_sync_data(sync_data,update_keys)
         self.session.commit()
         self.obj.clear_changed_entities()
 
@@ -109,8 +125,9 @@ class RootObjClient():
 
         LOG.debug('current_device_knowledge %s' %  self.obj.knowledge.current_device_knowledge)
         LOG.debug('device_knowledge_of_server %s' % self.obj.knowledge.device_knowledge_of_server)
+        self.synced = True
 
-    def push(self):
+    def push(self, update_from_sync_data=True, update_keys=None):
         changed_entities = self.obj.get_changed_apidict()
         request_data = dict(starting_device_knowledge=self.client.starting_device_knowledge,
                             ending_device_knowledge=self.client.ending_device_knowledge,
@@ -125,24 +142,25 @@ class RootObjClient():
             sync_data = self.connection.dorequest(request_data, self.opname)
             LOG.debug('server_knowledge_of_device ' + str(sync_data['server_knowledge_of_device']))
             LOG.debug('current_server_knowledge ' + str(sync_data['current_server_knowledge']))
-            self.update_from_sync_data(sync_data)
-            validate()
+            if update_from_sync_data:
+                self.update_from_sync_data(sync_data, update_keys)
+                validate()
 
-            server_knowledge_of_device = sync_data['server_knowledge_of_device']
-            current_server_knowledge = sync_data['current_server_knowledge']
+                server_knowledge_of_device = sync_data['server_knowledge_of_device']
+                current_server_knowledge = sync_data['current_server_knowledge']
 
-            change = current_server_knowledge - self.obj.knowledge.device_knowledge_of_server
-            if change > 0:
-                LOG.debug('Server knowledge has gone up by ' + str(
-                    change) + '. We should be getting back some entities from the server')
-            if  self.obj.knowledge.current_device_knowledge < server_knowledge_of_device:
-                if  self.obj.knowledge.current_device_knowledge != 0:
-                    LOG.error('The server knows more about this device than we know about ourselves')
-                self.obj.knowledge.current_device_knowledge = server_knowledge_of_device
-            self.obj.knowledge.device_knowledge_of_server = current_server_knowledge
+                change = current_server_knowledge - self.obj.knowledge.device_knowledge_of_server
+                if change > 0:
+                    LOG.debug('Server knowledge has gone up by ' + str(
+                        change) + '. We should be getting back some entities from the server')
+                if  self.obj.knowledge.current_device_knowledge < server_knowledge_of_device:
+                    if  self.obj.knowledge.current_device_knowledge != 0:
+                        LOG.error('The server knows more about this device than we know about ourselves')
+                    self.obj.knowledge.current_device_knowledge = server_knowledge_of_device
+                self.obj.knowledge.device_knowledge_of_server = current_server_knowledge
 
-            LOG.debug('current_device_knowledge %s' %  self.obj.knowledge.current_device_knowledge)
-            LOG.debug('device_knowledge_of_server %s' % self.obj.knowledge.device_knowledge_of_server)
+                LOG.debug('current_device_knowledge %s' %  self.obj.knowledge.current_device_knowledge)
+                LOG.debug('device_knowledge_of_server %s' % self.obj.knowledge.device_knowledge_of_server)
         else:
             validate()
 
