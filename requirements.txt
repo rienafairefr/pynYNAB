@@ -2,7 +2,7 @@ configargparse
 configparser
 appdirs
 requests
-jsontableschema
+jsontableschema==0.10.0
 aenum
 six>=1.5
 sqlalchemy
