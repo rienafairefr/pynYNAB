@@ -57,7 +57,7 @@ setup(
         'configargparse',
         'pynab',
         'requests',
-        'jsontableschema',
+        'jsontableschema==0.10.0',
         'unicodecsv',
         'appdirs',
         'six>=1.5',
