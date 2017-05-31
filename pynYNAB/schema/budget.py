@@ -29,7 +29,7 @@ class Transaction(Base, BudgetEntity):
     check_number = Column(String)
     cleared = Column(String, default='Uncleared')
     credit_amount = Column(AmountType)
-    credit_amount_adjusted = Column(Boolean)
+    credit_amount_adjusted = Column(AmountType)
     date = Column(Date)
     date_entered_from_schedule = Column(Date)
     entities_account_id = Column(ForeignKey('account.id'))
