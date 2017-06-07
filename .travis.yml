@@ -36,5 +36,5 @@ deploy:
   on:
     tags: true
     distributions: sdist bdist_wheel
-    repo: rienafairefr/nYNABapi
+    repo: rienafairefr/pynYNAB
     condition: $TRAVIS_PYTHON_VERSION = "2.7"
