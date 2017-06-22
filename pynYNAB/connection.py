@@ -66,7 +66,7 @@ class nYnabConnection(object):
         self.lastrequest_elapsed = r.elapsed
         js = r.json()
         if r.status_code == 500:
-            raise NYnabConnectionError('Uunrecoverable server error, sorry YNAB')
+            raise NYnabConnectionError('Unrecoverable server error, sorry YNAB')
         if r.status_code != 200:
             LOG.debug('non-200 HTTP code: %s ' % r.text)
         if not 'error' in js:
