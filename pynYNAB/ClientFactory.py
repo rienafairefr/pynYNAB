@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 from pynYNAB.ObjClient import RootObjClient
 from pynYNAB.connection import nYnabConnection
-from pynYNAB.exceptions import NoBudgetNameException, BudgetNotFound
+from pynYNAB.exceptions import NoBudgetNameException, BudgetNotFound, NoCredentialsException
 from pynYNAB.schema import Base
 
 
@@ -33,6 +33,9 @@ class BudgetClient(RootObjClient):
         super(BudgetClient, self).__init__(client.budget, client)
 
 
+
+
+
 class nYnabClientFactory(object):
     def __init__(self, engine_url='sqlite://', engine=None):
         self.engine_url = engine_url
@@ -56,7 +59,7 @@ class nYnabClientFactory(object):
         if hasattr(args,'budgetname'):
             setattr(args, 'budget_name', args.budgetname)
 
-        if hasattr(args, 'nynabconnection'):
+        if hasattr(args, 'nynabconnection') and args.nynabconnection is not None:
             setattr(args, 'connection', args.nynabconnection)
 
         if not hasattr(args, 'budget_name') or args.budget_name is None:
@@ -64,12 +67,15 @@ class nYnabClientFactory(object):
 
         try:
             if not hasattr(args, 'connection'):
+                if not hasattr(args, 'email') or args.email is None:
+                    if not hasattr(args, 'password') or args.password is None:
+                        raise NoCredentialsException
                 connection = nYnabConnection(args.email, args.password)
                 connection.init_session()
             else:
                 connection = args.connection
 
-            client_id = connection.user_id
+            client_id = connection.id
 
             def postprocessed_client(cl):
                 cl.connection = connection
@@ -96,7 +102,7 @@ class nYnabClientFactory(object):
                 client.sync()
             return client
         except BudgetNotFound:
-            LOG.error('No budget by the name %s found in nYNAB' % args.budgetname)
+            LOG.error('No budget by the name %s found in nYNAB' % args.budget_name)
             raise
 
 

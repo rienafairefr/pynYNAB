@@ -1,8 +1,6 @@
-from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.__main__ import parser
 from dotenv import load_dotenv,find_dotenv
 
-from pynYNAB.connection import nYnabConnection
 from pynYNAB.schema import Transaction
 from pynYNAB.ClientFactory import nYnabClientFactory
 
