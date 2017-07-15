@@ -5,6 +5,7 @@ from pynYNAB.schema import nYnabClient_
 
 LOG = logging.getLogger(__name__)
 
+
 class nYnabClient(object):
     def __new__(cls, *args, **kwargs):
         connection = kwargs.pop('nynabconnection', None)

@@ -58,6 +58,7 @@ class MainCommands(object):
             exit(1)
         if getattr(args, 'password', None):
             args.password = getpass('YNAB password:')
+        sys.argv.pop(1)
         # use dispatch pattern to invoke method with same name
         getattr(self, args.command)()
 
@@ -83,10 +84,6 @@ class MainCommands(object):
         args = cls.csvimport_parser.parse_args()
         verify_common_args(args)
 
-        if not os.path.exists(args.csvfile):
-            LOG.error('input CSV file does not exist')
-            exit(-1)
-
         client = clientfromargs(args)
         delta = do_csvimport(args,client)
         client.push(expected_delta=delta)
@@ -106,8 +103,9 @@ class MainCommands(object):
 
         args = cls.ofximport_parser.parse_args()
         verify_common_args(args)
+
         client = clientfromargs(args)
-        delta = do_ofximport(args,client)
+        delta = do_ofximport(args, client)
         client.push(expected_delta=delta)
 
 

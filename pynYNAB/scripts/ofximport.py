@@ -1,12 +1,19 @@
+import os
 from datetime import datetime
 
+import logging
 from ofxtools import OFXTree
 
 from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.schema.budget import Transaction, Payee
 
+LOG = logging.getLogger(__name__)
+
 
 def do_ofximport(args, client=None):
+    if not os.path.exists(args.ofxfile):
+        LOG.error('input CSV file does not exist')
+        exit(-1)
     delta = 0
     if client is None:
         client = clientfromargs(args)
