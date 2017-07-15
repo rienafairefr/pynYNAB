@@ -56,7 +56,7 @@ class MainCommands(object):
             print('Unrecognized command')
             parser.print_help()
             exit(1)
-        if args.password is None:
+        if getattr(args, 'password', None):
             args.password = getpass('YNAB password:')
         # use dispatch pattern to invoke method with same name
         getattr(self, args.command)()
@@ -74,7 +74,6 @@ class MainCommands(object):
         csv_parser.add_argument('-import-duplicates', action='store_true',
                                       help='Forces the import even if a duplicate (same date, account, amount, memo, payee) is found')
         return csv_parser
-
 
     @classmethod
     def csvimport(cls):
