@@ -1,11 +1,11 @@
 import csv
 import json
+import logging
 import os
 import sys
 from collections import namedtuple
 from datetime import datetime
 
-import logging
 from jsontableschema.exceptions import InvalidSchemaError
 from jsontableschema.model import SchemaModel
 
@@ -160,6 +160,6 @@ def do_csvimport(args, client=None):
 
 
 if __name__ == "__main__":
-    from pynYNAB.__main__ import MainCommands
+    from pynYNAB.scripts.__main__ import MainCommands
     MainCommands.csvimport()
 

@@ -1,12 +1,14 @@
 # coding=utf-8
 import unittest
+
 from dotenv import load_dotenv,find_dotenv
 
 from pynYNAB.ClientFactory import clientfromargs
-from pynYNAB.__main__ import parser
 from pynYNAB.schema import DictDiffer
 from pynYNAB.schema.Entity import fromapi_conversion_functions_table
 from pynYNAB.schema.types import AmountType
+from pynYNAB.scripts.__main__ import parser
+
 ## these test cases are live, but designed to be very short in time !
 
 load_dotenv(find_dotenv())

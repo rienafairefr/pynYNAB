@@ -1,7 +1,4 @@
-import os
-import subprocess
-
-from pynYNAB.__main__ import MainCommands
+from pynYNAB.scripts.__main__ import MainCommands
 
 with open('README.rst', 'w') as readme:
 

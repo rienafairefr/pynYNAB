@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from ofxtools import OFXTree
 
 from pynYNAB.ClientFactory import clientfromargs
@@ -74,5 +75,5 @@ def do_ofximport(args, client=None):
 
 
 if __name__ == "__main__":
-    from pynYNAB.__main__ import MainCommands
+    from pynYNAB.scripts.__main__ import MainCommands
     MainCommands.ofximport()
