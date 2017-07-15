@@ -1,9 +1,9 @@
 import unittest
 
 from pynYNAB.ClientFactory import clientfromargs
-from pynYNAB.__main__ import parser
 from pynYNAB.schema import DictDiffer
 from pynYNAB.schema.budget import Transaction
+from pynYNAB.scripts.__main__ import parser
 from test_live.common import CommonLive
 from test_live.common import needs_account
 

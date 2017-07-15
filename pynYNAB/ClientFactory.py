@@ -33,9 +33,6 @@ class BudgetClient(RootObjClient):
         super(BudgetClient, self).__init__(client.budget, client)
 
 
-
-
-
 class nYnabClientFactory(object):
     def __init__(self, engine_url='sqlite://', engine=None):
         self.engine_url = engine_url

@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from pynYNAB.ClientFactory import clientfromargs
-from pynYNAB.schema.budget import Transaction
-from pynYNAB.__main__ import parser
 from dotenv import load_dotenv,find_dotenv
 
+from pynYNAB.ClientFactory import clientfromargs
+from pynYNAB.schema.budget import Transaction
+from pynYNAB.scripts.__main__ import parser
 from pynYNAB.utils import get_or_create_payee
 
 load_dotenv(find_dotenv())

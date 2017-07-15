@@ -6,8 +6,8 @@ from functools import wraps
 from pynYNAB import KeyGenerator
 from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.schema.Entity import AccountTypes
-from pynYNAB.schema.budget import Account, Payee
-from pynYNAB.__main__ import parser
+from pynYNAB.schema.budget import Account
+from pynYNAB.scripts.__main__ import parser
 
 
 def util_add_account(client, account_name=None):
