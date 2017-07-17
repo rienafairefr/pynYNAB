@@ -22,7 +22,7 @@ if os.getenv('SPELLCHECK'):
 
 source_suffix = '.rst'
 master_doc = 'index'
-project = u'pynYNAB'
+project = u'pynynab'
 year = u'2015-2017'
 author = u'Matthieu Berthom\\xe9'
 copyright = '{0}, {1}'.format(year, author)
