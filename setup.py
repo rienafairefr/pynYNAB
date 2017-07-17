@@ -55,19 +55,19 @@ setup(
 
     install_requires=[
         'configargparse',
-        'pynab',
+        'appdirs',
         'requests',
         'jsontableschema==0.10.0',
-        'unicodecsv',
-        'appdirs',
-        'six>=1.5',
         'aenum',
-        'sqlalchemy'
+        'six>=1.5',
+        'sqlalchemy',
+        'unicodecsv',
+        'ofxtools==0.3.8'
     ],
 
     entry_points={
         'console_scripts': [
-            'pynynab = pynYNAB.__main__:main',
+            'pynynab = pynYNAB.scripts.__main__:main',
         ],
     },
 
