@@ -1,6 +1,6 @@
+import re
 import unittest
 import uuid
-import re
 from datetime import datetime
 
 from pynYNAB.schema.Entity import date_from_api

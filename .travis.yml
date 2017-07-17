@@ -58,6 +58,7 @@ install:
   - tox --version
 script:
   - tox -v
+  - sh test.sh
 after_failure:
   - more .tox/log/* | cat
   - more .tox/*/log/* | cat
@@ -65,3 +66,12 @@ notifications:
   email:
     on_success: never
     on_failure: always
+deploy:
+  provider: pypi
+  user: rienafairefr
+  password:
+    secure: WI3jOwC+gXEGgCc3Vet68uyJbmOTCvnpQ8q6xMLJyu7Q0+VgiaA8adEigiITqLwS5y+3C1wz0KYfxzoFt09fCaJwtUD9UoT6zC2H39xzK+sbCLAKiSKx2u29zCXV1f68hIkyFDjcdVdbqThoH6pOW3UwyR2OvmaeHKzj2kY3yrMPPq3diEpp091yqNJhJN+DuQq9Tolys+vG5CIXsWYV3Cczd+VDolc1yNOHYu43+vOsDt2XgPMvrqkc1R4BdHBmlL9keY+q9UUj9ZFVnFScBq7Lia8VB+/cqriduWbEePxmCZlN7SDV6ZyfvQahsS+G5RsR0DRvRm7wt5ZCgIG/VgYOQnlO42G53FmDzAZnNxyoFP7EuE+yr/+fgcMNoPoBVqEQ+OCbqyFclPqt5TQMH9dODdkbNdDR68idQpjuReb266oBnPaCow/pnn3TljtzYzYEiHFOZWR0xo4T6G67E2YCOfqvHwfR+dcHya+pKaL9y1ePyRkElXfYR+M6WsOLg00yjcoKRd5uzgexHYaKVeE/jObhL+0LOHwmULBkY7kM2IF3qtXAwRmpKsXLZX8RfCPmJe+4ARYmpJFKv1MG67Q3OnCgnE4AapVOSHfp+bSAi7XImmN6f/zZWyu68j+NS2/BbjIqfmkRraRiCupk4jUMcOUGAtHzrIFDMgmdOHA=
+  on:
+    tags: true
+    distributions: sdist bdist_wheel
+    condition: $TRAVIS_PYTHON_VERSION = "2.7"
