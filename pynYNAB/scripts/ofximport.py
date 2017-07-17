@@ -12,7 +12,7 @@ LOG = logging.getLogger(__name__)
 
 def do_ofximport(args, client=None):
     if not os.path.exists(args.ofxfile):
-        LOG.error('input CSV file does not exist')
+        LOG.error('input OFX file does not exist')
         exit(-1)
     delta = 0
     if client is None:
