@@ -3,6 +3,8 @@ graft examples
 graft src
 graft ci
 graft tests
+graft testscripts
+graft test_live
 
 include .bumpversion.cfg
 include .coveragerc
@@ -17,5 +19,7 @@ include LICENSE
 include README.rst
 
 include tox.ini .travis.yml appveyor.yml
+
+include *.sh
 
 global-exclude *.py[cod] __pycache__ *.so *.dylib
