@@ -1,7 +1,10 @@
 import unittest
 
 import sys
-from mock import patch, mock
+try:
+    import mock
+except ImportError:
+    import unittest.mock as mock
 
 from pynYNAB.ClientFactory import nYnabClientFactory
 from pynYNAB.scripts.__main__ import verify_common_args, MainCommands
@@ -38,23 +41,23 @@ class TestScripts(unittest.TestCase):
     def test_verify_common_nobudgetname(self):
         verify_common_args(self.Args('', '', None))
 
-    @patch.object(sys, 'argv', ["prog", 'csvimport'])
-    @patch.object(MainCommands, 'csvimport')
+    @mock.patch.object(sys, 'argv', ["prog", 'csvimport'])
+    @mock.patch.object(MainCommands, 'csvimport')
     def test_command_selection_csvimport(self, mock_csvimport):
         MainCommands()
         self.assertTrue(mock_csvimport.called)
 
-    @patch.object(sys, 'argv', ["prog", 'ofximport'])
-    @patch.object(MainCommands, 'ofximport')
+    @mock.patch.object(sys, 'argv', ["prog", 'ofximport'])
+    @mock.patch.object(MainCommands, 'ofximport')
     def test_command_selection_ofximport(self, mock_ofximport):
         MainCommands()
         self.assertTrue(mock_ofximport.called)
 
-    @patch.object(sys, 'argv',
+    @mock.patch.object(sys, 'argv',
                           ["prog", 'csvimport', '--email', 'email', '--password', 'password', '--budgetname',
                            'budgetname', 'csvfile',
                            'csvschema'])
-    @patch.object(nYnabClientFactory, 'create_client')
+    @mock.patch.object(nYnabClientFactory, 'create_client')
     @mock.patch('pynYNAB.scripts.__main__.verify_csvimport')
     @mock.patch('pynYNAB.scripts.__main__.do_csvimport')
     def test_command_do_csvimport(self, mock_do_csvimport, mock_verify_csvimport, mock_create_client):
@@ -79,10 +82,10 @@ class TestScripts(unittest.TestCase):
         self.assertEqual('csvfile', call_args_do.csvfile)
         self.assertEqual('csvschema', call_args_do.schema)
 
-    @patch.object(sys, 'argv',
+    @mock.patch.object(sys, 'argv',
                           ["prog", 'ofximport', '--email', 'email', '--password', 'password', '--budgetname',
                            'budgetname', 'ofxfile'])
-    @patch.object(nYnabClientFactory, 'create_client')
+    @mock.patch.object(nYnabClientFactory, 'create_client')
     @mock.patch('pynYNAB.scripts.__main__.verify_ofximport')
     @mock.patch('pynYNAB.scripts.__main__.do_ofximport')
     def test_command_do_ofximport(self, mock_do_ofximport, mock_verify_ofximport, mock_create_client):
