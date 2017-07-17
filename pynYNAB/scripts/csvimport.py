@@ -62,8 +62,6 @@ def do_csvimport(args, schema, client=None):
 
     LOG.debug('selected schema %s' % (args.schema,))
 
-    nheaders = len(schema.nheaders)
-
     LOG.debug('schema headers %s' % schema.headers)
     delta = 0
 
@@ -123,7 +121,7 @@ def do_csvimport(args, schema, client=None):
     LOG.debug('OK starting the import from %s ' % os.path.abspath(args.csvfile))
     with open(args.csvfile, 'r') as inputfile:
         header = []
-        for i in range(0, nheaders):
+        for i in range(0, schema.nheaders):
             header.append(inputfile.readline())
         for row in csv.reader(inputfile):
             if sys.version[0] == '2':
