@@ -42,14 +42,14 @@ setup(
     zip_safe=False,
     classifiers=[
         # complete classifier list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
-		'Development Status :: 3 - Alpha',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-		'Intended Audience :: Financial and Insurance Industry',
+        'Intended Audience :: Financial and Insurance Industry',
         'License :: OSI Approved :: MIT License',
-'Operating System :: Unix',
+        'Operating System :: Unix',
         'Operating System :: POSIX',
         'Operating System :: Microsoft :: Windows',
-		'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Utilities',
         'Topic :: Office/Business',
         'Topic :: Office/Business :: Financial',
@@ -72,7 +72,7 @@ setup(
         # eg: 'keyword1', 'keyword2', 'keyword3',
     ],
     install_requires=[
-		'configargparse',
+        'configargparse',
         'appdirs',
         'requests',
         'jsontableschema==0.10.0',

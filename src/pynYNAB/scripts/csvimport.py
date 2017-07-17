@@ -45,15 +45,11 @@ def verify_csvimport(args):
                 setattr(schema, 'nheaders', schemacontent['nheaders'])
             except KeyError:
                 setattr(schema, 'nheaders', 1)
-
-
         return schema
 
     except InvalidSchemaError as e:
         LOG.error('Invalid CSV schema %s'%e)
         exit(-1)
-
-
 
 
 def do_csvimport(args, schema, client=None):

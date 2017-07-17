@@ -1,7 +1,6 @@
 import logging
 
 from pynYNAB.ClientFactory import nYnabClientFactory
-from pynYNAB.schema import nYnabClient_
 
 LOG = logging.getLogger(__name__)
 

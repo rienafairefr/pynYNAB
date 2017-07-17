@@ -106,7 +106,7 @@ class RootObjClient():
         self.server_entities[self.opname] = sync_data['changed_entities']
         LOG.debug('server_knowledge_of_device ' + str(sync_data['server_knowledge_of_device']))
         LOG.debug('current_server_knowledge ' + str(sync_data['current_server_knowledge']))
-        self.update_from_sync_data(sync_data,update_keys)
+        self.update_from_sync_data(sync_data, update_keys)
         self.session.commit()
         self.obj.clear_changed_entities()
 

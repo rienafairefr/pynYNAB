@@ -59,6 +59,7 @@ def get_or_create_payee(client, name):
     client.push(1)
     return payee
 
+
 def get_one_or_create(session,
                       model,
                       create_method='',

@@ -47,13 +47,13 @@ class nYnabClientFactory(object):
 
     def create_client(self, args=None, sync=True, **kwargs):
         from pynYNAB.schema.Client import nYnabClient_
-        from pynYNAB.Client import nYnabClient
         if args is None:
-            class Arg(object):pass
+            class Arg(object):
+                pass
             args = Arg()
-        for k,v in kwargs.items():
-            setattr(args,k,v)
-        if hasattr(args,'budgetname'):
+        for k, v in kwargs.items():
+            setattr(args, k, v)
+        if hasattr(args, 'budgetname'):
             setattr(args, 'budget_name', args.budgetname)
 
         if hasattr(args, 'nynabconnection') and args.nynabconnection is not None:
