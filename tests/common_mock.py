@@ -8,6 +8,7 @@ from pynYNAB.schema.roots import Catalog, Budget
 
 class MockConnection(object):
     def __init__(self):
+        self.id = '1234'
         self.user_id = '1234'
         self.catalog = Catalog()
         self.budget = Budget()
