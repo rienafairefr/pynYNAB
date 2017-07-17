@@ -13,6 +13,8 @@ from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.scripts.csvimport import do_csvimport
 from pynYNAB.scripts.ofximport import do_ofximport
 
+logging.basicConfig()
+
 configfile = 'ynab.conf'
 if not os.path.exists(configfile):
     myAppdir = AppDirs('pynYNAB').user_config_dir
