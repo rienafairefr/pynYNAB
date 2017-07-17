@@ -2,24 +2,12 @@ import unittest
 
 import sys
 try:
-    import mock
-except ImportError:
     import unittest.mock as mock
+except ImportError:
+    import mock
 
 from pynYNAB.ClientFactory import nYnabClientFactory
 from pynYNAB.scripts.__main__ import verify_common_args, MainCommands
-
-
-def expect_exception(exception):
-    """Marks test to expect the specified exception. Call assertRaises internally"""
-
-    def test_decorator(fn):
-        def test_decorated(self, *args, **kwargs):
-            self.assertRaises(exception, fn, self, *args, **kwargs)
-
-        return test_decorated
-
-    return test_decorator
 
 
 class TestScripts(unittest.TestCase):
@@ -29,17 +17,14 @@ class TestScripts(unittest.TestCase):
             self.password = password
             self.budgetname = budgetname
 
-    @expect_exception(SystemExit)
     def test_verify_common_noemail(self):
-        verify_common_args(self.Args('', None, ''))
+        self.assertRaises(SystemExit, lambda: verify_common_args(self.Args('', None, '')))
 
-    @expect_exception(SystemExit)
     def test_verify_common_nopassword(self):
-        verify_common_args(self.Args(None, '', ''))
+        self.assertRaises(SystemExit, lambda: verify_common_args(self.Args(None, '', '')))
 
-    @expect_exception(SystemExit)
     def test_verify_common_nobudgetname(self):
-        verify_common_args(self.Args('', '', None))
+        self.assertRaises(SystemExit, lambda: verify_common_args(self.Args('', '', None)))
 
     @mock.patch.object(sys, 'argv', ["prog", 'csvimport'])
     @mock.patch.object(MainCommands, 'csvimport')

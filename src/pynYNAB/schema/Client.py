@@ -6,7 +6,10 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
 
 from pynYNAB.exceptions import BudgetNotFound, WrongPushException
-from pynYNAB.schema import Base, Catalog, Budget, Knowledge, Payee, Transaction
+from pynYNAB.schema.Entity import Base
+from pynYNAB.schema.budget import Payee, Transaction
+from pynYNAB.schema.roots import Catalog, Budget
+from pynYNAB.schema.roots import Knowledge
 
 LOG = logging.getLogger(__name__)
 
@@ -22,7 +25,7 @@ def operation(expected_delta):
     return operation_decorator
 
 
-class nYnabClient_(Base):
+class PersistedYnabClient(Base):
     __tablename__ = "nynabclients"
     id = Column(String, primary_key=True)
     catalog_id = Column(ForeignKey('catalog.id'))
@@ -133,9 +136,9 @@ class nYnabClient_(Base):
 
     def add_transactions(self, transaction_list):
         @operation(len(transaction_list))
-        def _add_transactions_method(self, tr_list):
+        def _add_transactions_method(sl, tr_list):
             for tr in tr_list:
-                self.budget.be_transactions.append(tr)
+                sl.budget.be_transactions.append(tr)
 
         return _add_transactions_method(transaction_list)
 

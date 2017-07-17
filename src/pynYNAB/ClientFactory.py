@@ -5,8 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from pynYNAB.ObjClient import RootObjClient
 from pynYNAB.connection import nYnabConnection
 from pynYNAB.exceptions import NoBudgetNameException, BudgetNotFound, NoCredentialsException
-from pynYNAB.schema import Base
-
+from pynYNAB.schema.Entity import Base
 
 LOG = logging.getLogger(__name__)
 
@@ -46,7 +45,7 @@ class nYnabClientFactory(object):
         self.session = Session()
 
     def create_client(self, args=None, sync=True, **kwargs):
-        from pynYNAB.schema.Client import nYnabClient_
+        from pynYNAB.schema.Client import PersistedYnabClient
         if args is None:
             class Arg(object):
                 pass
@@ -80,12 +79,12 @@ class nYnabClientFactory(object):
                 cl.budgetClient = BudgetClient(cl)
                 return cl
 
-            previous_client = self.session.query(nYnabClient_).get(client_id)
+            previous_client = self.session.query(PersistedYnabClient).get(client_id)
             if previous_client is not None:
                 previous_client.session = self.session
                 return postprocessed_client(previous_client)
 
-            client = nYnabClient_(id=client_id, budget_name=args.budget_name)
+            client = PersistedYnabClient(id=client_id, budget_name=args.budget_name)
             client.engine = self.engine
             client.session = self.session
             client.add_missing()
