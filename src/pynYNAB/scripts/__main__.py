@@ -50,7 +50,7 @@ class MainCommands(object):
             usage='''nynab <command> [<args>]
 
             ''')
-        argcommands = parser.add_argument('command', help='Subcommand to run',choices=['csvimport','ofximport'])
+        argcommands = parser.add_argument('command', help='Subcommand to run', choices=['csvimport', 'ofximport'])
         parser.usage += 'commands : '+','.join(argcommands.choices)
         # parse_args defaults to [1:] for args, but you need to
         # exclude the rest of the args too, or validation will fail
