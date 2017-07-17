@@ -40,15 +40,15 @@ class TestScripts(unittest.TestCase):
 
     @patch.object(sys, 'argv', ["prog", 'csvimport'])
     @patch.object(MainCommands, 'csvimport')
-    def test_command_selection_csvimport(self, new_m):
+    def test_command_selection_csvimport(self, mock_csvimport):
         MainCommands()
-        self.assertTrue(new_m.called)
+        self.assertTrue(mock_csvimport.called)
 
     @patch.object(sys, 'argv', ["prog", 'ofximport'])
     @patch.object(MainCommands, 'ofximport')
-    def test_command_selection_ofximport(self, new_m):
+    def test_command_selection_ofximport(self, mock_ofximport):
         MainCommands()
-        self.assertTrue(new_m.called)
+        self.assertTrue(mock_ofximport.called)
 
     @patch.object(sys, 'argv',
                           ["prog", 'csvimport', '--email', 'email', '--password', 'password', '--budgetname',
@@ -57,11 +57,11 @@ class TestScripts(unittest.TestCase):
     @patch.object(nYnabClientFactory, 'create_client')
     @mock.patch('pynYNAB.scripts.__main__.verify_csvimport')
     @mock.patch('pynYNAB.scripts.__main__.do_csvimport')
-    def test_command_do_csvimport(self, new_m, new_m2, new_c):
+    def test_command_do_csvimport(self, mock_do_csvimport, mock_verify_csvimport, mock_create_client):
         MainCommands()
 
-        self.assertTrue(new_m2.called)
-        call_args_verify = new_m2.call_args[0][0]
+        self.assertTrue(mock_verify_csvimport.called)
+        call_args_verify = mock_verify_csvimport.call_args[0][0]
 
         self.assertEqual('email', call_args_verify.email)
         self.assertEqual('password', call_args_verify.password)
@@ -69,15 +69,15 @@ class TestScripts(unittest.TestCase):
         self.assertEqual('csvfile', call_args_verify.csvfile)
         self.assertEqual('csvschema', call_args_verify.schema)
 
-        self.assertTrue(new_m.called)
-        call_args = new_m.call_args[0]
-        self.assertEqual(new_c(), call_args[2])
-        call_args = call_args[0]
-        self.assertEqual('email', call_args.email)
-        self.assertEqual('password', call_args.password)
-        self.assertEqual('budgetname', call_args.budgetname)
-        self.assertEqual('csvfile', call_args.csvfile)
-        self.assertEqual('csvschema', call_args.schema)
+        self.assertTrue(mock_do_csvimport.called)
+        call_args_do = mock_do_csvimport.call_args[0]
+        self.assertEqual(mock_create_client(), call_args_do[2])
+        call_args_do = call_args_do[0]
+        self.assertEqual('email', call_args_do.email)
+        self.assertEqual('password', call_args_do.password)
+        self.assertEqual('budgetname', call_args_do.budgetname)
+        self.assertEqual('csvfile', call_args_do.csvfile)
+        self.assertEqual('csvschema', call_args_do.schema)
 
     @patch.object(sys, 'argv',
                           ["prog", 'ofximport', '--email', 'email', '--password', 'password', '--budgetname',
@@ -85,22 +85,22 @@ class TestScripts(unittest.TestCase):
     @patch.object(nYnabClientFactory, 'create_client')
     @mock.patch('pynYNAB.scripts.__main__.verify_ofximport')
     @mock.patch('pynYNAB.scripts.__main__.do_ofximport')
-    def test_command_do_ofximport(self, new_m, new_m2, new_c):
+    def test_command_do_ofximport(self, mock_do_ofximport, mock_verify_ofximport, mock_create_client):
         MainCommands()
 
-        self.assertTrue(new_m2.called)
-        call_args_verify = new_m2.call_args[0][0]
+        self.assertTrue(mock_verify_ofximport.called)
+        call_args_verify = mock_verify_ofximport.call_args[0][0]
 
         self.assertEqual('email', call_args_verify.email)
         self.assertEqual('password', call_args_verify.password)
         self.assertEqual('budgetname', call_args_verify.budgetname)
         self.assertEqual('ofxfile', call_args_verify.ofxfile)
 
-        self.assertTrue(new_m.called)
-        call_args = new_m.call_args[0]
-        self.assertEqual(new_c(), call_args[2])
-        call_args = call_args[0]
-        self.assertEqual('email', call_args.email)
-        self.assertEqual('password', call_args.password)
-        self.assertEqual('budgetname', call_args.budgetname)
-        self.assertEqual('ofxfile', call_args.ofxfile)
+        self.assertTrue(mock_do_ofximport.called)
+        call_args_do = mock_do_ofximport.call_args[0]
+        self.assertEqual(mock_create_client(), call_args_do[2])
+        call_args_do = call_args_do[0]
+        self.assertEqual('email', call_args_do.email)
+        self.assertEqual('password', call_args_do.password)
+        self.assertEqual('budgetname', call_args_do.budgetname)
+        self.assertEqual('ofxfile', call_args_do.ofxfile)
