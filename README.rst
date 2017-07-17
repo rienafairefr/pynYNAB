@@ -16,7 +16,7 @@ Overview
       - | |version| |wheel| |supported-versions| |supported-implementations|
         | |commits-since|
 
-.. |docs| image:: https://readthedocs.org/projects/pynYNAB/badge/?style=flat
+.. |docs| image:: https://readthedocs.org/projects/pynynab/badge/?style=flat
     :target: https://readthedocs.org/projects/pynYNAB
     :alt: Documentation Status
 
@@ -85,10 +85,10 @@ See the wiki `WIKI`_ for an extended explanation and usage examples
 Preventing harm to nYnab servers
 --------------------------------
 
-I've taken all precautionary steps so that this python Client can't affect YNAB even if used too widely. 
+I've taken all precautionary steps so that this python Client can't affect YNAB even if used too widely.
 
 * It honors requests by the server to throttle its requests  >  Same mechanisme that the JS app uses
-* It self-limits the requests to 5 request per second 
+* It self-limits the requests to 5 request per second
 * It clearly identifies itself by User-Agent > Easy to lock it out if it causes trouble
 
 Development
