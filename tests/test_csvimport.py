@@ -5,7 +5,7 @@ from tempfile import gettempdir
 import configargparse
 
 from pynYNAB.schema.budget import Transaction
-from pynYNAB.scripts.csvimport import do_csvimport
+from pynYNAB.scripts.csvimport import do_csvimport, verify_csvimport
 from pynYNAB.utils import get_or_create_account, get_or_create_payee
 from test_live.common import needs_account
 from tests.common_mock import TestCommonMock
@@ -45,7 +45,8 @@ class TestCsv(TestCommonMock):
         transaction = self.getTr(datetime(year=2016, month=2, day=1).date(), 'Super Pants Inc.', -20, 'Buying pants',
                                  'Credit')
         self.client.budget.be_transactions.append(transaction)
-        delta = do_csvimport(args, self.client)
+        schema = verify_csvimport(args)
+        delta = do_csvimport(args, schema, self.client)
         self.assertEqual(delta, 0)
 
     @needs_account('Cash')
@@ -68,7 +69,8 @@ class TestCsv(TestCommonMock):
                                  'Cash')
 
         self.client.budget.be_transactions.append(transaction)
-        delta = do_csvimport(args, self.client)
+        schema = verify_csvimport(args)
+        delta = do_csvimport(args, schema, self.client)
         self.assertEqual(delta, 1)
 
         self.assertEqual(sum(1 for tr in self.client.budget.be_transactions if tr.key2 == transaction.key2), 2)
@@ -99,6 +101,7 @@ class TestCsv(TestCommonMock):
             self.getTr(datetime(year=2016, month=2, day=3).date(), '', 10, 'Saving!', 'Savings'),
         ]
 
-        do_csvimport(args, self.client)
+        schema = verify_csvimport(args)
+        do_csvimport(args, schema, self.client)
         for transaction in transactions:
             self.assertIn(transaction.key2, [tr.key2 for tr in self.client.budget.be_transactions])

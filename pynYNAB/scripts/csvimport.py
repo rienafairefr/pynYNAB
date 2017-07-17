@@ -39,6 +39,14 @@ def verify_csvimport(args):
             LOG.error('This schema does not have an account column and no account name was provided')
             exit(-1)
 
+        with open(schemafile, 'r') as sf:
+            schemacontent = json.load(sf)
+            try:
+                setattr(schema, 'nheaders', schemacontent['nheaders'])
+            except KeyError:
+                setattr(schema, 'nheaders', 1)
+
+
         return schema
 
     except InvalidSchemaError as e:
@@ -54,7 +62,7 @@ def do_csvimport(args, schema, client=None):
 
     LOG.debug('selected schema %s' % (args.schema,))
 
-    nheaders = len(schema.headers)
+    nheaders = len(schema.nheaders)
 
     LOG.debug('schema headers %s' % schema.headers)
     delta = 0
