@@ -1,0 +1,50 @@
+# This file exists so you can easily regenerate your project.
+#
+# `cookiepatcher` is a convenient shim around `cookiecutter`
+# for regenerating projects (it will generate a .cookiecutterrc
+# automatically for any template). To use it:
+#
+#    pip install cookiepatcher
+#    cookiepatcher gh:ionelmc/cookiecutter-pylibrary project-path
+#
+# See:
+#    https://pypi.python.org/pypi/cookiepatcher
+#
+# Alternatively, you can run:
+#
+#    cookiecutter --overwrite-if-exists --config-file=project-path/.cookiecutterrc gh:ionelmc/cookiecutter-pylibrary
+
+default_context:
+
+    appveyor:                  'no'
+    c_extension_cython:        'no'
+    c_extension_optional:      'no'
+    c_extension_support:       'no'
+    codacy:                    'no'
+    codeclimate:               'no'
+    codecov:                   'no'
+    command_line_interface:    'argparse'
+    command_line_interface_bin_name: 'pynynab'
+    coveralls:                 'yes'
+    distribution_name:         'pynYNAB'
+    email:                     'matthieu@berthom\xe9.eu'
+    full_name:                 'Matthieu Berthom\xe9'
+    github_username:           'rienafairefr'
+    landscape:                 'no'
+    license:                   'MIT license'
+    package_name:              '\x1b[A\x1b[BpynYNAB'
+    project_name:              'pyYNAB\x1b[D\x1b[D\x1b[D\x1b[Dn'
+    project_short_description: 'An example package. Generated with cookiecutter-pylibrary.'
+    release_date:              'today'
+    repo_name:                 'pynYNAB'
+    requiresio:                'no'
+    scrutinizer:               'no'
+    sphinx_doctest:            'yes'
+    sphinx_theme:              'sphinx-rtd-theme'
+    test_matrix_configurator:  'yes'
+    test_matrix_separate_coverage: 'no'
+    test_runner:               'nose'
+    travis:                    'yes'
+    version:                   '0.5.5'
+    website:                   'https://github.com/rienafairefr'
+    year:                      '2015-2017'

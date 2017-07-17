@@ -1,9 +1,14 @@
+[paths]
+source = src
+
 [run]
+branch = true
 source =
-    pynYNAB
+    src
+    tests
+parallel = true
 
 [report]
-omit = */tests/*, \
-    */pynYNAB/__main__.py, \
-    */test_live/*, \
-    */testscripts/*
+show_missing = true
+precision = 2
+omit = *migrations*
