@@ -83,7 +83,7 @@ API Documentation
 See the wiki `WIKI`_ for an extended explanation and usage examples
 
 Preventing harm to nYnab servers
----------------------------
+--------------------------------
 
 I've taken all precautionary steps so that this python Client can't affect YNAB even if used too widely. 
 
