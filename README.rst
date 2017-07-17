@@ -17,7 +17,7 @@ Overview
         | |commits-since|
 
 .. |docs| image:: https://readthedocs.org/projects/pynynab/badge/?style=flat
-    :target: https://readthedocs.org/projects/pynYNAB
+    :target: https://readthedocs.org/projects/pynynab
     :alt: Documentation Status
 
 .. |travis| image:: https://travis-ci.org/rienafairefr/pynYNAB.svg?branch=master
@@ -72,11 +72,6 @@ Usage
 
 Either code your own script that uses the pynYNAB api, or use the provided scripts, ofximport, YNAB4 migrate, csvimport
 
-Scripts Documentation
----------------------
-
-See appropriate `README`_
-
 API Documentation
 -----------------
 
@@ -115,5 +110,4 @@ Note, to combine the coverage data from all the tox environments run:
 
             PYTEST_ADDOPTS=--cov-append tox
 
-.. _README: https://github.com/rienafairefr/nYNABapi/blob/master/scripts/README.rst
 .. _WIKI: https://github.com/rienafairefr/pynYNAB/wiki
