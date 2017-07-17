@@ -68,6 +68,6 @@ class Budget(Base, RootEntity):
 class Knowledge(Base):
     __tablename__ = 'knowledge'
 
-    obj_id = Column(String,primary_key=True,default=KeyGenerator.generateuuid)
-    current_device_knowledge = Column(Integer,default=0)
-    device_knowledge_of_server = Column(Integer,default=0)
+    obj_id = Column(String, primary_key=True, default=KeyGenerator.generateuuid)
+    current_device_knowledge = Column(Integer, default=0)
+    device_knowledge_of_server = Column(Integer, default=0)

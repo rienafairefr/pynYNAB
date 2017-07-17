@@ -1,5 +1,4 @@
 import json
-import uuid
 
 from sqlalchemy import String, types
 from sqlalchemy import TypeDecorator

@@ -23,6 +23,7 @@ from sqlalchemy import inspect
 
 LOG = logging.getLogger(__name__)
 
+
 class AccountTypes(Enum):
     undef = 'undef'
     Checking = 'Checking'
@@ -89,7 +90,6 @@ class BaseModel(object):
         return {k: scalarcolumns[k].type.__class__ for k in scalarcolumns.keys() if k != 'parent_id' and k != 'knowledge_id'}
 
 
-
 def configure_listener(mapper, class_):
     for col_attr in mapper.column_attrs:
         column = col_attr.columns[0]
@@ -106,8 +106,9 @@ def expectedtype_listener(rel_attr):
         expected_type = initiator.parent_token.mapper.class_
         value_type = type(value)
         if expected_type != value_type:
-            raise ValueError('type %s, attribute %s, expect a %s, received a %s ' % (
-            type(target), rel_attr.key, expected_type, value_type))
+            raise ValueError(
+                'type {}, attribute {}, expect a {}, received a {} '.format(type(target), rel_attr.key, expected_type,
+                                                                            value_type))
 
 
 def default_listener(col_attr, default):
@@ -153,7 +154,6 @@ re_uuid = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 re_date = re.compile(r'\d{4}[\/ .-]\d{2}[\/.-]\d{2}')
 
 
-
 def date_from_api(columntype, string):
     result = re_date.search(string)
     if result is not None:
@@ -162,7 +162,7 @@ def date_from_api(columntype, string):
 
 fromapi_conversion_functions_table = {
     Date: date_from_api,
-    DateTime: lambda t,x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f'),
+    DateTime: lambda t, x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f'),
     AmountType: lambda t, x: float(x) / 1000,
     sqlaEnum: lambda t, x: t.enum_class[x]
 }
@@ -205,7 +205,7 @@ class Entity(BaseModel):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def key(self,excludes=None):
+    def key(self, excludes=None):
         t = tuple()
         for k, v in self.get_dict().items():
             if excludes and k in excludes:

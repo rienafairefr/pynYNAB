@@ -91,8 +91,6 @@ class nYnabClientFactory(object):
             client.add_missing()
             client = postprocessed_client(client)
 
-
-
             self.session.add(client)
             client.session.commit()
             if sync:

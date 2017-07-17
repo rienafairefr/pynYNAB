@@ -67,16 +67,16 @@ class MainCommands(object):
 
     @classproperty
     def csvimport_parser(cls):
-        csv_parser = argparse.ArgumentParser(parents=[parser],add_help=False)
+        csv_parser = argparse.ArgumentParser(parents=[parser], add_help=False)
         csv_parser.description = inspect.getdoc(cls.csvimport)
         csv_parser.add_argument('csvfile', metavar='CSVpath', type=str,
-                                      help='The CSV file to import')
+                                help='The CSV file to import')
         csv_parser.add_argument('schema', metavar='schemaName', type=str,
-                                      help='The CSV schema to use (see csv_schemas directory)')
+                                help='The CSV schema to use (see csv_schemas directory)')
         csv_parser.add_argument('accountname', metavar='AccountName', type=str, nargs='?',
-                                      help='The nYNAB account name  to use')
+                                help='The nYNAB account name  to use')
         csv_parser.add_argument('-import-duplicates', action='store_true',
-                                      help='Forces the import even if a duplicate (same date, account, amount, memo, payee) is found')
+                                help='Forces the import even if a duplicate (same date, account, amount, memo, payee) is found')
         return csv_parser
 
     @classmethod
@@ -94,10 +94,9 @@ class MainCommands(object):
 
     @classproperty
     def ofximport_parser(cls):
-        ofx_parser = argparse.ArgumentParser(parents=[parser],add_help=False)
+        ofx_parser = argparse.ArgumentParser(parents=[parser], add_help=False)
         ofx_parser.description = inspect.getdoc(cls.ofximport)
-        ofx_parser.add_argument('ofxfile', metavar='OFXPath', type=str,
-                            help='The OFX file to import')
+        ofx_parser.add_argument('ofxfile', metavar='OFXPath', type=str, help='The OFX file to import')
         return ofx_parser
 
     @classmethod

@@ -1,10 +1,9 @@
 import logging
-from abc import abstractproperty,ABCMeta
+from abc import abstractproperty, ABCMeta
 
-from pynYNAB.schema import fromapi_conversion_functions_table
+from pynYNAB.schema.Entity import fromapi_conversion_functions_table
 
 LOG = logging.getLogger(__name__)
-
 
 
 class RootObjClient():
@@ -95,8 +94,7 @@ class RootObjClient():
         pass
 
     def update_from_sync_data(self, sync_data, update_keys=None):
-        self.update_from_api_changed_entitydicts(sync_data['changed_entities'],update_keys)
-
+        self.update_from_api_changed_entitydicts(sync_data['changed_entities'], update_keys)
 
     def sync(self, update_keys=None):
         if self.connection is None:
@@ -117,13 +115,13 @@ class RootObjClient():
         if change > 0:
             LOG.debug('Server knowledge has gone up by ' + str(
                 change) + '. We should be getting back some entities from the server')
-        if  self.obj.knowledge.current_device_knowledge < server_knowledge_of_device:
-            if  self.obj.knowledge.current_device_knowledge != 0:
+        if self.obj.knowledge.current_device_knowledge < server_knowledge_of_device:
+            if self.obj.knowledge.current_device_knowledge != 0:
                 LOG.error('The server knows more about this device than we know about ourselves')
             self.obj.knowledge.current_device_knowledge = server_knowledge_of_device
         self.obj.knowledge.device_knowledge_of_server = current_server_knowledge
 
-        LOG.debug('current_device_knowledge %s' %  self.obj.knowledge.current_device_knowledge)
+        LOG.debug('current_device_knowledge %s' % self.obj.knowledge.current_device_knowledge)
         LOG.debug('device_knowledge_of_server %s' % self.obj.knowledge.device_knowledge_of_server)
         self.synced = True
 
@@ -153,13 +151,13 @@ class RootObjClient():
                 if change > 0:
                     LOG.debug('Server knowledge has gone up by ' + str(
                         change) + '. We should be getting back some entities from the server')
-                if  self.obj.knowledge.current_device_knowledge < server_knowledge_of_device:
-                    if  self.obj.knowledge.current_device_knowledge != 0:
+                if self.obj.knowledge.current_device_knowledge < server_knowledge_of_device:
+                    if self.obj.knowledge.current_device_knowledge != 0:
                         LOG.error('The server knows more about this device than we know about ourselves')
                     self.obj.knowledge.current_device_knowledge = server_knowledge_of_device
                 self.obj.knowledge.device_knowledge_of_server = current_server_knowledge
 
-                LOG.debug('current_device_knowledge %s' %  self.obj.knowledge.current_device_knowledge)
+                LOG.debug('current_device_knowledge %s' % self.obj.knowledge.current_device_knowledge)
                 LOG.debug('device_knowledge_of_server %s' % self.obj.knowledge.device_knowledge_of_server)
         else:
             validate()

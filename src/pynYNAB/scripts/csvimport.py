@@ -20,7 +20,7 @@ LOG = logging.getLogger(__name__)
 
 def verify_csvimport(args):
     if not os.path.exists(args.csvfile):
-        LOG.error('input CSV file %s does not exist'% args.csvfile)
+        LOG.error('input CSV file %s does not exist' % args.csvfile)
         exit(-1)
 
     if os.path.exists(args.schema):
@@ -28,14 +28,14 @@ def verify_csvimport(args):
     else:
         schemafile = os.path.join(schemas_dir, args.schema + '.json')
     if not os.path.exists(schemafile):
-        LOG.error('This schema file %s doesn''t exist in current directory or csv_schemas directory'% (args.schema+'.json'))
+        LOG.error('This schema file %s doesn''t exist in current directory or csv_schemas directory' % (args.schema+'.json'))
         exit(-1)
 
     try:
         schema = SchemaModel(schemafile, case_insensitive_headers=True)
 
         if 'account' not in schema.headers and args.accountname is None:
-            LOG.error('schema headers: %s'%schema.headers)
+            LOG.error('schema headers: %s' % schema.headers)
             LOG.error('This schema does not have an account column and no account name was provided')
             exit(-1)
 
@@ -48,7 +48,7 @@ def verify_csvimport(args):
         return schema
 
     except InvalidSchemaError as e:
-        LOG.error('Invalid CSV schema %s'%e)
+        LOG.error('Invalid CSV schema %s' % e)
         exit(-1)
 
 

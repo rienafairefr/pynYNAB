@@ -56,12 +56,12 @@ class nYnabConnection(object):
         # Available operations :
 
         def errorout(message):
-            LOG.error(message.replace(self.password,'********'))
+            LOG.error(message.replace(self.password, '********'))
             raise NYnabConnectionError(message)
 
         json_request_dict = json.dumps(request_dic, cls=ComplexEncoder)
         params = {u'operation_name': opname, 'request_data': json_request_dict}
-        LOG.debug(('%s  ... %s ' % (opname, params)).replace(self.password,'********'))
+        LOG.debug(('%s  ... %s ' % (opname, params)).replace(self.password, '********'))
         r = self.session.post(self.urlCatalog, params)
         self.lastrequest_elapsed = r.elapsed
         js = r.json()
@@ -69,7 +69,7 @@ class nYnabConnection(object):
             raise NYnabConnectionError('Unrecoverable server error, sorry YNAB')
         if r.status_code != 200:
             LOG.debug('non-200 HTTP code: %s ' % r.text)
-        if not 'error' in js:
+        if 'error' not in js:
             errorout('The server returned a json value without an error field')
         if js['error'] is None:
             return js
@@ -88,4 +88,3 @@ class nYnabConnection(object):
             return self.dorequest(request_dic, opname)
         else:
             errorout('Unknown API Error \"%s\" was returned from the API when sending request (%s)' % (error['id'], params))
-

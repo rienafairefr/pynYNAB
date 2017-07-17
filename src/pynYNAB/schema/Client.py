@@ -178,4 +178,3 @@ class nYnabClient_(Base):
                                       "currency_format": json.dumps(currency_format),
                                       "date_format": json.dumps(date_format)
                                   })
-
