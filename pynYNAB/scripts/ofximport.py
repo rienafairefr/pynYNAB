@@ -10,18 +10,22 @@ from pynYNAB.schema.budget import Transaction, Payee
 LOG = logging.getLogger(__name__)
 
 
-def do_ofximport(args, client=None):
+def verify_ofximport(args):
     if not os.path.exists(args.ofxfile):
         LOG.error('input OFX file does not exist')
         exit(-1)
-    delta = 0
-    if client is None:
-        client = clientfromargs(args)
 
     tree = OFXTree()
     tree.parse(args.ofxfile)
     response = tree.convert()
     stmts = response.statements
+    return stmts
+
+
+def do_ofximport(args, stmts, client=None):
+    delta = 0
+    if client is None:
+        client = clientfromargs(args)
 
     accounts = client.budget.be_accounts
     accountvsnotes = {account.note: account for account in accounts if account.note is not None}

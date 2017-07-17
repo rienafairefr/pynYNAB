@@ -11,7 +11,7 @@ from appdirs import AppDirs
 
 from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.scripts.csvimport import do_csvimport, verify_csvimport
-from pynYNAB.scripts.ofximport import do_ofximport
+from pynYNAB.scripts.ofximport import do_ofximport, verify_ofximport
 
 logging.basicConfig()
 
@@ -107,8 +107,9 @@ class MainCommands(object):
         args = cls.ofximport_parser.parse_args()
         verify_common_args(args)
 
+        stmts = verify_ofximport(args)
         client = clientfromargs(args)
-        delta = do_ofximport(args, client)
+        delta = do_ofximport(args, stmts, client)
         client.push(expected_delta=delta)
 
 

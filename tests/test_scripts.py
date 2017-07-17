@@ -86,13 +86,23 @@ class TestScripts(unittest.TestCase):
                           ["prog", 'ofximport', '--email', 'email', '--password', 'password', '--budgetname',
                            'budgetname', 'ofxfile']):
             with mock.patch('pynYNAB.scripts.__main__.do_ofximport') as new_m:
-                with patch.object(nYnabClientFactory, 'create_client') as new_c:
-                    MainCommands()
-                    self.assertTrue(new_m.called)
-                    call_args = new_m.call_args[0]
-                    self.assertEqual(new_c(), call_args[1])
-                    call_args = call_args[0]
-                    self.assertEqual('email', call_args.email)
-                    self.assertEqual('password', call_args.password)
-                    self.assertEqual('budgetname', call_args.budgetname)
-                    self.assertEqual('ofxfile', call_args.ofxfile)
+                with mock.patch('pynYNAB.scripts.__main__.verify_ofximport') as new_m2:
+                    with patch.object(nYnabClientFactory, 'create_client') as new_c:
+                        MainCommands()
+
+                        self.assertTrue(new_m2.called)
+                        call_args_verify = new_m2.call_args[0][0]
+
+                        self.assertEqual('email', call_args_verify.email)
+                        self.assertEqual('password', call_args_verify.password)
+                        self.assertEqual('budgetname', call_args_verify.budgetname)
+                        self.assertEqual('ofxfile', call_args_verify.ofxfile)
+
+                        self.assertTrue(new_m.called)
+                        call_args = new_m.call_args[0]
+                        self.assertEqual(new_c(), call_args[2])
+                        call_args = call_args[0]
+                        self.assertEqual('email', call_args.email)
+                        self.assertEqual('password', call_args.password)
+                        self.assertEqual('budgetname', call_args.budgetname)
+                        self.assertEqual('ofxfile', call_args.ofxfile)
