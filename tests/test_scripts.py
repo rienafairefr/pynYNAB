@@ -38,71 +38,69 @@ class TestScripts(unittest.TestCase):
     def test_verify_common_nobudgetname(self):
         verify_common_args(self.Args('', '', None))
 
-    def test_command_selection_csvimport(self):
-        testargs = ["prog", 'csvimport']
-        with patch.object(sys, 'argv', testargs):
-            with patch.object(MainCommands, 'csvimport') as new_m:
-                MainCommands()
-                self.assertTrue(new_m.called)
+    @patch.object(sys, 'argv', ["prog", 'csvimport'])
+    @patch.object(MainCommands, 'csvimport')
+    def test_command_selection_csvimport(self, new_m):
+        MainCommands()
+        self.assertTrue(new_m.called)
 
-    def test_command_selection_ofximport(self):
-        testargs = ["prog", 'ofximport']
-        with patch.object(sys, 'argv', testargs):
-            with patch.object(MainCommands, 'ofximport') as new_m:
-                MainCommands()
-                self.assertTrue(new_m.called)
+    @patch.object(sys, 'argv', ["prog", 'ofximport'])
+    @patch.object(MainCommands, 'ofximport')
+    def test_command_selection_ofximport(self, new_m):
+        MainCommands()
+        self.assertTrue(new_m.called)
 
-    def test_command_do_csvimport(self):
-        with patch.object(sys, 'argv',
+    @patch.object(sys, 'argv',
                           ["prog", 'csvimport', '--email', 'email', '--password', 'password', '--budgetname',
                            'budgetname', 'csvfile',
-                           'csvschema']):
-            with mock.patch('pynYNAB.scripts.__main__.do_csvimport') as new_m:
-                with mock.patch('pynYNAB.scripts.__main__.verify_csvimport') as new_m2:
-                    with patch.object(nYnabClientFactory, 'create_client') as new_c:
-                        MainCommands()
+                           'csvschema'])
+    @patch.object(nYnabClientFactory, 'create_client')
+    @mock.patch('pynYNAB.scripts.__main__.verify_csvimport')
+    @mock.patch('pynYNAB.scripts.__main__.do_csvimport')
+    def test_command_do_csvimport(self, new_m, new_m2, new_c):
+        MainCommands()
 
-                        self.assertTrue(new_m2.called)
-                        call_args_verify = new_m2.call_args[0][0]
+        self.assertTrue(new_m2.called)
+        call_args_verify = new_m2.call_args[0][0]
 
-                        self.assertEqual('email', call_args_verify.email)
-                        self.assertEqual('password', call_args_verify.password)
-                        self.assertEqual('budgetname', call_args_verify.budgetname)
-                        self.assertEqual('csvfile', call_args_verify.csvfile)
-                        self.assertEqual('csvschema', call_args_verify.schema)
+        self.assertEqual('email', call_args_verify.email)
+        self.assertEqual('password', call_args_verify.password)
+        self.assertEqual('budgetname', call_args_verify.budgetname)
+        self.assertEqual('csvfile', call_args_verify.csvfile)
+        self.assertEqual('csvschema', call_args_verify.schema)
 
-                        self.assertTrue(new_m.called)
-                        call_args = new_m.call_args[0]
-                        self.assertEqual(new_c(), call_args[2])
-                        call_args = call_args[0]
-                        self.assertEqual('email', call_args.email)
-                        self.assertEqual('password', call_args.password)
-                        self.assertEqual('budgetname', call_args.budgetname)
-                        self.assertEqual('csvfile', call_args.csvfile)
-                        self.assertEqual('csvschema', call_args.schema)
+        self.assertTrue(new_m.called)
+        call_args = new_m.call_args[0]
+        self.assertEqual(new_c(), call_args[2])
+        call_args = call_args[0]
+        self.assertEqual('email', call_args.email)
+        self.assertEqual('password', call_args.password)
+        self.assertEqual('budgetname', call_args.budgetname)
+        self.assertEqual('csvfile', call_args.csvfile)
+        self.assertEqual('csvschema', call_args.schema)
 
-    def test_command_do_ofximport(self):
-        with patch.object(sys, 'argv',
+    @patch.object(sys, 'argv',
                           ["prog", 'ofximport', '--email', 'email', '--password', 'password', '--budgetname',
-                           'budgetname', 'ofxfile']):
-            with mock.patch('pynYNAB.scripts.__main__.do_ofximport') as new_m:
-                with mock.patch('pynYNAB.scripts.__main__.verify_ofximport') as new_m2:
-                    with patch.object(nYnabClientFactory, 'create_client') as new_c:
-                        MainCommands()
+                           'budgetname', 'ofxfile'])
+    @patch.object(nYnabClientFactory, 'create_client')
+    @mock.patch('pynYNAB.scripts.__main__.verify_ofximport')
+    @mock.patch('pynYNAB.scripts.__main__.do_ofximport')
+    def test_command_do_ofximport(self, new_m, new_m2, new_c):
+        MainCommands()
 
-                        self.assertTrue(new_m2.called)
-                        call_args_verify = new_m2.call_args[0][0]
+        self.assertTrue(new_m2.called)
+        call_args_verify = new_m2.call_args[0][0]
 
-                        self.assertEqual('email', call_args_verify.email)
-                        self.assertEqual('password', call_args_verify.password)
-                        self.assertEqual('budgetname', call_args_verify.budgetname)
-                        self.assertEqual('ofxfile', call_args_verify.ofxfile)
+        self.assertEqual('email', call_args_verify.email)
+        self.assertEqual('password', call_args_verify.password)
+        self.assertEqual('budgetname', call_args_verify.budgetname)
+        self.assertEqual('ofxfile', call_args_verify.ofxfile)
 
-                        self.assertTrue(new_m.called)
-                        call_args = new_m.call_args[0]
-                        self.assertEqual(new_c(), call_args[2])
-                        call_args = call_args[0]
-                        self.assertEqual('email', call_args.email)
-                        self.assertEqual('password', call_args.password)
-                        self.assertEqual('budgetname', call_args.budgetname)
-                        self.assertEqual('ofxfile', call_args.ofxfile)
+        self.assertTrue(new_m.called)
+        call_args = new_m.call_args[0]
+        self.assertEqual(new_c(), call_args[2])
+        call_args = call_args[0]
+        self.assertEqual('email', call_args.email)
+        self.assertEqual('password', call_args.password)
+        self.assertEqual('budgetname', call_args.budgetname)
+        self.assertEqual('ofxfile', call_args.ofxfile)
