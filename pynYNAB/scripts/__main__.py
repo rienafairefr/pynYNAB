@@ -10,7 +10,7 @@ import sys
 from appdirs import AppDirs
 
 from pynYNAB.ClientFactory import clientfromargs
-from pynYNAB.scripts.csvimport import do_csvimport
+from pynYNAB.scripts.csvimport import do_csvimport, verify_csvimport
 from pynYNAB.scripts.ofximport import do_ofximport
 
 logging.basicConfig()
@@ -86,8 +86,9 @@ class MainCommands(object):
         args = cls.csvimport_parser.parse_args()
         verify_common_args(args)
 
+        schema = verify_csvimport(args)
         client = clientfromargs(args)
-        delta = do_csvimport(args,client)
+        delta = do_csvimport(args, schema, client)
         client.push(expected_delta=delta)
 
     @classproperty

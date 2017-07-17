@@ -18,39 +18,46 @@ schemas_dir = os.path.join(scriptsdir, 'csv_schemas')
 LOG = logging.getLogger(__name__)
 
 
-def do_csvimport(args, client=None):
+def verify_csvimport(args):
     if not os.path.exists(args.csvfile):
-        LOG.error('input CSV file does not exist')
+        LOG.error('input CSV file %s does not exist'% args.csvfile)
         exit(-1)
 
-    delta = 0
+    if os.path.exists(args.schema):
+        schemafile = args.schema + '.json'
+    else:
+        schemafile = os.path.join(schemas_dir, args.schema + '.json')
+    if not os.path.exists(schemafile):
+        LOG.error('This schema file %s doesn''t exist in current directory or csv_schemas directory'% (args.schema+'.json'))
+        exit(-1)
+
+    try:
+        schema = SchemaModel(schemafile, case_insensitive_headers=True)
+
+        if 'account' not in schema.headers and args.accountname is None:
+            LOG.error('schema headers: %s'%schema.headers)
+            LOG.error('This schema does not have an account column and no account name was provided')
+            exit(-1)
+
+        return schema
+
+    except InvalidSchemaError as e:
+        LOG.error('Invalid CSV schema %s'%e)
+        exit(-1)
+
+
+
+
+def do_csvimport(args, schema, client=None):
     if client is None:
         client = clientfromargs(args)
 
     LOG.debug('selected schema %s' % (args.schema,))
-    if os.path.exists(args.schema):
-        schemafile = args.schema
-    else:
-        schemafile = os.path.join(schemas_dir, args.schema + '.json')
-        if not os.path.exists(schemafile):
-            LOG.error('This schema doesn''t exist in csv_schemas')
-            exit(-1)
-    try:
-        schema = SchemaModel(schemafile, case_insensitive_headers=True)
-        with open(schemafile, 'r') as sf:
-            schemacontent = json.load(sf)
-            try:
-                nheaders = schemacontent['nheaders']
-            except KeyError:
-                nheaders = 1
-    except InvalidSchemaError:
-        LOG.error('Invalid CSV schema')
-        raise
-    LOG.debug('schema headers %s' % schema.headers)
 
-    if 'account' not in schema.headers and args.accountname is None:
-        LOG.error('This schema does not have an account column and no account name was provided')
-        exit(-1)
+    nheaders = len(schema.headers)
+
+    LOG.debug('schema headers %s' % schema.headers)
+    delta = 0
 
     accounts = {x.account_name: x for x in client.budget.be_accounts}
     payees = {p.name: p for p in client.budget.be_payees}
@@ -69,6 +76,7 @@ def do_csvimport(args, client=None):
             exit(-1)
 
     def getpayee(payeename):
+        global delta
         try:
             LOG.debug('searching for payee %s' % payeename)
             return payees[payeename]
@@ -167,4 +175,3 @@ def do_csvimport(args, client=None):
 if __name__ == "__main__":
     from pynYNAB.scripts.__main__ import MainCommands
     MainCommands.csvimport()
-
