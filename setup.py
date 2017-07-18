@@ -75,12 +75,12 @@ setup(
         'configargparse',
         'appdirs',
         'requests',
-        'jsontableschema',
+        'jsontableschema==0.10.0',
         'aenum',
-        'six>=1.5',
+        'six',
         'sqlalchemy',
         'unicodecsv',
-        'ofxtools'
+        'ofxtools==0.4.1'
     ],
     extras_require={
         # eg:
