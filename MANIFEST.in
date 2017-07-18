@@ -21,7 +21,7 @@ include README.rst
 include tox.ini .travis.yml appveyor.yml
 
 include *.sh
-include *.sh
+include *.txt
 recursive-include test_live *.html
 recursive-include test_live *.js
 recursive-include test_live *.py
