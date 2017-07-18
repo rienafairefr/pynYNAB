@@ -32,7 +32,7 @@ setup(
         re.compile('^.. start-badges.*^.. end-badges', re.M | re.S).sub('', read('README.rst')),
         re.sub(':[a-z]+:`~?(.*?)`', r'``\1``', read('CHANGELOG.rst'))
     ),
-    author='Matthieu Berthom\xe9',
+    author='Matthieu Berthomé',
     author_email='rienafairefr@gmail.com',
     url='https://github.com/rienafairefr/pynYNAB',
     packages=find_packages('src'),

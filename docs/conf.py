@@ -24,7 +24,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 project = u'pynynab'
 year = u'2015-2017'
-author = u'Matthieu Berthom\\xe9'
+author = u'Matthieu Berthomé'
 copyright = '{0}, {1}'.format(year, author)
 version = release = u'0.5.5'
 
