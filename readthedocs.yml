@@ -1,1 +1,4 @@
 requirements_file: docs/requirements.txt
+python:
+    setup_py_install: true
+    versions: 2.7
