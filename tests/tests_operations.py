@@ -25,6 +25,8 @@ date_format = dict(
 class MockConnection2(object):
     id='12345'
 
+    def init_session(self): pass
+
 factory = nYnabClientFactory('sqlite://')
 
 
@@ -37,6 +39,8 @@ class TestOperations(TestCommonMock):
                 self.assertEqual(request_dic['date_format'], json.dumps(date_format))
             user_id = '1234'
             id = '1234'
+
+            def init_session(self): pass
 
         self.client = factory.create_client(budgetname='', nynabconnection=MockConnection2(), sync=False)
         self.client.create_budget(budget_name='New Budget')

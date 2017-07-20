@@ -11,6 +11,9 @@ class MockConnection(object):
     def __init__(self,id):
         self.id = id
 
+    def init_session(self):
+        pass
+
 
 class Args(object):
     budget_name = 'Test Budget'
