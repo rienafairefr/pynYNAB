@@ -68,10 +68,10 @@ class nYnabClientFactory(object):
                     if not hasattr(args, 'password') or args.password is None:
                         raise NoCredentialsException
                 connection = nYnabConnection(args.email, args.password)
-                connection.init_session()
             else:
                 connection = args.connection
 
+            connection.init_session()
             client_id = connection.id
 
             def postprocessed_client(cl):
