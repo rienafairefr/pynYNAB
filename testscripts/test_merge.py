@@ -48,4 +48,4 @@ connection = DummyConnection()
 connection.transactions=[Transaction(memo=str(i)) for i in range(500)]
 client = nYnabClientFactory().create_client(connection=connection, budget_name='Test', sync=False)
 client.sync()
-assert (client.budget.be_transactions == connection.transactions)
+assert (set(client.budget.be_transactions) == set(connection.transactions))
