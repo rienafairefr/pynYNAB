@@ -22,11 +22,6 @@ class nYnabConnection(object):
     urlCatalog = 'https://app.youneedabudget.com/api/v1/catalog'
 
     def init_session(self):
-        self.session.cookies = RequestsCookieJar()
-
-        self.session.headers['X-YNAB-Device-Id'] = self.id
-        self.session.headers['User-Agent'] = 'python nYNAB API bot - rienafairefr rienafairefr@gmail.com'
-
         firstlogin = self.dorequest({"email": self.email, "password": self.password, "remember_me": True,
                                      "device_info": {"id": self.id}}, 'loginUser')
         if firstlogin is None:
@@ -42,6 +37,10 @@ class nYnabConnection(object):
         self.sessionToken = None
         self.id = str(generateuuid())
         self.lastrequest_elapsed = None
+        self.session.cookies = RequestsCookieJar()
+
+        self.session.headers['X-YNAB-Device-Id'] = self.id
+        self.session.headers['User-Agent'] = 'python nYNAB API bot - rienafairefr rienafairefr@gmail.com'
 
     @rate_limited(maxpersecond=5)
     def dorequest(self, request_dic, opname):
@@ -66,7 +65,7 @@ class nYnabConnection(object):
         self.lastrequest_elapsed = r.elapsed
         js = r.json()
         if r.status_code == 500:
-            raise NYnabConnectionError('Unrecoverable server error, sorry YNAB')
+            errorout('Unrecoverable server error, sorry YNAB')
         if r.status_code != 200:
             LOG.debug('non-200 HTTP code: %s ' % r.text)
         if not 'error' in js:
@@ -86,6 +85,8 @@ class nYnabConnection(object):
             LOG.debug('Waiting for %s s' % retryrafter)
             sleep(float(retryrafter))
             return self.dorequest(request_dic, opname)
+        elif error['id'] == 'invalid_session_token':
+            errorout('Invalid session token. You should call init_session() on the connection object')
         else:
             errorout('Unknown API Error \"%s\" was returned from the API when sending request (%s)' % (error['id'], params))
 

@@ -1,11 +1,18 @@
 import logging
 from abc import abstractproperty,ABCMeta
 
+import itertools
+
 from pynYNAB.schema import fromapi_conversion_functions_table
 
 LOG = logging.getLogger(__name__)
 
-
+def split_seq(iterable, size):
+    it = iter(iterable)
+    item = list(itertools.islice(it, size))
+    while item:
+        yield item
+        item = list(itertools.islice(it, size))
 
 class RootObjClient():
     __metaclass__ = ABCMeta
@@ -36,6 +43,7 @@ class RootObjClient():
             newlist = []
             if changed_entitydicts[listfield_name] is not None:
                 for entitydict in changed_entitydicts[listfield_name]:
+                    entitydict['parent_id'] = self.obj.id
                     newlist.append(self.obj.listfields[listfield_name].from_apidict(entitydict))
             modified_entitydicts[listfield_name] = newlist
         for scalarfield_name in self.obj.scalarfields:
@@ -45,54 +53,37 @@ class RootObjClient():
                 modified_entitydicts[scalarfield_name] = conversion_function(typ, changed_entitydicts[scalarfield_name])
         self.update_from_changed_entities(modified_entitydicts)
 
-    def update_from_changed_entitydict(self, changed_entitiydicts):
-        for name in changed_entitiydicts:
-            value = changed_entitiydicts[name]
-            if not isinstance(value, list):
-                continue
-
-            for incoming_obj_dict in value:
-                incoming_obj_dict['parent_id'] = self.obj.id
-                current_obj = self.session.query(self.obj.listfields[name]).get(incoming_obj_dict['id'])
-                if current_obj is not None:
-                    if incoming_obj_dict['is_tombstone']:
-                        self.session.delete(current_obj)
-                        continue
-                else:
-                    incoming_obj = self.obj.listfields[name].from_dict(incoming_obj_dict)
-                    self.session.merge(incoming_obj)
-        self.session.commit()
-        self.session.expire(self.obj)
-        pass
-
     def update_from_changed_entities(self, changed_entities):
+       # to_add =[]
         for name in changed_entities:
             value = changed_entities[name]
-            if not isinstance(value, list):
+            if not isinstance(value, list) or not value:
                 continue
-            list_of_entities = getattr(self.obj, name)
-            for incoming_obj in value:
-                current_obj = self.session.query(self.obj.listfields[name]).get(incoming_obj.id)
-                if current_obj is not None:
-                    if incoming_obj.is_tombstone:
-                        self.session.delete(current_obj)
+
+            for obj in [v for v in value if v.parent_id is None]:
+                obj.parent = self.obj
+
+            value = {obj.id: obj for obj in value}
+
+            cls = self.obj.listfields[name]
+
+            for seq in split_seq(value.keys(),999):
+                for each in self.session.query(cls).filter(cls.id.in_(seq)).all():
+                    v = value.pop(each.id)
+                    if v.is_tombstone:
+                        # delete is_tombstone entities
+                        self.session.query(cls).filter_by(id=each.id).delete()
                     else:
-                        if current_obj not in list_of_entities:
-                            current_obj.parent = self.obj
-                        else:
-                            for field in current_obj.scalarfields:
-                                incoming = getattr(incoming_obj, field)
-                                present = getattr(current_obj, field)
-                                if present != incoming:
-                                    setattr(current_obj, field, incoming)
-                                    pass
-                            pass
-                else:
-                    if not incoming_obj.is_tombstone:
-                        self.session.add(incoming_obj)
-                        incoming_obj.parent = self.obj
+                        # Only merge entities that already exist in the db
+                        self.session.merge(v)
+
+
+
+            self.session.add_all(value.values())
+
+            getattr(self.obj,name).dirty=True
         self.session.commit()
-        pass
+
 
     def update_from_sync_data(self, sync_data, update_keys=None):
         self.update_from_api_changed_entitydicts(sync_data['changed_entities'],update_keys)

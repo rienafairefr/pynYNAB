@@ -34,7 +34,7 @@ class BudgetClient(RootObjClient):
 
 
 class nYnabClientFactory(object):
-    def __init__(self, engine_url='sqlite://', engine=None):
+    def __init__(self, engine_url='sqlite:///:memory:', engine=None):
         self.engine_url = engine_url
         if engine is None:
             self.engine = create_engine(engine_url)
@@ -47,7 +47,6 @@ class nYnabClientFactory(object):
 
     def create_client(self, args=None, sync=True, **kwargs):
         from pynYNAB.schema.Client import nYnabClient_
-        from pynYNAB.Client import nYnabClient
         if args is None:
             class Arg(object):pass
             args = Arg()

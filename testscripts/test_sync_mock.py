@@ -15,7 +15,7 @@ class TestSyncMock(unittest.TestCase):
                 with open(opname+'.json','r') as f:
                     data = json.load(f)
                     return data
-        engine= create_engine('sqlite://',echo=True)
+        engine= create_engine('sqlite:///:memory:',echo=True)
 
         client = nYnabClientFactory(engine=engine).create_client(budgetname='Test Budget',
                                                                  connection = MockConnection(),

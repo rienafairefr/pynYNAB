@@ -26,7 +26,7 @@ class MyEntity(Base, Entity):
 
 class CommonTest(unittest.TestCase):
     def setUp(self):
-        engine = create_engine('sqlite://')
+        engine = create_engine('sqlite:///:memory:')
 
         Base.metadata.create_all(engine)
         self.Session = sessionmaker(bind=engine)
