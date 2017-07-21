@@ -74,22 +74,15 @@ class BaseModel(object):
         return cls.__name__.lower()
 
     @property
-    def relations(self):
-        return getattr(self,'_relations',inspect(self.__class__).relationships)
-
-    @property
     def listfields(self):
-        return getattr(self,'_listfields',
-                       {k: self.relations[k].mapper.class_ for k in self.relations.keys()
-                        if self.relations[k].direction == ONETOMANY
-                        or self.relations[k].direction == MANYTOMANY})
+        relations = inspect(self.__class__).relationships
+        return {k: relations[k].mapper.class_ for k in relations.keys() if
+                relations[k].direction == ONETOMANY or relations[k].direction == MANYTOMANY}
 
     @property
     def scalarfields(self):
-        return getattr(self, '_scalarfields',
-                       {k: self.__table__.columns[k].type.__class__
-                        for k in self.__table__.columns.keys()
-                        if k != 'parent_id' and k != 'knowledge_id'})
+        scalarcolumns = self.__table__.columns
+        return {k: scalarcolumns[k].type.__class__ for k in scalarcolumns.keys() if k != 'parent_id' and k != 'knowledge_id'}
 
 
 
