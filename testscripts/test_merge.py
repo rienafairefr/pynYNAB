@@ -1,7 +1,5 @@
 import unittest
 
-from sqlalchemy import create_engine
-
 from pynYNAB.ClientFactory import nYnabClientFactory
 from pynYNAB.schema import BudgetVersion
 from pynYNAB.schema import Transaction
@@ -48,8 +46,6 @@ class DummyConnection(object):
 
 connection = DummyConnection()
 connection.transactions=[Transaction(memo=str(i)) for i in range(500)]
-#engine= create_engine('sqlite:///:memory:',echo=True)
-engine= create_engine('sqlite:///:memory:')
-client = nYnabClientFactory(engine=engine).create_client(connection=connection, budget_name='Test', sync=False)
+client = nYnabClientFactory().create_client(connection=connection, budget_name='Test', sync=False)
 client.sync()
 assert (client.budget.be_transactions == connection.transactions)
