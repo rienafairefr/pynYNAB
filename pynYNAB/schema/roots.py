@@ -5,7 +5,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 
 from pynYNAB import KeyGenerator
-from pynYNAB.schema import Base
+from pynYNAB.schema import Base, RootEntity
 
 from pynYNAB.schema.Entity import Base, RootEntity
 from pynYNAB.schema.budget import TransactionGroup
