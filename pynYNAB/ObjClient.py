@@ -1,11 +1,18 @@
 import logging
 from abc import abstractproperty,ABCMeta
 
+import itertools
+
 from pynYNAB.schema import fromapi_conversion_functions_table
 
 LOG = logging.getLogger(__name__)
 
-
+def split_seq(iterable, size):
+    it = iter(iterable)
+    item = list(itertools.islice(it, size))
+    while item:
+        yield item
+        item = list(itertools.islice(it, size))
 
 class RootObjClient():
     __metaclass__ = ABCMeta
@@ -60,14 +67,15 @@ class RootObjClient():
 
             cls = self.obj.listfields[name]
 
-            for each in self.session.query(cls).filter(cls.id.in_(value.keys())).all():
-                v = value.pop(each.id)
-                if v.is_tombstone:
-                    # delete is_tombstone entities
-                    self.session.query(cls).filter_by(id=each.id).delete()
-                else:
-                    # Only merge entities that already exist in the db
-                    self.session.merge(v)
+            for seq in split_seq(value.keys(),999):
+                for each in self.session.query(cls).filter(cls.id.in_(seq)).all():
+                    v = value.pop(each.id)
+                    if v.is_tombstone:
+                        # delete is_tombstone entities
+                        self.session.query(cls).filter_by(id=each.id).delete()
+                    else:
+                        # Only merge entities that already exist in the db
+                        self.session.merge(v)
 
 
 
