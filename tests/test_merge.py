@@ -48,6 +48,6 @@ class TestMerge(unittest.TestCase):
     def test_merge(self):
         connection = DummyConnection()
         connection.transactions=[Transaction(memo=str(i)) for i in range(51)]
-        client = nYnabClientFactory().create_client(connection=connection, budget_name='Test')
+        client = nYnabClientFactory().create_client(connection=connection, budget_name='Test', sync=False)
         client.sync()
-        self.assertEqual(client.budget.be_transactions,connection.transactions)
+        self.assertEqual(set(client.budget.be_transactions),set(connection.transactions))
