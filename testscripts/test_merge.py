@@ -46,7 +46,7 @@ class DummyConnection(object):
 
 import time
 elapsed = []
-for size in [1, 2, 4, 7 , 10, 20, 40, 70, 100, 200, 400, 700,1000]:
+for size in [10, 20, 40, 70, 100, 200, 400, 700,1000, 2000, 4000]:
     connection = DummyConnection()
     connection.transactions=[Transaction(memo=str(i)) for i in range(size)]
     client = nYnabClientFactory().create_client(connection=connection, budget_name='Test', sync=False)
@@ -58,6 +58,6 @@ for size in [1, 2, 4, 7 , 10, 20, 40, 70, 100, 200, 400, 700,1000]:
     elapsed.append(round(time_elapsed, 1))
     assert (set(client.budget.be_transactions) == set(connection.transactions))
     print('%i,%f' % (size, time_elapsed))
-print(','.join(elapsed))
+print(','.join(str(i) for i in elapsed))
 
 
