@@ -44,8 +44,20 @@ class DummyConnection(object):
         return d
 
 
-connection = DummyConnection()
-connection.transactions=[Transaction(memo=str(i)) for i in range(500)]
-client = nYnabClientFactory().create_client(connection=connection, budget_name='Test', sync=False)
-client.sync()
-assert (client.budget.be_transactions == connection.transactions)
+import time
+elapsed = []
+for size in [1, 2, 4, 7 , 10, 20, 40, 70, 100, 200, 400, 700,1000]:
+    connection = DummyConnection()
+    connection.transactions=[Transaction(memo=str(i)) for i in range(size)]
+    client = nYnabClientFactory().create_client(connection=connection, budget_name='Test', sync=False)
+
+    t = time.time()
+    # do stuff
+    client.sync()
+    time_elapsed = time.time() - t
+    elapsed.append(round(time_elapsed, 1))
+    assert (set(client.budget.be_transactions) == set(connection.transactions))
+    print('%i,%f' % (size, time_elapsed))
+print(','.join(elapsed))
+
+
