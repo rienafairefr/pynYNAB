@@ -7,7 +7,6 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
 from pynYNAB.schema.Entity import Entity, Base
-from pynYNAB.schema.RootEntity import RootEntity
 from pynYNAB.schema.types import ArrayType
 
 

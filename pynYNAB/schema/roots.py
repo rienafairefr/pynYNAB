@@ -1,13 +1,11 @@
-from sqlalchemy import Boolean, Column, String, Integer
 from sqlalchemy import Column
 from sqlalchemy import Date
-from sqlalchemy import ForeignKey
+from sqlalchemy import String, Integer
 from sqlalchemy.orm import relationship
 
 from pynYNAB import KeyGenerator
-from pynYNAB.schema import Base, RootEntity
-
-from pynYNAB.schema.Entity import Base, RootEntity
+from pynYNAB.schema.Entity import Base
+from pynYNAB.schema.RootEntity import RootEntity
 from pynYNAB.schema.budget import TransactionGroup
 
 
