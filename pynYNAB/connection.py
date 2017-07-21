@@ -65,7 +65,7 @@ class nYnabConnection(object):
         self.lastrequest_elapsed = r.elapsed
         js = r.json()
         if r.status_code == 500:
-            raise NYnabConnectionError('Unrecoverable server error, sorry YNAB')
+            errorout('Unrecoverable server error, sorry YNAB')
         if r.status_code != 200:
             LOG.debug('non-200 HTTP code: %s ' % r.text)
         if not 'error' in js:
@@ -86,7 +86,7 @@ class nYnabConnection(object):
             sleep(float(retryrafter))
             return self.dorequest(request_dic, opname)
         elif error['id'] == 'invalid_session_token':
-            raise NYnabConnectionError('Invalid session token. You should call init_session() on the connection object')
+            errorout('Invalid session token. You should call init_session() on the connection object')
         else:
             errorout('Unknown API Error \"%s\" was returned from the API when sending request (%s)' % (error['id'], params))
 
