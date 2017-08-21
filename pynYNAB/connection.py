@@ -8,14 +8,13 @@ from requests.cookies import RequestsCookieJar
 
 from pynYNAB.KeyGenerator import generateuuid
 from pynYNAB.schema.Entity import ComplexEncoder
-from pynYNAB.utils import rate_limited
+from pynYNAB.utils import rate_limited, pp_json
 
 LOG = logging.getLogger(__name__)
 
 
 class NYnabConnectionError(Exception):
     pass
-
 
 # noinspection PyPep8Naming
 class nYnabConnection(object):
@@ -54,13 +53,16 @@ class nYnabConnection(object):
         """
         # Available operations :
 
+        def curate_password(message):
+            return message.replace(self.password, '********')
+
         def errorout(message):
-            LOG.error(message.replace(self.password,'********'))
+            LOG.error(curate_password(message))
             raise NYnabConnectionError(message)
 
         json_request_dict = json.dumps(request_dic, cls=ComplexEncoder)
         params = {u'operation_name': opname, 'request_data': json_request_dict}
-        LOG.debug(('%s  ... %s ' % (opname, params)).replace(self.password,'********'))
+        LOG.debug(curate_password('%s  ... %s ' % (opname, params)))
         r = self.session.post(self.urlCatalog, params)
         self.lastrequest_elapsed = r.elapsed
         js = r.json()
@@ -71,6 +73,7 @@ class nYnabConnection(object):
         if not 'error' in js:
             errorout('The server returned a json value without an error field')
         if js['error'] is None:
+            LOG.debug(curate_password('the server returned '+pp_json(js)))
             return js
         error = js['error']
         if 'id' not in error:
