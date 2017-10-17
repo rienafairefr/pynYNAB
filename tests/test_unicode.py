@@ -1,4 +1,5 @@
 # coding=utf-8
+import six
 import unittest
 
 from pynYNAB.ClientFactory import nYnabClientFactory
@@ -20,5 +21,8 @@ class UnitTestsUnicode(unittest.TestCase):
         # if passing non-unicode strings this will fail
         self.run_test(u'Caffè Nero')
         # without the u fails in python 2.7
-        self.assertRaises(Exception,lambda:self.run_test('Caffè Nero'))
+        if six.PY2:
+            self.assertRaises(Exception,lambda:self.run_test('Caffè Nero'))
+        else:
+            self.assertRaises(Exception, lambda: self.run_test(b'Caffè Nero'))
 
