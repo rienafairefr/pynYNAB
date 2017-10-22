@@ -67,7 +67,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'pynynab = pynYNAB.__main__:main',
+            'pynynab = pynYNAB.scripts.__main__:main',
         ],
     },
 
