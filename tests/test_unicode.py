@@ -23,6 +23,3 @@ class UnitTestsUnicode(unittest.TestCase):
         # without the u fails in python 2.7
         if six.PY2:
             self.assertRaises(Exception,lambda:self.run_test('Caffè Nero'))
-        else:
-            self.assertRaises(Exception, lambda: self.run_test(b'Caffè Nero'))
-
