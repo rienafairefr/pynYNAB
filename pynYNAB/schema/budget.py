@@ -8,7 +8,7 @@ from sqlalchemy import String
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from pynYNAB.schema.Entity import Entity, AccountTypes, Base
+from pynYNAB.schema.Entity import Entity, AccountTypes, Base, ColorFlagType
 from pynYNAB.schema.types import AmountType
 
 
@@ -39,7 +39,7 @@ class Transaction(Base, BudgetEntity):
     entities_scheduled_transaction_id = Column(ForeignKey('scheduledtransaction.id'))
     entities_subcategory_id = Column(ForeignKey('subcategory.id'))
     entities_subcategory = relationship('SubCategory')
-    flag = Column(String, default=None)
+    flag = Column(Enum(ColorFlagType), default=None)
     imported_date = Column(Date)
     imported_payee = Column(String)
     matched_transaction_id = Column(ForeignKey('transaction.id'))

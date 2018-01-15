@@ -34,6 +34,19 @@ class AccountTypes(Enum):
     OtherLiability = 'OtherLiability'
 
 
+def flag(s):
+    return 'ynab-flag-'+s
+
+
+class ColorFlagType(Enum):
+    Red = flag('red')
+    Orange = flag('orange')
+    Yellow = flag('yellow')
+    Green = flag('green')
+    Blue = flag('blue')
+    Purple = flag('purple')
+
+
 on_budget_dict = dict(
     undef=None,
     Checking=True,
