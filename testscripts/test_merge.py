@@ -1,5 +1,7 @@
 import unittest
 
+from sqlalchemy import create_engine
+
 from pynYNAB.ClientFactory import nYnabClientFactory
 from pynYNAB.schema import BudgetVersion
 from pynYNAB.schema import Transaction

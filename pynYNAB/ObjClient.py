@@ -3,6 +3,8 @@ from abc import abstractproperty,ABCMeta
 
 import itertools
 
+from sqlalchemy import inspect
+
 from pynYNAB.schema import fromapi_conversion_functions_table
 
 LOG = logging.getLogger(__name__)
@@ -38,23 +40,42 @@ class RootObjClient():
             update_keys = list(self.obj.listfields.keys())
         else:
             update_keys = [k for k in update_keys if k in self.obj.listfields]
+        modified_entities = {}
         modified_entitydicts = {}
         for listfield_name in update_keys:
-            newlist = []
+            entities = []
+            entitydicts = []
             if changed_entitydicts[listfield_name] is not None:
                 for entitydict in changed_entitydicts[listfield_name]:
                     entitydict['parent_id'] = self.obj.id
-                    newlist.append(self.obj.listfields[listfield_name].from_apidict(entitydict))
-            modified_entitydicts[listfield_name] = newlist
+                    entity = self.obj.listfields[listfield_name].from_apidict(entitydict)
+                    entities.append(entity)
+                    entitydicts.append(entity.get_dict())
+            modified_entities[listfield_name] = entities
+            modified_entitydicts[listfield_name] = entitydicts
         for scalarfield_name in self.obj.scalarfields:
             if scalarfield_name in changed_entitydicts:
                 typ = self.obj.scalarfields[scalarfield_name]
                 conversion_function = fromapi_conversion_functions_table.get(typ, lambda t, x: x)
-                modified_entitydicts[scalarfield_name] = conversion_function(typ, changed_entitydicts[scalarfield_name])
-        self.update_from_changed_entities(modified_entitydicts)
+                modified_entities[scalarfield_name] = conversion_function(typ, changed_entitydicts[scalarfield_name])
+        self.update_from_changed_entities(modified_entities, modified_entitydicts)
 
-    def update_from_changed_entities(self, changed_entities):
-       # to_add =[]
+    def update_from_changed_entities(self, changed_entities, changed_entitydicts):
+        if False and self.client.starting_device_knowledge == 0:
+            # first sync, insert_mapping
+            for name in changed_entitydicts:
+                value = changed_entitydicts[name]
+
+                if value:
+                    for d in value:
+                        d['parent_id'] = self.obj.id
+                    self.session.bulk_insert_mappings(self.obj.listfields[name], value)
+
+            self.session.commit()
+            self.session.expire_all()
+            return
+
+        # to_add =[]
         for name in changed_entities:
             value = changed_entities[name]
             if not isinstance(value, list) or not value:
