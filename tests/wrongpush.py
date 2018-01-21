@@ -10,4 +10,4 @@ class TestWrongPush(unittest.TestCase):
         client = nYnabClient_(budgetname='Test')
         client.budget.be_transactions.append(Transaction())
         client.budget.be_transactions.append(Transaction())
-        self.assertRaises(WrongPushException,lambda: client.push(expected_delta=1))
+        self.assertRaises(WrongPushException, lambda: client.push(expected_delta=1))

@@ -8,7 +8,7 @@ factory = nYnabClientFactory('sqlite://')
 
 
 class MockConnection(object):
-    def __init__(self,id):
+    def __init__(self, id):
         self.id = id
 
 

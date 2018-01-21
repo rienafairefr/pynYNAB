@@ -5,10 +5,9 @@ from datetime import datetime
 
 from pynYNAB.schema.Entity import date_from_api
 
-
 strdate0 = '2015-04-03'
 date0 = datetime.strptime(strdate0, '%Y-%m-%d').date()
-datestrings = [strdate0+'T00:00:00',strdate0,'random+'+strdate0]
+datestrings = [strdate0 + 'T00:00:00', strdate0, 'random+' + strdate0]
 
 
 class TestDatesCases(unittest.TestCase):

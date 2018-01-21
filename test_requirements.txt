@@ -4,4 +4,5 @@ nose
 pytest
 jsbeautifier
 python-dotenv
+pycodestyle
 pytest-cov

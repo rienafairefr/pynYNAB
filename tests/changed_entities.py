@@ -69,5 +69,3 @@ class TestUpdateChangedEntities(CommonTest):
         self.assertEqual(len(self.client.budget.be_accounts), 1)
         acc = self.client.budget.be_accounts[0]
         self.assertEqual(acc, self.account2)
-
-

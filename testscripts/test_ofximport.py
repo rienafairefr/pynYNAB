@@ -84,12 +84,12 @@ NEWFILEUID:NONE
 
         testaccount = 'TEST'
 
-        account = get_or_create_account(self.client,testaccount)
+        account = get_or_create_account(self.client, testaccount)
 
         key = '11706 41029 29939615002'
         account.note = 'great note key[%s]key' % key
 
-        payee = get_or_create_payee(self.client,'CHEQUE')
+        payee = get_or_create_payee(self.client, 'CHEQUE')
         amount = -491.09
 
         transaction = Transaction(
@@ -105,7 +105,7 @@ NEWFILEUID:NONE
             imported_date=imported_date
         )
 
-        delta = do_ofximport(args,self.client)
-        self.assertEqual(delta,1,msg="should add exactly one transaction")
+        delta = do_ofximport(args, self.client)
+        self.assertEqual(delta, 1, msg="should add exactly one transaction")
         self.assertIn(transaction.key2, [tr.key2 for tr in self.client.budget.be_transactions],
                       msg='couldnt find an imported transaction after ofx import')
