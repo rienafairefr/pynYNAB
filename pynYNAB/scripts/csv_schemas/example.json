@@ -1,37 +1,37 @@
 {
-    "nheaders" : 1,
-    "fields": [
-        {
-            "name": "date",
-            "title": "Date",
-            "type": "date",
-            "format": "fmt:%Y-%m-%d"
-        },
-        {
-            "name": "payee",
-            "title": "Payee",
-            "type": "string",
-            "constraints": {
-              "required": false
-            }
-        },
-        {
-            "name": "amount",
-            "title": "Amount",
-            "type": "number"
-        },
-        {
-            "name": "memo",
-            "title": "Memo",
-            "type": "string",
-            "constraints": {
-              "required": false
-            }
-        },
-        {
-            "name": "account",
-            "title": "Account",
-            "type": "string"
-        }
-    ]
+  "nheaders": 1,
+  "fields": [
+    {
+      "name": "date",
+      "title": "Date",
+      "type": "date",
+      "format": "fmt:%Y-%m-%d"
+    },
+    {
+      "name": "payee",
+      "title": "Payee",
+      "type": "string",
+      "constraints": {
+        "required": false
+      }
+    },
+    {
+      "name": "amount",
+      "title": "Amount",
+      "type": "number"
+    },
+    {
+      "name": "memo",
+      "title": "Memo",
+      "type": "string",
+      "constraints": {
+        "required": false
+      }
+    },
+    {
+      "name": "account",
+      "title": "Account",
+      "type": "string"
+    }
+  ]
 }

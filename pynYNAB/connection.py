@@ -16,6 +16,7 @@ LOG = logging.getLogger(__name__)
 class NYnabConnectionError(Exception):
     pass
 
+
 # noinspection PyPep8Naming
 class nYnabConnection(object):
     urlCatalog = 'https://app.youneedabudget.com/api/v1/catalog'
@@ -51,6 +52,7 @@ class nYnabConnection(object):
         updateDirectConnectCredentials,poll,createFeedback,runSqlStatement
         :return: the dictionary of the result of the request
         """
+
         # Available operations :
 
         def curate_password(message):
@@ -73,7 +75,7 @@ class nYnabConnection(object):
         if not 'error' in js:
             errorout('The server returned a json value without an error field')
         if js['error'] is None:
-            LOG.debug(curate_password('the server returned '+pp_json(js)))
+            LOG.debug(curate_password('the server returned ' + pp_json(js)))
             return js
         error = js['error']
         if 'id' not in error:
@@ -91,5 +93,5 @@ class nYnabConnection(object):
         elif error['id'] == 'invalid_session_token':
             errorout('Invalid session token. You should call init_session() on the connection object')
         else:
-            errorout('Unknown API Error \"%s\" was returned from the API when sending request (%s)' % (error['id'], params))
-
+            errorout(
+                'Unknown API Error \"%s\" was returned from the API when sending request (%s)' % (error['id'], params))

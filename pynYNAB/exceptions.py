@@ -19,7 +19,7 @@ class WrongPushException(Exception):
 
 class NoBudgetNameException(ValueError):
     def __init__(self):
-        super(NoBudgetNameException,self).__init__('you should pass a budget_name ')
+        super(NoBudgetNameException, self).__init__('you should pass a budget_name ')
 
 
 class NoCredentialsException(BaseException):
