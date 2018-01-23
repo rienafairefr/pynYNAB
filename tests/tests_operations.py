@@ -4,7 +4,7 @@ from pynYNAB.Client import nYnabClient
 from pynYNAB.ClientFactory import nYnabClientFactory
 from pynYNAB.exceptions import NoBudgetNameException
 from pynYNAB.schema.catalog import BudgetVersion
-from tests.common_mock import TestCommonMock
+from common.common_mock import TestCommonMock
 
 
 currency_format = dict(

@@ -4,7 +4,7 @@ import unittest
 
 from pynYNAB.ClientFactory import nYnabClientFactory
 from pynYNAB.schema import Payee
-from tests.common_mock import MockConnection
+from common.common_mock import MockConnection
 
 
 class UnitTestsUnicode(unittest.TestCase):

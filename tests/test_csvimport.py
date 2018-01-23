@@ -8,7 +8,7 @@ from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.csvimport import do_csvimport, verify_csvimport
 from pynYNAB.utils import get_or_create_account, get_or_create_payee
 from test_live.common import needs_account
-from tests.common_mock import TestCommonMock
+from common.common_mock import TestCommonMock
 
 
 class TestCsv(TestCommonMock):

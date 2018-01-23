@@ -1,7 +1,7 @@
 import unittest
 
 from pynYNAB.ClientFactory import nYnabClientFactory
-from tests.common_mock import MockConnection
+from common.common_mock import MockConnection
 
 connection = MockConnection()
 factory = nYnabClientFactory('sqlite://')
