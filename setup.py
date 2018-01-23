@@ -55,7 +55,6 @@ setup(
 
     install_requires=[
         'configargparse',
-        'pynab',
         'requests',
         'jsontableschema==0.10.0',
         'unicodecsv',
