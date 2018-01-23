@@ -61,6 +61,7 @@ setup(
         'appdirs',
         'six>=1.5',
         'aenum',
+        'ofxtools',
         'sqlalchemy'
     ],
 
