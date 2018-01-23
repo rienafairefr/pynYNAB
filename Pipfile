@@ -1,0 +1,27 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[dev-packages]
+
+mock = "*"
+coveralls = "*"
+nose = "*"
+
+
+[packages]
+
+configargparse = "*"
+configparser = "*"
+requests = "*"
+jsontableschema = "==0.10.0"
+aenum = "*"
+sqlalchemy = "*"
+lxml = "==3.8.0"
+ofxtools = {ref = "4a3e496d7d2a3babdeabd4e114d98fc5f2862667", git = "https://github.com/csingley/ofxtools.git", editable = true}
+pynab = "*"
+bcrypt = "*"
+"functools32" = "*"
