@@ -17,7 +17,6 @@ class TestOFX(TestCommonMock):
         parser = configargparse.getArgumentParser('pynYNAB')
         args = parser.parse_known_args()[0]
         args.ofxfile = os.path.join(tempfile.gettempdir(), 'data.ofx')
-        args.logginglevel = 'debug'
 
         content = """OFXHEADER:100
 DATA:OFXSGML

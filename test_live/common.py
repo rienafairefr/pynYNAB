@@ -3,11 +3,12 @@ import unittest
 from datetime import datetime
 from functools import wraps
 
+from pynYNAB.ClientFactory import clientfromkwargs
+from pynYNAB.scripts.__main__ import parser
+
 from pynYNAB import KeyGenerator
-from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.schema.Entity import AccountTypes
 from pynYNAB.schema.budget import Account
-from pynYNAB.scripts.__main__ import parser
 
 
 def util_add_account(client, account_name=None):
@@ -31,7 +32,7 @@ def needs_account(account_name=None):
                     self.account = account
                     fn(self, *args, **kwargs)
                     return
-            self.account = util_add_account(self.client,account_name)
+            self.account = util_add_account(self.client, account_name)
             fn(self, *args, **kwargs)
             return
 
@@ -50,8 +51,8 @@ class CommonLive(unittest.TestCase):
 
     def reload(self):
         # parser = configargparse.getArgumentParser('pynYNAB')
-        args = parser.parse_known_args()[0]
-        self.client = clientfromargs(args)
+        args = parser.parse_args()
+        self.client = clientfromkwargs(**args.config)
 
     def setUp(self):
         self.reload()

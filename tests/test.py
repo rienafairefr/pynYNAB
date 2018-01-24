@@ -17,7 +17,7 @@ from pynYNAB.schema.budget import Account, Transaction, Subtransaction
 from pynYNAB.schema.catalog import User
 from pynYNAB.schema.roots import Budget
 from pynYNAB.schema.types import AmountType
-from tests.common_mock import MockConnection
+from .common_mock import MockConnection
 
 
 class MyEntity(Base, Entity):
@@ -44,7 +44,7 @@ class TestGetChangedEntities(CommonTest):
         self.obj.clear_changed_entities()
         self.account2 = Account(id=self.account)
 
-        self.client = factory.create_client(budget_name='budgetname', nynabconnection = MockConnection(),sync=False)
+        self.client = factory.create_client(budget_name='budgetname', connection = MockConnection(),sync=False)
 
     def testgetChangedEntities_add(self):
         added_account = Account()
@@ -105,7 +105,9 @@ class TestUpdateChangedEntities(CommonTest):
     def setUp(self):
         self.account = Account()
 
-        self.client = factory.create_client(budgetname='budgetname', nynabconnection = MockConnection(),sync=False)
+        self.client = factory.create_client(budget_name='budgetname',
+                                            connection = MockConnection(),
+                                            sync=False)
         self.client.budget.be_accounts = [self.account]
         self.account2 = self.account.copy()
         self.client.session.commit()

@@ -1,6 +1,3 @@
-configargparse
-configparser
-appdirs
 requests
 jsontableschema==0.10.0
 aenum
@@ -9,3 +6,4 @@ sqlalchemy
 lxml
 ofxtools
 bcrypt
+pyYAML

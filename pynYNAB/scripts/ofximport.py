@@ -1,31 +1,23 @@
-import os
+import logging
 from datetime import datetime
 
-import logging
 from ofxtools import OFXTree
 
-from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.schema.budget import Transaction, Payee
 
 LOG = logging.getLogger(__name__)
 
 
-def verify_ofximport(args):
-    if not os.path.exists(args.ofxfile):
-        LOG.error('input OFX file does not exist')
-        exit(-1)
-
+def get_stmts(ofxfile):
     tree = OFXTree()
-    tree.parse(args.ofxfile)
+    tree.parse(ofxfile)
     response = tree.convert()
-    stmts = response.statements
-    return stmts
+    return response.statements
 
 
-def do_ofximport(args, stmts, client=None):
+def do_ofximport(file, client):
     delta = 0
-    if client is None:
-        client = clientfromargs(args)
+    stmts = get_stmts(file)
 
     accounts = client.budget.be_accounts
     accountvsnotes = {account.note: account for account in accounts if account.note is not None}
@@ -83,8 +75,3 @@ def do_ofximport(args, stmts, client=None):
                             delta += 1
 
     return delta
-
-
-if __name__ == "__main__":
-    from pynYNAB.scripts.__main__ import MainCommands
-    MainCommands.ofximport()

@@ -1,13 +1,9 @@
 import csv
-import json
 import logging
 import os
 import sys
 from collections import namedtuple
 from datetime import datetime
-
-from jsontableschema.exceptions import InvalidSchemaError
-from jsontableschema.model import SchemaModel
 
 from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.schema.budget import Payee, Transaction
@@ -18,51 +14,25 @@ schemas_dir = os.path.join(scriptsdir, 'csv_schemas')
 LOG = logging.getLogger(__name__)
 
 
-def verify_csvimport(args):
-    if not os.path.exists(args.csvfile):
-        LOG.error('input CSV file %s does not exist'% args.csvfile)
-        exit(-1)
-
-    if os.path.exists(args.schema):
-        schemafile = args.schema + '.json'
-    else:
-        schemafile = os.path.join(schemas_dir, args.schema + '.json')
-    if not os.path.exists(schemafile):
-        LOG.error('This schema file %s doesn''t exist in current directory or csv_schemas directory'% (args.schema+'.json'))
-        exit(-1)
-
-    try:
-        schema = SchemaModel(schemafile, case_insensitive_headers=True)
-
-        if 'account' not in schema.headers and args.accountname is None:
-            LOG.error('schema headers: %s'%schema.headers)
-            LOG.error('This schema does not have an account column and no account name was provided')
-            exit(-1)
-
-        with open(schemafile, 'r') as sf:
-            schemacontent = json.load(sf)
-            try:
-                setattr(schema, 'nheaders', schemacontent['nheaders'])
-            except KeyError:
-                setattr(schema, 'nheaders', 1)
-
-
-        return schema
-
-    except InvalidSchemaError as e:
-        LOG.error('Invalid CSV schema %s'%e)
+def verify_csvimport(schema, accountname=None):
+    if 'account' not in schema.headers and accountname is None:
+        LOG.error('schema headers: %s' % schema.headers)
+        LOG.error('This schema does not have an account column and no account name was provided')
         exit(-1)
 
 
+class CsvImportArgs(object):
+    def __init__(self, csv_file, schema, account_name=None, import_duplicates=False):
+        self.csv_file = csv_file
+        self.schema = schema
+        self.account_name = account_name
+        self.import_duplicates = import_duplicates
 
 
-def do_csvimport(args, schema, client=None):
-    if client is None:
-        client = clientfromargs(args)
-
+def do_csvimport(args, client):
     LOG.debug('selected schema %s' % (args.schema,))
 
-    LOG.debug('schema headers %s' % schema.headers)
+    LOG.debug('schema headers %s' % args.schema.headers)
     delta = 0
 
     accounts = {x.account_name: x for x in client.budget.be_accounts}
@@ -73,55 +43,55 @@ def do_csvimport(args, schema, client=None):
         m = mastercategories_perid[s.entities_master_category_id]
         subcategories[m.name + ':' + s.name] = s
 
-    def getaccount(accountname):
+    def getaccount(account_name):
         try:
-            LOG.debug('searching for account %s' % accountname)
-            return accounts[accountname]
+            LOG.debug('searching for account %s' % account_name)
+            return accounts[account_name]
         except KeyError:
-            LOG.error('Couldn''t find this account: %s' % accountname)
+            LOG.error('Couldn''t find this account: %s' % account_name)
             exit(-1)
 
-    def getpayee(payeename):
+    def getpayee(payee_name):
         global delta
         try:
-            LOG.debug('searching for payee %s' % payeename)
-            return payees[payeename]
+            LOG.debug('searching for payee %s' % payee_name)
+            return payees[payee_name]
         except KeyError:
-            LOG.debug('Couldn''t find this payee: %s' % payeename)
-            payee = Payee(name=payeename)
+            LOG.debug('Couldn''t find this payee: %s' % payee_name)
+            payee = Payee(name=payee_name)
             client.budget.be_payees.append(payee)
             delta += 1
             return payee
 
-    def getsubcategory(categoryname):
+    def getsubcategory(category_name):
         try:
-            LOG.debug('searching for subcategory %s' % categoryname)
-            return subcategories[categoryname]
+            LOG.debug('searching for subcategory %s' % category_name)
+            return subcategories[category_name]
         except KeyError:
-            LOG.debug('Couldn''t find this category: %s' % categoryname)
+            LOG.debug('Couldn''t find this category: %s' % category_name)
             exit(-1)
 
     entities_account_id = None
-    if 'account' not in schema.headers:
-        entities_account_id = getaccount(args.accountname).id
+    if 'account' not in args.schema.headers:
+        entities_account_id = getaccount(args.account_name).id
 
     amount = None
-    if 'inflow' in schema.headers and 'outflow' in schema.headers:
+    if 'inflow' in args.schema.headers and 'outflow' in args.schema.headers:
         pass
-    elif 'amount' in schema.headers:
+    elif 'amount' in args.schema.headers:
         pass
     else:
         LOG.error('This schema doesn''t provide an amount column or (inflow,outflow) columns')
         exit(-1)
 
-    csvrow = namedtuple('CSVrow', field_names=schema.headers)
+    csvrow = namedtuple('CSVrow', field_names=args.schema.headers)
 
     imported_date = datetime.now().date()
 
-    LOG.debug('OK starting the import from %s ' % os.path.abspath(args.csvfile))
-    with open(args.csvfile, 'r') as inputfile:
+    LOG.debug('OK starting the import from %s ' % os.path.abspath(args.csv_file))
+    with open(args.csv_file, 'r') as inputfile:
         header = []
-        for i in range(0, schema.nheaders):
+        for i in range(0, args.schema.nheaders):
             header.append(inputfile.readline())
         for row in csv.reader(inputfile):
             if sys.version[0] == '2':
@@ -129,28 +99,28 @@ def do_csvimport(args, schema, client=None):
             if all(map(lambda x: x.strip() == '', row)):
                 continue
             LOG.debug('read line %s' % row)
-            result = csvrow(*list(schema.convert_row(*row, fail_fast=True)))
-            if 'account' in schema.headers:
+            result = csvrow(*list(args.schema.convert_row(*row, fail_fast=True)))
+            if 'account' in args.schema.headers:
                 entities_account_id = getaccount(result.account).id
             if entities_account_id is None:
                 LOG.error(
                     'No account id, the account %s in the an account column was not recognized' % result.account)
                 exit(-1)
-            if 'inflow' in schema.headers and 'outflow' in schema.headers:
+            if 'inflow' in args.schema.headers and 'outflow' in args.schema.headers:
                 amount = result.inflow - result.outflow
-            elif 'amount' in schema.headers:
+            elif 'amount' in args.schema.headers:
                 amount = result.amount
 
-            if 'category' in schema.headers and result.category:
+            if 'category' in args.schema.headers and result.category:
                 entities_subcategory_id = getsubcategory(result.category).id
             else:
                 entities_subcategory_id = None
-            if 'payee' in schema.headers:
+            if 'payee' in args.schema.headers:
                 imported_payee = result.payee
             else:
                 imported_payee = ''
             entities_payee_id = getpayee(imported_payee).id
-            if 'memo' in schema.headers:
+            if 'memo' in args.schema.headers:
                 memo = result.memo
             else:
                 memo = ''
@@ -176,8 +146,3 @@ def do_csvimport(args, schema, client=None):
                 LOG.debug('Duplicate transaction found %s ' % transaction.get_dict())
 
     return delta
-
-
-if __name__ == "__main__":
-    from pynYNAB.scripts.__main__ import MainCommands
-    MainCommands.csvimport()

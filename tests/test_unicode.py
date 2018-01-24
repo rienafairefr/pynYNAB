@@ -1,17 +1,18 @@
 # coding=utf-8
-import six
 import unittest
+
+import six
 
 from pynYNAB.ClientFactory import nYnabClientFactory
 from pynYNAB.schema import Payee
-from common.common_mock import MockConnection
+from .common_mock import MockConnection
 
 
 class UnitTestsUnicode(unittest.TestCase):
     def run_test(self, payee_name):
         payee = Payee(name=payee_name)
         client = nYnabClientFactory().create_client(budget_name=u'budgetname',
-                                                    nynabconnection=MockConnection(),
+                                                    connection=MockConnection(),
                                                     sync=False)
         client.budget.be_payees.append(payee)
         client.session.commit()

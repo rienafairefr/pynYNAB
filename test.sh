@@ -2,8 +2,6 @@
 
 set -ev
 
-export NYNAB_LOGGINGLEVEL=error;
-
 tox
 
 if [[ ${TRAVIS_EVENT_TYPE} = "cron" || ${TRAVIS_COMMIT_MESSAGE} = *"[ci-cron]"* ]]; then
