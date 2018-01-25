@@ -4,3 +4,4 @@ nose
 pytest
 jsbeautifier
 python-dotenv
+pytest-cov

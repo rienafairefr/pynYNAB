@@ -1,30 +1,24 @@
 # coding=utf-8
 import unittest
 
-from dotenv import load_dotenv,find_dotenv
-
-from pynYNAB.ClientFactory import clientfromargs
+from pynYNAB.ClientFactory import clientfromkwargs
 from pynYNAB.schema import DictDiffer
 from pynYNAB.schema.Entity import fromapi_conversion_functions_table
 from pynYNAB.schema.types import AmountType
-from pynYNAB.scripts.__main__ import parser
+from pynYNAB.scripts.helpers import merge_config
 
-## these test cases are live, but designed to be very short in time !
-
-load_dotenv(find_dotenv())
+test_budget_name = 'Test Budget - Dont Remove'
 
 
 class LiveTests2(unittest.TestCase):
     def test_roundtrip(self):
-        args = parser.parse_known_args()[0]
-
         # 1. gets sync data from server
         # 2. tests that to_api(from_api(data)) is the same thing
-
-        client = clientfromargs(args, sync=False)
+        kwargs = merge_config({'budget_name': test_budget_name})
+        client = clientfromkwargs(sync=False, **kwargs)
         sync_data = client.catalogClient.get_sync_data_obj()
         budget_version_id = next(d['id'] for d in sync_data['changed_entities']['ce_budget_versions'] if
-                                 d['version_name'] == args.budgetname)
+                                 d['version_name'] == test_budget_name)
         client.budget_version_id = budget_version_id
 
         for objclient in (client.budgetClient, client.catalogClient):
@@ -51,7 +45,6 @@ class LiveTests2(unittest.TestCase):
                     if server_changed_entities[key] != obj_dict2[key]:
                         AssertionError('changed {}: {}->{}'.format(key, server_changed_entities[key], obj_dict2[key]))
 
-test_budget_name = 'Test Budget - Dont Remove'
 
 # this test cases expect that
 # a budget named "Test Budget" exists
@@ -65,9 +58,8 @@ class LiveTestBudget(unittest.TestCase):
         self.client = None
 
     def setUp(self):
-        args = parser.parse_known_args()[0]
-        args.budgetname = test_budget_name
-        self.client = clientfromargs(args, sync=False)
+        kwargs = merge_config({'budget_name': test_budget_name})
+        self.client = clientfromkwargs(sync=False, **kwargs)
         self.client.catalogClient.sync()
         self.client.select_budget(test_budget_name)
 
@@ -78,5 +70,6 @@ class LiveTestBudget(unittest.TestCase):
         amount = None
         for transaction in transactions:
             if transaction['memo'] == 'TEST TRANSACTION':
-                amount = fromapi_conversion_functions_table[AmountType](AmountType,transaction['amount'])
-        self.assertEqual(12.34,amount)
+                amount = fromapi_conversion_functions_table[AmountType](AmountType, transaction['amount'])
+                break
+        self.assertEqual(12.34, amount)

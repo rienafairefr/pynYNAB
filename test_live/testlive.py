@@ -1,9 +1,10 @@
 import unittest
 
-from pynYNAB.ClientFactory import clientfromargs
+import yaml
+
+from pynYNAB.ClientFactory import clientfromkwargs, clientfromenv
 from pynYNAB.schema import DictDiffer
 from pynYNAB.schema.budget import Transaction
-from pynYNAB.scripts.__main__ import parser
 from test_live.common import CommonLive
 from test_live.common import needs_account
 
@@ -27,18 +28,16 @@ class LiveTests(CommonLive):
         self.assertNotIn(transaction, self.client.budget.be_transactions)
 
 
+test_budget_name = 'Test Budget - Dont Remove'
+
+
 class LiveTests2(unittest.TestCase):
     def test_roundtrip(self):
-        args = parser.parse_known_args()[0]
+        client = clientfromenv(budgetname=test_budget_name)
 
-        # 1. gets sync data from server
-        # 2. tests that to_api(from_api(data)) is the same thing
-
-
-        client = clientfromargs(args, sync=False)
         sync_data = client.catalogClient.get_sync_data_obj()
         budget_version_id = next(d['id'] for d in sync_data['changed_entities']['ce_budget_versions'] if
-                                 d['version_name'] == args.budgetname)
+                                 d['version_name'] == test_budget_name)
         client.budget_version_id = budget_version_id
 
         for objclient in (client.budgetClient, client.catalogClient):

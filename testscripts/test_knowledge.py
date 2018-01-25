@@ -7,7 +7,7 @@ from pynYNAB.scripts.__main__ import parser
 
 # used to ping the nYNAB API to check that the sync works
 
-args = parser.parse_known_args()[0]
+args = parser.parse_args()
 N = 20
 client = clientfromargs(args)
 client.sync()

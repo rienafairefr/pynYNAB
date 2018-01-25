@@ -1,4 +1,8 @@
 import logging
+
+import os
+
+import yaml
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -6,7 +10,6 @@ from pynYNAB.ObjClient import RootObjClient
 from pynYNAB.connection import nYnabConnection
 from pynYNAB.exceptions import NoBudgetNameException, BudgetNotFound, NoCredentialsException
 from pynYNAB.schema import Base
-
 
 LOG = logging.getLogger(__name__)
 
@@ -45,31 +48,18 @@ class nYnabClientFactory(object):
         Session = sessionmaker(bind=self.engine)
         self.session = Session()
 
-    def create_client(self, args=None, sync=True, **kwargs):
+    def create_client(self, email=None, password=None, budget_name=None, connection=None, sync=True):
         from pynYNAB.schema.Client import nYnabClient_
-        if args is None:
-            class Arg(object):pass
-            args = Arg()
-        for k,v in kwargs.items():
-            setattr(args,k,v)
-        if hasattr(args,'budgetname'):
-            setattr(args, 'budget_name', args.budgetname)
 
-        if hasattr(args, 'nynabconnection') and args.nynabconnection is not None:
-            setattr(args, 'connection', args.nynabconnection)
-
-        if not hasattr(args, 'budget_name') or args.budget_name is None:
+        if budget_name is None:
             raise NoBudgetNameException
 
         try:
-            if not hasattr(args, 'connection'):
-                if not hasattr(args, 'email') or args.email is None:
-                    if not hasattr(args, 'password') or args.password is None:
-                        raise NoCredentialsException
-                connection = nYnabConnection(args.email, args.password)
+            if connection is None:
+                if email is None and password is None:
+                    raise NoCredentialsException()
+                connection = nYnabConnection(email, password)
                 connection.init_session()
-            else:
-                connection = args.connection
 
             client_id = connection.id
 
@@ -84,13 +74,11 @@ class nYnabClientFactory(object):
                 previous_client.session = self.session
                 return postprocessed_client(previous_client)
 
-            client = nYnabClient_(id=client_id, budget_name=args.budget_name)
+            client = nYnabClient_(id=client_id, budget_name=budget_name)
             client.engine = self.engine
             client.session = self.session
             client.add_missing()
             client = postprocessed_client(client)
-
-
 
             self.session.add(client)
             client.session.commit()
@@ -98,9 +86,13 @@ class nYnabClientFactory(object):
                 client.sync()
             return client
         except BudgetNotFound:
-            LOG.error('No budget by the name %s found in nYNAB' % args.budget_name)
+            LOG.error('No budget by the name %s found in nYNAB' % budget_name)
             raise
 
 
 def clientfromargs(args, sync=True):
-    return nYnabClientFactory().create_client(args, sync)
+    return nYnabClientFactory().create_client(args.email, args.password, args.budget_name, args.connection, sync)
+
+
+def clientfromkwargs(**kwargs):
+    return nYnabClientFactory().create_client(**kwargs)

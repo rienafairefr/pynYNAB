@@ -6,6 +6,7 @@ pynYNAB.egg-info/
 .tox/
 *.log
 ynab.conf
+ynab.yaml
 .coverage
 *.log
 *.env

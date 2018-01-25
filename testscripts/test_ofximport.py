@@ -9,7 +9,7 @@ import configargparse
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.ofximport import do_ofximport
 from pynYNAB.utils import get_or_create_account, get_or_create_payee
-from tests.common_mock import TestCommonMock
+from common import TestCommonMock
 
 
 class TestOFX(TestCommonMock):
@@ -17,7 +17,6 @@ class TestOFX(TestCommonMock):
         parser = configargparse.getArgumentParser('pynYNAB')
         args = parser.parse_known_args()[0]
         args.ofxfile = os.path.join(tempfile.gettempdir(), 'data.ofx')
-        args.logginglevel = 'debug'
 
         content = """OFXHEADER:100
 DATA:OFXSGML

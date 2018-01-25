@@ -54,15 +54,14 @@ setup(
     packages=find_packages(),
 
     install_requires=[
-        'configargparse',
-        'pynab',
         'requests',
         'jsontableschema==0.10.0',
         'unicodecsv',
-        'appdirs',
         'six>=1.5',
         'aenum',
-        'sqlalchemy'
+        'ofxtools',
+        'sqlalchemy',
+        'pyYAML'
     ],
 
     entry_points={

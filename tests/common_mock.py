@@ -27,7 +27,9 @@ factory = nYnabClientFactory()
 
 class TestCommonMock(unittest.TestCase):
     def setUp(self):
-        self.client = factory.create_client(budgetname='TestBudget',nynabconnection=MockConnection(),sync=False)
+        self.client = factory.create_client(budget_name='TestBudget',
+                                            connection=MockConnection(),
+                                            sync=False)
 
         session = self.client.session
 

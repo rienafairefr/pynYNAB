@@ -1,6 +1,6 @@
 import unittest
 
-from pynYNAB.Client import WrongPushException
+from pynYNAB.exceptions import WrongPushException
 from pynYNAB.schema.Client import nYnabClient_
 from pynYNAB.schema.budget import Transaction
 
