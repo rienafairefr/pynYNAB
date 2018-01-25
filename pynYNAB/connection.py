@@ -1,6 +1,7 @@
 # coding=utf-8
 import json
 import logging
+import uuid
 from time import sleep
 
 import requests
@@ -34,7 +35,7 @@ class nYnabConnection(object):
         self.password = password
         self.session = requests.Session()
         self.sessionToken = None
-        self.id = str(generateuuid())
+        self.id = str(uuid.uuid5(uuid.NAMESPACE_DNS, self.email + self.password))
         self.lastrequest_elapsed = None
         self.session.cookies = RequestsCookieJar()
 
