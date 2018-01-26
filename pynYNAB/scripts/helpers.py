@@ -52,7 +52,9 @@ def get_config_from_env():
     return returnvalue
 
 
-def merge_config(arguments, nominal=DEFAULT_CONFIG_FILE):
+def merge_config(arguments=None, nominal=DEFAULT_CONFIG_FILE):
+    if arguments is None:
+        arguments = {}
     cli_config = arguments
     env_config = get_config_from_env()
     ynab_yaml_config = get_config_from_yaml(nominal)

@@ -2,11 +2,12 @@ import unittest
 
 import yaml
 
-from pynYNAB.ClientFactory import clientfromkwargs, clientfromenv
+from pynYNAB.ClientFactory import clientfromkwargs
 from pynYNAB.schema import DictDiffer
 from pynYNAB.schema.budget import Transaction
-from test_live.common import CommonLive
-from test_live.common import needs_account
+from pynYNAB.scripts.helpers import get_config_from_env, merge_config
+from .common import CommonLive
+from .common import needs_account
 
 
 # noinspection PyArgumentList
@@ -33,7 +34,8 @@ test_budget_name = 'Test Budget - Dont Remove'
 
 class LiveTests2(unittest.TestCase):
     def test_roundtrip(self):
-        client = clientfromenv(budgetname=test_budget_name)
+        config = merge_config()
+        client = clientfromkwargs(sync=False, **config)
 
         sync_data = client.catalogClient.get_sync_data_obj()
         budget_version_id = next(d['id'] for d in sync_data['changed_entities']['ce_budget_versions'] if

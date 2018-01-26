@@ -9,6 +9,7 @@ from pynYNAB.scripts.__main__ import parser
 from pynYNAB import KeyGenerator
 from pynYNAB.schema.Entity import AccountTypes
 from pynYNAB.schema.budget import Account
+from pynYNAB.scripts.helpers import merge_config
 
 
 def util_add_account(client, account_name=None):
@@ -50,9 +51,8 @@ class CommonLive(unittest.TestCase):
         self.client = None
 
     def reload(self):
-        # parser = configargparse.getArgumentParser('pynYNAB')
-        args = parser.parse_args()
-        self.client = clientfromkwargs(**args.config)
+        config = merge_config()
+        self.client = clientfromkwargs(**config)
 
     def setUp(self):
         self.reload()
