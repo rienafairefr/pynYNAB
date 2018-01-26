@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm import sessionmaker
 
 from pynYNAB.exceptions import BudgetNotFound, WrongPushException
-from pynYNAB.schema import Base, Catalog, Budget, Knowledge, Payee, Transaction
+from pynYNAB.schema import Base, Catalog, Budget, Knowledge, Payee, Transaction, PayeeRenameConditionOperator
 
 LOG = logging.getLogger(__name__)
 
@@ -127,9 +127,27 @@ class nYnabClient_(Base):
     def delete_account(self, account):
         self.budget.be_accounts.remove(account)
 
+    def _rename_payee(self, input_payee):
+        for payee_rename_condition in self.budget.be_payee_rename_conditions:
+            operand = payee_rename_condition.operand
+            dispatch = {
+                PayeeRenameConditionOperator.Is: lambda n: n == operand,
+                PayeeRenameConditionOperator.Contains: lambda n: operand in n,
+                PayeeRenameConditionOperator.StartsWith: lambda n: n.startswith(operand),
+                PayeeRenameConditionOperator.EndsWith: lambda n: n.endswith(operand),
+            }
+            if dispatch[payee_rename_condition.operator](input_payee.name):
+                return payee_rename_condition.entities_payee
+
+        return input_payee
+
     @operation(1)
     def add_transaction(self, transaction):
         self.budget.be_transactions.append(transaction)
+
+    def run_treat_rename_payee(self):
+        for transaction in self.budget.be_transactions:
+            transaction.entities_payee = self._rename_payee(transaction.entities_payee)
 
     def add_transactions(self, transaction_list):
         @operation(len(transaction_list))
