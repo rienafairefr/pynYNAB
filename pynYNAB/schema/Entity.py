@@ -47,6 +47,13 @@ class ColorFlagType(Enum):
     Purple = flag('purple')
 
 
+class PayeeRenameConditionOperator(Enum):
+    Is = 'Is'
+    Contains = 'Contains'
+    StartsWith = 'StartsWith'
+    EndsWith = 'EndsWith'
+
+
 on_budget_dict = dict(
     undef=None,
     Checking=True,

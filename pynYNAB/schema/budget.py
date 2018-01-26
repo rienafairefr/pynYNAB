@@ -8,7 +8,7 @@ from sqlalchemy import String
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from pynYNAB.schema.Entity import Entity, AccountTypes, Base, ColorFlagType
+from pynYNAB.schema.Entity import Entity, AccountTypes, Base, ColorFlagType, PayeeRenameConditionOperator
 from pynYNAB.schema.types import AmountType
 
 
@@ -291,7 +291,7 @@ class PayeeRenameCondition(Base, BudgetEntity):
     entities_payee_id = Column(ForeignKey('payee.id'))
     entities_payee = relationship('Payee', foreign_keys=entities_payee_id)
     operand = Column(String)
-    operator = Column(String)
+    operator = Column(Enum(PayeeRenameConditionOperator))
 
 
 class Account(Base, BudgetEntity):
