@@ -2,7 +2,3 @@ linters:
   flake8: {  }
   shellcheck:
     shell: bash
-files:
-  ignore:
-    - 'bower_components/*'
-    - 'node_modules/*'
