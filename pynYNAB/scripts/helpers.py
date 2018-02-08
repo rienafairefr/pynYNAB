@@ -31,7 +31,7 @@ class ConfigEnvArgumentParser(argparse.ArgumentParser):
         return AttrDict(**parsed_args_config)
 
 
-def get_config_from_yaml(config_file):
+def get_config_from_yaml(config_file=DEFAULT_CONFIG_FILE):
     try:
         with open(config_file, 'r') as stream:
             yaml_content = yaml.load(stream)
