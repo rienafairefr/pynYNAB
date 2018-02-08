@@ -3,20 +3,24 @@ import time
 
 import os
 
-import ynab_api
 from pprint import pprint
 from dotenv import load_dotenv,find_dotenv
 
-from ynab_api.rest import ApiException
+from pynYNAB.ynab_api.api.accounts_api import AccountsApi
+from pynYNAB.ynab_api.configuration import Configuration
+from pynYNAB.ynab_api.rest import ApiException
+from pynYNAB.ynab_api.api_client import ApiClient
 
 load_dotenv(find_dotenv())
 
 # Configure API key authorization: bearer
-ynab_api.configuration.api_key['Authorization'] = os.environ.get('YNAB_API_TOKEN')
+configuration = Configuration()
+
+configuration.api_key['Authorization'] = os.environ.get('YNAB_API_TOKEN')
 # Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-# ynab_api.configuration.api_key_prefix['Authorization'] = 'Bearer'
+api_client = ApiClient()
 # create an instance of the API class
-api_instance = ynab_api.AccountsApi()
+api_instance = AccountsApi(api_client)
 budget_id = 'budget_id_example' # str | The ID of the Budget.
 account_id = 'account_id_example' # str | The ID of the Account.
 

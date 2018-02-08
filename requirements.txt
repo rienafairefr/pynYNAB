@@ -7,3 +7,4 @@ lxml
 ofxtools
 bcrypt
 pyYAML
+-e ynab-api

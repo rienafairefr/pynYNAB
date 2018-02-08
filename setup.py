@@ -61,6 +61,7 @@ setup(
         'aenum',
         'ofxtools',
         'sqlalchemy',
+        'ynab_api',
         'pyYAML'
     ],
 
