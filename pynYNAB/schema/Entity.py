@@ -169,11 +169,19 @@ def date_from_api(columntype, string):
         return datetime.strptime(result.group(0), '%Y-%m-%d').date()
 
 
+def enumconversion(t, x):
+    try:
+        return t.enum_class[x]
+    except KeyError:
+        # received an invalid enum value
+        return None
+
+
 fromapi_conversion_functions_table = {
     Date: date_from_api,
     DateTime: lambda t,x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f'),
     AmountType: lambda t, x: float(x) / 1000,
-    sqlaEnum: lambda t, x: t.enum_class[x]
+    sqlaEnum: enumconversion
 }
 
 toapi_conversion_functions_table = {
