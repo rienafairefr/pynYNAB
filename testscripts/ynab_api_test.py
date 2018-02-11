@@ -18,7 +18,7 @@ configuration = Configuration()
 
 configuration.api_key['Authorization'] = os.environ.get('YNAB_API_TOKEN')
 # Uncomment below to setup prefix (e.g. Bearer) for API key, if needed
-api_client = ApiClient()
+api_client = ApiClient(configuration)
 # create an instance of the API class
 api_instance = AccountsApi(api_client)
 budget_id = 'budget_id_example' # str | The ID of the Budget.
