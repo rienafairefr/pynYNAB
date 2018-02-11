@@ -5,3 +5,4 @@ pytest
 jsbeautifier
 python-dotenv
 pytest-cov
+-e ynab-api
