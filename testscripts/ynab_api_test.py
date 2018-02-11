@@ -6,10 +6,10 @@ import os
 from pprint import pprint
 from dotenv import load_dotenv,find_dotenv
 
-from pynYNAB.ynab_api.api.accounts_api import AccountsApi
-from pynYNAB.ynab_api.configuration import Configuration
-from pynYNAB.ynab_api.rest import ApiException
-from pynYNAB.ynab_api.api_client import ApiClient
+from ynab.api.accounts_api import AccountsApi
+from ynab.configuration import Configuration
+from ynab.rest import ApiException
+from ynab.api_client import ApiClient
 
 load_dotenv(find_dotenv())
 
