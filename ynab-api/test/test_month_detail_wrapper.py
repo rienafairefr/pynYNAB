@@ -15,9 +15,9 @@ from __future__ import absolute_import
 
 import unittest
 
-import pynYnAB.ynab_api
-from pynYnAB.ynab_api.models.month_detail_wrapper import MonthDetailWrapper  # noqa: E501
-from pynYnAB.ynab_api.rest import ApiException
+import ynab
+from ynab.models.month_detail_wrapper import MonthDetailWrapper  # noqa: E501
+from ynab.rest import ApiException
 
 
 class TestMonthDetailWrapper(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestMonthDetailWrapper(unittest.TestCase):
     def testMonthDetailWrapper(self):
         """Test MonthDetailWrapper"""
         # FIXME: construct object with mandatory attributes with example values
-        # model = pynYnAB.ynab_api.models.month_detail_wrapper.MonthDetailWrapper()  # noqa: E501
+        # model = ynab.models.month_detail_wrapper.MonthDetailWrapper()  # noqa: E501
         pass
 
 

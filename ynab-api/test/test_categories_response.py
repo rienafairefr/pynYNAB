@@ -15,9 +15,9 @@ from __future__ import absolute_import
 
 import unittest
 
-import pynYnAB.ynab_api
-from pynYnAB.ynab_api.models.categories_response import CategoriesResponse  # noqa: E501
-from pynYnAB.ynab_api.rest import ApiException
+import ynab
+from ynab.models.categories_response import CategoriesResponse  # noqa: E501
+from ynab.rest import ApiException
 
 
 class TestCategoriesResponse(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestCategoriesResponse(unittest.TestCase):
     def testCategoriesResponse(self):
         """Test CategoriesResponse"""
         # FIXME: construct object with mandatory attributes with example values
-        # model = pynYnAB.ynab_api.models.categories_response.CategoriesResponse()  # noqa: E501
+        # model = ynab.models.categories_response.CategoriesResponse()  # noqa: E501
         pass
 
 

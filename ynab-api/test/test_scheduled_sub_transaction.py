@@ -15,9 +15,9 @@ from __future__ import absolute_import
 
 import unittest
 
-import pynYnAB.ynab_api
-from pynYnAB.ynab_api.models.scheduled_sub_transaction import ScheduledSubTransaction  # noqa: E501
-from pynYnAB.ynab_api.rest import ApiException
+import ynab
+from ynab.models.scheduled_sub_transaction import ScheduledSubTransaction  # noqa: E501
+from ynab.rest import ApiException
 
 
 class TestScheduledSubTransaction(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestScheduledSubTransaction(unittest.TestCase):
     def testScheduledSubTransaction(self):
         """Test ScheduledSubTransaction"""
         # FIXME: construct object with mandatory attributes with example values
-        # model = pynYnAB.ynab_api.models.scheduled_sub_transaction.ScheduledSubTransaction()  # noqa: E501
+        # model = ynab.models.scheduled_sub_transaction.ScheduledSubTransaction()  # noqa: E501
         pass
 
 

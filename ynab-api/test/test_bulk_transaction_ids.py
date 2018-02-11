@@ -15,9 +15,9 @@ from __future__ import absolute_import
 
 import unittest
 
-import pynYnAB.ynab_api
-from pynYnAB.ynab_api.models.bulk_transaction_ids import BulkTransactionIds  # noqa: E501
-from pynYnAB.ynab_api.rest import ApiException
+import ynab
+from ynab.models.bulk_transaction_ids import BulkTransactionIds  # noqa: E501
+from ynab.rest import ApiException
 
 
 class TestBulkTransactionIds(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestBulkTransactionIds(unittest.TestCase):
     def testBulkTransactionIds(self):
         """Test BulkTransactionIds"""
         # FIXME: construct object with mandatory attributes with example values
-        # model = pynYnAB.ynab_api.models.bulk_transaction_ids.BulkTransactionIds()  # noqa: E501
+        # model = ynab.models.bulk_transaction_ids.BulkTransactionIds()  # noqa: E501
         pass
 
 

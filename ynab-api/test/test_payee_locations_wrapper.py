@@ -15,9 +15,9 @@ from __future__ import absolute_import
 
 import unittest
 
-import pynYnAB.ynab_api
-from pynYnAB.ynab_api.models.payee_locations_wrapper import PayeeLocationsWrapper  # noqa: E501
-from pynYnAB.ynab_api.rest import ApiException
+import ynab
+from ynab.models.payee_locations_wrapper import PayeeLocationsWrapper  # noqa: E501
+from ynab.rest import ApiException
 
 
 class TestPayeeLocationsWrapper(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestPayeeLocationsWrapper(unittest.TestCase):
     def testPayeeLocationsWrapper(self):
         """Test PayeeLocationsWrapper"""
         # FIXME: construct object with mandatory attributes with example values
-        # model = pynYnAB.ynab_api.models.payee_locations_wrapper.PayeeLocationsWrapper()  # noqa: E501
+        # model = ynab.models.payee_locations_wrapper.PayeeLocationsWrapper()  # noqa: E501
         pass
 
 

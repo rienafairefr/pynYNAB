@@ -15,9 +15,9 @@ from __future__ import absolute_import
 
 import unittest
 
-import pynYnAB.ynab_api
-from pynYnAB.ynab_api.models.scheduled_transaction_wrapper import ScheduledTransactionWrapper  # noqa: E501
-from pynYnAB.ynab_api.rest import ApiException
+import ynab
+from ynab.models.scheduled_transaction_wrapper import ScheduledTransactionWrapper  # noqa: E501
+from ynab.rest import ApiException
 
 
 class TestScheduledTransactionWrapper(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestScheduledTransactionWrapper(unittest.TestCase):
     def testScheduledTransactionWrapper(self):
         """Test ScheduledTransactionWrapper"""
         # FIXME: construct object with mandatory attributes with example values
-        # model = pynYnAB.ynab_api.models.scheduled_transaction_wrapper.ScheduledTransactionWrapper()  # noqa: E501
+        # model = ynab.models.scheduled_transaction_wrapper.ScheduledTransactionWrapper()  # noqa: E501
         pass
 
 

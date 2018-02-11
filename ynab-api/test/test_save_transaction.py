@@ -15,9 +15,9 @@ from __future__ import absolute_import
 
 import unittest
 
-import pynYnAB.ynab_api
-from pynYnAB.ynab_api.models.save_transaction import SaveTransaction  # noqa: E501
-from pynYnAB.ynab_api.rest import ApiException
+import ynab
+from ynab.models.save_transaction import SaveTransaction  # noqa: E501
+from ynab.rest import ApiException
 
 
 class TestSaveTransaction(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestSaveTransaction(unittest.TestCase):
     def testSaveTransaction(self):
         """Test SaveTransaction"""
         # FIXME: construct object with mandatory attributes with example values
-        # model = pynYnAB.ynab_api.models.save_transaction.SaveTransaction()  # noqa: E501
+        # model = ynab.models.save_transaction.SaveTransaction()  # noqa: E501
         pass
 
 

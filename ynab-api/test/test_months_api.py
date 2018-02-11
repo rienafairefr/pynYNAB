@@ -15,16 +15,16 @@ from __future__ import absolute_import
 
 import unittest
 
-import pynYnAB.ynab_api
-from pynYnAB.ynab_api.api.months_api import MonthsApi  # noqa: E501
-from pynYnAB.ynab_api.rest import ApiException
+import ynab
+from ynab.api.months_api import MonthsApi  # noqa: E501
+from ynab.rest import ApiException
 
 
 class TestMonthsApi(unittest.TestCase):
     """MonthsApi unit test stubs"""
 
     def setUp(self):
-        self.api = pynYnAB.ynab_api.api.months_api.MonthsApi()  # noqa: E501
+        self.api = ynab.api.months_api.MonthsApi()  # noqa: E501
 
     def tearDown(self):
         pass

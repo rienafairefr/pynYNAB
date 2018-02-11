@@ -15,9 +15,9 @@ from __future__ import absolute_import
 
 import unittest
 
-import pynYnAB.ynab_api
-from pynYnAB.ynab_api.models.budget_detail import BudgetDetail  # noqa: E501
-from pynYnAB.ynab_api.rest import ApiException
+import ynab
+from ynab.models.budget_detail import BudgetDetail  # noqa: E501
+from ynab.rest import ApiException
 
 
 class TestBudgetDetail(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestBudgetDetail(unittest.TestCase):
     def testBudgetDetail(self):
         """Test BudgetDetail"""
         # FIXME: construct object with mandatory attributes with example values
-        # model = pynYnAB.ynab_api.models.budget_detail.BudgetDetail()  # noqa: E501
+        # model = ynab.models.budget_detail.BudgetDetail()  # noqa: E501
         pass
 
 
