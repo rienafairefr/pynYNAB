@@ -51,7 +51,7 @@ setup(
 
     keywords=['nynab', 'ynab'],
 
-    packages=find_packages(),
+    packages=find_packages() + ['ynab-api/ynab_api'],
 
     install_requires=[
         'requests',
@@ -61,7 +61,6 @@ setup(
         'aenum',
         'ofxtools',
         'sqlalchemy',
-        'ynab_api',
         'pyYAML'
     ],
 
