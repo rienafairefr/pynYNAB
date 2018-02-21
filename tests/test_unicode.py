@@ -14,7 +14,7 @@ class UnitTestsUnicode(unittest.TestCase):
         client = nYnabClientFactory().create_client(budget_name=u'budgetname',
                                                     connection=MockConnection(),
                                                     sync=False)
-        client.budget.be_payees.append(payee)
+        client.budget.payees.append(payee)
         client.session.commit()
 
     def test_8bitbytestringserror(self):
@@ -23,4 +23,4 @@ class UnitTestsUnicode(unittest.TestCase):
         self.run_test(u'Caffè Nero')
         # without the u fails in python 2.7
         if six.PY2:
-            self.assertRaises(Exception,lambda:self.run_test('Caffè Nero'))
+            self.assertRaises(Exception, lambda:self.run_test('Caffè Nero'))

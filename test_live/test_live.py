@@ -23,10 +23,10 @@ class LiveTests(CommonLive):
         )
         self.client.add_transaction(transaction)
         self.reload()
-        self.assertIn(transaction, self.client.budget.be_transactions)
+        self.assertIn(transaction, self.client.budget.transactions)
         self.client.delete_transaction(transaction)
         self.reload()
-        self.assertNotIn(transaction, self.client.budget.be_transactions)
+        self.assertNotIn(transaction, self.client.budget.transactions)
 
 
 test_budget_name = 'Test Budget - Dont Remove'

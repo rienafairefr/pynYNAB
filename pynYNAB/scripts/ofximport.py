@@ -19,7 +19,7 @@ def do_ofximport(file, client):
     delta = 0
     stmts = get_stmts(file)
 
-    accounts = client.budget.be_accounts
+    accounts = client.budget.accounts
     accountvsnotes = {account.note: account for account in accounts if account.note is not None}
 
     for stmt in stmts:
@@ -48,17 +48,17 @@ def do_ofximport(file, client):
                     for ofx_transaction in stmt.transactions:
                         payee_name = ofx_transaction.name if ofx_transaction.payee is None else ofx_transaction.payee
                         try:
-                            payee = next(p for p in client.budget.be_payees if p.name == payee_name)
+                            payee = next(p for p in client.budget.payees if p.name == payee_name)
                         except StopIteration:
                             payee = Payee(
                                 name=payee_name
                             )
-                            client.budget.be_payees.append(payee)
+                            client.budget.payees.append(payee)
                             delta += 1
 
                         # use ftid so we don't import duplicates
                         if not any(ofx_transaction.fitid in transaction.memo for transaction in
-                                   client.budget.be_transactions if
+                                   client.budget.transactions if
                                    transaction.memo is not None and transaction.entities_account_id == account.id):
                             transaction = Transaction(
                                 date=ofx_transaction.dtposted,
@@ -71,7 +71,7 @@ def do_ofximport(file, client):
                                 amount=float(ofx_transaction.trnamt),
                                 entities_account_id=account.id
                             )
-                            client.budget.be_transactions.append(transaction)
+                            client.budget.transactions.append(transaction)
                             delta += 1
 
     return delta

@@ -49,7 +49,7 @@ class TestOperations(TestCommonMock):
         client = factory.create_client(budget_name='',connection=MockConnection2(), sync=False)
         budget_version1 = BudgetVersion(version_name='TestBudget')
         budget_version2 = BudgetVersion(version_name='NewTestBudget')
-        client.catalog.ce_budget_versions= [budget_version1, budget_version2]
+        client.catalog.budget_versions= [budget_version1, budget_version2]
 
         client.select_budget(budget_name='NewTestBudget')
         self.assertEqual(budget_version2.id, client.budget_version_id)

@@ -11,7 +11,7 @@ args = parser.parse_args()
 N = 20
 client = clientfromargs(args)
 client.sync()
-account = next(acc for acc in client.budget.be_accounts)
+account = next(acc for acc in client.budget.accounts)
 for _ in range(0, N):
     transaction = Transaction(
         cleared='Uncleared',

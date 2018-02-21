@@ -1,7 +1,7 @@
 # coding=utf-8
 import unittest
 
-from pynYNAB.ClientFactory import clientfromkwargs
+from pynYNAB.ClientFactory import clientfromkwargs, BudgetClient
 from pynYNAB.schema import DictDiffer
 from pynYNAB.schema.Entity import fromapi_conversion_functions_table
 from pynYNAB.schema.types import AmountType
@@ -66,7 +66,7 @@ class LiveTestBudget(unittest.TestCase):
     def test_api_scaling_is_ok(self):
         sync_data = self.client.budgetClient.get_sync_data_obj()
         server_entities = sync_data['changed_entities']
-        transactions = server_entities['be_transactions']
+        transactions = server_entities[BudgetClient.prefix + 'transactions']
         amount = None
         for transaction in transactions:
             if transaction['memo'] == 'TEST TRANSACTION':

@@ -20,6 +20,7 @@ class CatalogClient(RootObjClient):
         return dict(user_id=self.client.user_id)
 
     opname = 'syncCatalogData'
+    prefix = 'ce_'
 
     def __init__(self, client):
         super(CatalogClient, self).__init__(client.catalog, client)
@@ -31,6 +32,7 @@ class BudgetClient(RootObjClient):
         return dict(calculated_entities_included=False, budget_version_id=self.client.budget_version_id)
 
     opname = 'syncBudgetData'
+    prefix = 'be_'
 
     def __init__(self, client):
         super(BudgetClient, self).__init__(client.budget, client)

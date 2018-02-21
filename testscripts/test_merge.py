@@ -14,7 +14,7 @@ class DummyConnection(object):
     def dorequest(self, request_data, opname):
         d = dict(server_knowledge_of_device=0, current_server_knowledge=42)
         if opname == 'syncBudgetData':
-            d.update(dict(changed_entities=dict(be_transactions=[tr.get_apidict() for tr in self.transactions],
+            changed = dict(be_transactions=[tr.get_apidict() for tr in self.transactions],
                                                 be_master_categories=[],
                                                 be_settings=[],
                                                 be_monthly_budget_calculations=[],
@@ -31,8 +31,10 @@ class DummyConnection(object):
                                                 be_payees=[],
                                                 be_monthly_subcategory_budgets=[],
                                                 be_payee_rename_conditions=[],
-                                                be_accounts=[],
-                                                last_month='',
+                                                be_accounts=[])
+
+
+            d.update(dict(changed_entities=dict(last_month='',
                                                 first_month='')))
         elif opname == 'syncCatalogData':
             d.update(dict(changed_entities=dict(ce_user_budgets=[],
@@ -55,7 +57,7 @@ for size in [10, 20, 40, 70, 100, 200, 400, 700,1000, 2000, 4000]:
     client.sync()
     time_elapsed = time.time() - t
     elapsed.append(round(time_elapsed, 1))
-    assert (set(client.budget.be_transactions) == set(connection.transactions))
+    assert (set(client.budget.transactions) == set(connection.transactions))
     print('%i,%f' % (size, time_elapsed))
 print(','.join(str(i) for i in elapsed))
 
