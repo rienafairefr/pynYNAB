@@ -13,5 +13,3 @@ ynab.yaml
 nosetests*.xml
 tests/*.json
 testscripts/*.json
-
-ynab-api/
