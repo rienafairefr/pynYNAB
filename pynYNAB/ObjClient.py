@@ -86,7 +86,7 @@ class RootObjClient():
 
     def update_from_sync_data(self, sync_data, update_keys=None):
         changed_entities = sync_data['changed_entities']
-        for k in changed_entities:
+        for k in list(changed_entities.keys()):
             changed_entities[k.replace(self.prefix, '')] = changed_entities.pop(k)
         self.update_from_api_changed_entitydicts(sync_data['changed_entities'], update_keys)
 
