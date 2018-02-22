@@ -9,22 +9,22 @@ class TestGetChangedEntities(CommonTest):
         super(TestGetChangedEntities, self).setUp()
         self.obj = Budget()
         self.account = Account()
-        self.obj.be_accounts = [self.account]
+        self.obj.accounts = [self.account]
         self.obj.clear_changed_entities()
         self.account2 = Account(id=self.account)
 
     def testgetChangedEntities_add(self):
         added_account = Account()
-        self.obj.be_accounts.append(added_account)
+        self.obj.accounts.append(added_account)
         changed_entities = self.obj.get_changed_entities()
-        self.assertEqual(changed_entities, {'be_accounts': [added_account]})
+        self.assertEqual(changed_entities, {'accounts': [added_account]})
 
     def testgetChangedEntities_delete(self):
-        self.obj.be_accounts.remove(self.account)
+        self.obj.accounts.remove(self.account)
         changed_entities = self.obj.get_changed_entities()
         deleted = self.account.copy()
         deleted.is_tombstone = True
-        self.assertEqual(changed_entities, {'be_accounts': [deleted]})
+        self.assertEqual(changed_entities, {'accounts': [deleted]})
 
     def testgetChangedEntities_modify(self):
         self.account.account_name = 'BLA'
@@ -44,16 +44,16 @@ class TestUpdateChangedEntities(CommonTest):
     def testupdateChangedEntities_add(self):
         new_account = Account()
         changed_entities = dict(
-            be_accounts=[new_account]
+            accounts=[new_account]
         )
         self.client.budgetClient.update_from_changed_entities(changed_entities)
         self.assertEqual(len(self.client.budget.be_accounts), 2)
-        self.assertIn(new_account, self.client.budget.be_accounts)
+        self.assertIn(new_account, self.client.budget.accounts)
 
     def testupdateChangedEntities_delete(self):
         self.account2.is_tombstone = True
         changed_entities = dict(
-            be_accounts=[self.account2]
+            accounts=[self.account2]
         )
         self.client.budgetClient.update_from_changed_entities(changed_entities)
         self.assertEqual(len(self.client.budget.be_accounts), 0)
@@ -62,12 +62,12 @@ class TestUpdateChangedEntities(CommonTest):
         self.account2 = self.account.copy()
         self.account2.note = 'note'
         changed_entities = dict(
-            be_accounts=[self.account2]
+            accounts=[self.account2]
         )
 
         self.client.budgetClient.update_from_changed_entities(changed_entities)
-        self.assertEqual(len(self.client.budget.be_accounts), 1)
-        acc = self.client.budget.be_accounts[0]
+        self.assertEqual(len(self.client.budget.accounts), 1)
+        acc = self.client.budget.accounts[0]
         self.assertEqual(acc, self.account2)
 
 

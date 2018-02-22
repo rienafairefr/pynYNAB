@@ -102,8 +102,8 @@ class nYnabClient_(Base):
             name="Transfer : %s" % account.account_name
         )
         immediateincomeid = next(
-            s.id for s in self.budget.be_subcategories if s.internal_name == 'Category/__ImmediateIncome__')
-        startingbalanceid = next(p.id for p in self.budget.be_payees if p.internal_name == 'StartingBalancePayee')
+            s.id for s in self.budget.subcategories if s.internal_name == 'Category/__ImmediateIncome__')
+        startingbalanceid = next(p.id for p in self.budget.payees if p.internal_name == 'StartingBalancePayee')
 
         transaction = Transaction(
             accepted=True,
@@ -118,40 +118,40 @@ class nYnabClient_(Base):
             is_tombstone=False
         )
 
-        self.budget.be_accounts.append(account)
-        self.budget.be_payees.append(payee)
-        self.budget.be_transactions.append(transaction)
+        self.budget.accounts.append(account)
+        self.budget.payees.append(payee)
+        self.budget.transactions.append(transaction)
         pass
 
     @operation(1)
     def delete_account(self, account):
-        self.budget.be_accounts.remove(account)
+        self.budget.accounts.remove(account)
 
     @operation(1)
     def add_transaction(self, transaction):
-        self.budget.be_transactions.append(transaction)
+        self.budget.transactions.append(transaction)
 
     def add_transactions(self, transaction_list):
         @operation(len(transaction_list))
         def _add_transactions_method(self, tr_list):
             for tr in tr_list:
-                self.budget.be_transactions.append(tr)
+                self.budget.transactions.append(tr)
 
         return _add_transactions_method(transaction_list)
 
     @operation(1)
     def delete_transaction(self, transaction):
-        self.budget.be_transactions.remove(transaction)
+        self.budget.transactions.remove(transaction)
 
     @operation(1)
     def delete_budget(self, budget_name):
-        for budget in self.catalog.ce_budgets:
+        for budget in self.catalog.budgets:
             if budget.budget_name == budget_name:
-                self.catalog.ce_budgets.remove(budget)
+                self.catalog.budgets.remove(budget)
 
     def select_budget(self, budget_name):
         self.budget_version_id = None
-        for budget_version in self.catalog.ce_budget_versions:
+        for budget_version in self.catalog.budget_versions:
             if budget_version.version_name == budget_name:
                 self.budget_version_id = budget_version.id
         if self.budget_version_id is None:

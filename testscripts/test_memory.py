@@ -18,7 +18,7 @@ client = clientfromargs(Args(),sync=False)
 def func():
     print('test_sync')
     for i in range(0,5000):
-        client.budget.be_transactions.append(Transaction())
+        client.budget.transactions.append(Transaction())
     client.session.commit()
     client.budget.clear_changed_entities()
     print('Entities in the client: %i'%(sum([len(getattr(client.budget, f)) for f in client.budget.listfields]) +

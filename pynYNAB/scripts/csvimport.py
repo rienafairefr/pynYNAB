@@ -35,11 +35,11 @@ def do_csvimport(args, client):
     LOG.debug('schema headers %s' % args.schema.headers)
     delta = 0
 
-    accounts = {x.account_name: x for x in client.budget.be_accounts}
-    payees = {p.name: p for p in client.budget.be_payees}
-    mastercategories_perid = {m.id: m for m in client.budget.be_master_categories}
+    accounts = {x.account_name: x for x in client.budget.accounts}
+    payees = {p.name: p for p in client.budget.payees}
+    mastercategories_perid = {m.id: m for m in client.budget.master_categories}
     subcategories = {}
-    for s in client.budget.be_subcategories:
+    for s in client.budget.subcategories:
         m = mastercategories_perid[s.entities_master_category_id]
         subcategories[m.name + ':' + s.name] = s
 
@@ -59,7 +59,7 @@ def do_csvimport(args, client):
         except KeyError:
             LOG.debug('Couldn''t find this payee: %s' % payee_name)
             payee = Payee(name=payee_name)
-            client.budget.be_payees.append(payee)
+            client.budget.payees.append(payee)
             delta += 1
             return payee
 
@@ -138,9 +138,9 @@ def do_csvimport(args, client):
                 source="Imported"
             )
 
-            if args.import_duplicates or not (transaction.key2 in [tr.key2 for tr in client.budget.be_transactions]):
+            if args.import_duplicates or not (transaction.key2 in [tr.key2 for tr in client.budget.transactions]):
                 LOG.debug('Appending transaction %s ' % transaction.get_dict())
-                client.budget.be_transactions.append(transaction)
+                client.budget.transactions.append(transaction)
                 delta += 1
             else:
                 LOG.debug('Duplicate transaction found %s ' % transaction.get_dict())

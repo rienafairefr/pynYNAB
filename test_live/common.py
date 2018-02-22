@@ -28,7 +28,7 @@ def needs_account(account_name=None):
     def decorator(fn):
         @wraps(fn)
         def wrapped(self, *args, **kwargs):
-            for account in self.client.budget.be_accounts:
+            for account in self.client.budget.accounts:
                 if account_name is None or account.account_name == account_name:
                     self.account = account
                     fn(self, *args, **kwargs)

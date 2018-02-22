@@ -84,10 +84,11 @@ class RootObjClient():
             getattr(self.obj,name).dirty=True
         self.session.commit()
 
-
     def update_from_sync_data(self, sync_data, update_keys=None):
-        self.update_from_api_changed_entitydicts(sync_data['changed_entities'],update_keys)
-
+        changed_entities = sync_data['changed_entities']
+        for k in list(changed_entities.keys()):
+            changed_entities[k.replace(self.prefix, '')] = changed_entities.pop(k)
+        self.update_from_api_changed_entitydicts(sync_data['changed_entities'], update_keys)
 
     def sync(self, update_keys=None):
         if self.connection is None:
@@ -120,6 +121,11 @@ class RootObjClient():
 
     def push(self, update_from_sync_data=True, update_keys=None):
         changed_entities = self.obj.get_changed_apidict()
+
+        for key, value in list(changed_entities.items()):
+            if isinstance(value, list):
+                changed_entities[self.prefix + key] = changed_entities.pop(key)
+
         request_data = dict(starting_device_knowledge=self.client.starting_device_knowledge,
                             ending_device_knowledge=self.client.ending_device_knowledge,
                             device_knowledge_of_server=self.obj.knowledge.device_knowledge_of_server,
