@@ -4,11 +4,11 @@ import os
 import unittest
 
 from dotenv import load_dotenv, find_dotenv
-from ynab import BudgetsApi
+from ynab_api import BudgetsApi
 
-from ynab.configuration import Configuration
-from ynab.rest import ApiException
-from ynab.api_client import ApiClient
+from ynab_api.configuration import Configuration
+from ynab_api.rest import ApiException
+from ynab_api.api_client import ApiClient
 
 load_dotenv(find_dotenv())
 
