@@ -1,0 +1,3 @@
+sphinx
+doctr
+-r dev-requirements.txt

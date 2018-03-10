@@ -11,6 +11,14 @@ install:
 before_install:
 - export TRAVIS_COMMIT_MESSAGE=$(git log --format=%B -n 1 $TRAVIS_COMMIT)
 - echo "$TRAVIS_COMMIT_MESSAGE"
+jobs:
+  include:
+    - stage: deploy_docs
+      script:
+        - pip install -r docs-requirements.txt
+        - "./docs_build.sh"
+        - "./docs_deploy.sh"
+      python: 3.5
 script:
 - ./test.sh
 before_deploy:

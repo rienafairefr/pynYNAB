@@ -12,7 +12,8 @@
 nYNABapi
 ========
 
-a python client for the new YNAB API
+a python client for the new YNAB API. This is integrating with the old-school, internal-use API
+on https://app.youneedabudget.com/api/v1, not the new API that went live on December 2017
 
 Installation
 ------------
@@ -39,7 +40,7 @@ API Documentation
 See the wiki `WIKI`_ for an extended explanation and usage examples
 
 Preventing harm to nYnab servers
----------------------------
+--------------------------------
 
 I've taken all precautionary steps so that this python Client can't affect YNAB even if used too widely. 
 

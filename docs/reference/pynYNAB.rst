@@ -1,9 +1,5 @@
-nameless
-========
-
-.. testsetup::
-
-    from pynYNAB import *
+pynYNAB
+=======
 
 .. automodule:: pynYNAB
     :members:
