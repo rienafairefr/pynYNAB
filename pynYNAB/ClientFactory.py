@@ -95,8 +95,8 @@ def clientfromargs(args, sync=True):
 
 
 def clientfromkwargs(**kwargs):
-    return nYnabClientFactory().create_client(kwargs.get("email", None),\
-                                              kwargs.get("password", None),\
-                                              kwargs.get("budget_name", None),\
-                                              kwargs.get("connection", None),\
+    return nYnabClientFactory().create_client(kwargs.get("email", None),
+                                              kwargs.get("password", None),
+                                              kwargs.get("budget_name", None),
+                                              kwargs.get("connection", None),
                                               kwargs.get("sync", True))
