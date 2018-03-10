@@ -116,6 +116,13 @@ class OfxImport(object):
 COMMANDS = dict(csvimport=CsvImport,
                 ofximport=OfxImport)
 
+def csvimport_parser():
+    return CsvImport().parser
+
+
+def ofximport_parser():
+    return OfxImport().parser
+
 
 class MainCommands(object):
     def __init__(self):
