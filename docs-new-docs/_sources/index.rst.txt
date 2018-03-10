@@ -10,6 +10,7 @@ Welcome to pynYNAB's documentation!
    usage
    reference/index
    authors
+   scripts
 
 Indices and tables
 ==================
