@@ -1,9 +1,7 @@
 import unittest
 
 import sys
-
 import os
-
 try:
     import mock
 except ImportError:

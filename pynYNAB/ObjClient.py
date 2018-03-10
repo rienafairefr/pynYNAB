@@ -1,5 +1,5 @@
 import logging
-from abc import abstractproperty,ABCMeta
+from abc import abstractproperty, ABCMeta
 
 import itertools
 
@@ -7,12 +7,14 @@ from pynYNAB.schema import fromapi_conversion_functions_table
 
 LOG = logging.getLogger(__name__)
 
+
 def split_seq(iterable, size):
     it = iter(iterable)
     item = list(itertools.islice(it, size))
     while item:
         yield item
         item = list(itertools.islice(it, size))
+
 
 class RootObjClient():
     __metaclass__ = ABCMeta
@@ -54,7 +56,7 @@ class RootObjClient():
         self.update_from_changed_entities(modified_entitydicts)
 
     def update_from_changed_entities(self, changed_entities):
-       # to_add =[]
+        # to_add =[]
         for name in changed_entities:
             value = changed_entities[name]
             if not isinstance(value, list) or not value:
@@ -67,7 +69,7 @@ class RootObjClient():
 
             cls = self.obj.listfields[name]
 
-            for seq in split_seq(value.keys(),999):
+            for seq in split_seq(value.keys(), 999):
                 for each in self.session.query(cls).filter(cls.id.in_(seq)).all():
                     v = value.pop(each.id)
                     if v.is_tombstone:
@@ -77,17 +79,13 @@ class RootObjClient():
                         # Only merge entities that already exist in the db
                         self.session.merge(v)
 
-
-
             self.session.add_all(value.values())
 
-            getattr(self.obj,name).dirty=True
+            getattr(self.obj, name).dirty = True
         self.session.commit()
 
-
     def update_from_sync_data(self, sync_data, update_keys=None):
-        self.update_from_api_changed_entitydicts(sync_data['changed_entities'],update_keys)
-
+        self.update_from_api_changed_entitydicts(sync_data['changed_entities'], update_keys)
 
     def sync(self, update_keys=None):
         if self.connection is None:
@@ -97,7 +95,7 @@ class RootObjClient():
         self.server_entities[self.opname] = sync_data['changed_entities']
         LOG.debug('server_knowledge_of_device ' + str(sync_data['server_knowledge_of_device']))
         LOG.debug('current_server_knowledge ' + str(sync_data['current_server_knowledge']))
-        self.update_from_sync_data(sync_data,update_keys)
+        self.update_from_sync_data(sync_data, update_keys)
         self.session.commit()
         self.obj.clear_changed_entities()
 
@@ -108,13 +106,13 @@ class RootObjClient():
         if change > 0:
             LOG.debug('Server knowledge has gone up by ' + str(
                 change) + '. We should be getting back some entities from the server')
-        if  self.obj.knowledge.current_device_knowledge < server_knowledge_of_device:
-            if  self.obj.knowledge.current_device_knowledge != 0:
+        if self.obj.knowledge.current_device_knowledge < server_knowledge_of_device:
+            if self.obj.knowledge.current_device_knowledge != 0:
                 LOG.error('The server knows more about this device than we know about ourselves')
             self.obj.knowledge.current_device_knowledge = server_knowledge_of_device
         self.obj.knowledge.device_knowledge_of_server = current_server_knowledge
 
-        LOG.debug('current_device_knowledge %s' %  self.obj.knowledge.current_device_knowledge)
+        LOG.debug('current_device_knowledge %s' % self.obj.knowledge.current_device_knowledge)
         LOG.debug('device_knowledge_of_server %s' % self.obj.knowledge.device_knowledge_of_server)
         self.synced = True
 
@@ -129,6 +127,7 @@ class RootObjClient():
         def validate():
             self.session.commit()
             self.obj.clear_changed_entities()
+
         if self.connection is not None:
             sync_data = self.connection.dorequest(request_data, self.opname)
             LOG.debug('server_knowledge_of_device ' + str(sync_data['server_knowledge_of_device']))
@@ -144,13 +143,13 @@ class RootObjClient():
                 if change > 0:
                     LOG.debug('Server knowledge has gone up by ' + str(
                         change) + '. We should be getting back some entities from the server')
-                if  self.obj.knowledge.current_device_knowledge < server_knowledge_of_device:
-                    if  self.obj.knowledge.current_device_knowledge != 0:
+                if self.obj.knowledge.current_device_knowledge < server_knowledge_of_device:
+                    if self.obj.knowledge.current_device_knowledge != 0:
                         LOG.error('The server knows more about this device than we know about ourselves')
                     self.obj.knowledge.current_device_knowledge = server_knowledge_of_device
                 self.obj.knowledge.device_knowledge_of_server = current_server_knowledge
 
-                LOG.debug('current_device_knowledge %s' %  self.obj.knowledge.current_device_knowledge)
+                LOG.debug('current_device_knowledge %s' % self.obj.knowledge.current_device_knowledge)
                 LOG.debug('device_knowledge_of_server %s' % self.obj.knowledge.device_knowledge_of_server)
         else:
             validate()

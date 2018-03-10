@@ -15,15 +15,20 @@ class MockConnection(object):
 
     def dorequest(self, request_dic, opname):
         if opname == 'syncCatalogData':
-            return {'changed_entities':{k:[] for k in self.catalog.listfields},'server_knowledge_of_device':0,'current_server_knowledge':123}
+            return {'changed_entities': {k: [] for k in self.catalog.listfields}, 'server_knowledge_of_device': 0,
+                    'current_server_knowledge': 123}
         if opname == 'syncBudgetData':
-            return {'changed_entities':{k:[] for k in self.budget.listfields},'server_knowledge_of_device':0,'current_server_knowledge':123}
+            return {'changed_entities': {k: [] for k in self.budget.listfields}, 'server_knowledge_of_device': 0,
+                    'current_server_knowledge': 123}
 
     def init_session(self):
         pass
 
     user_id = '1'
+
+
 factory = nYnabClientFactory()
+
 
 class TestCommonMock(unittest.TestCase):
     def setUp(self):
@@ -38,7 +43,7 @@ class TestCommonMock(unittest.TestCase):
         subcategory = SubCategory(name='Immediate Income',
                                   internal_name='Category/__ImmediateIncome__',
                                   entities_master_category=master_category)
-        payee = Payee(name='Starting Balance Payee',internal_name='StartingBalancePayee')
+        payee = Payee(name='Starting Balance Payee', internal_name='StartingBalancePayee')
         session.add(master_category)
         session.add(subcategory)
         session.add(payee)

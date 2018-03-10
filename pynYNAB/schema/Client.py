@@ -16,9 +16,11 @@ def operation(expected_delta):
         @wraps(fn)
         def wrapped(self, *args, **kwargs):
             fn(self, *args, **kwargs)
-            LOG.debug('push after '+fn.__name__)
+            LOG.debug('push after ' + fn.__name__)
             self.push(expected_delta)
+
         return wrapped
+
     return operation_decorator
 
 
@@ -76,7 +78,7 @@ class nYnabClient_(Base):
         budget_changed_entities = self.budget.get_changed_apidict()
 
         delta = sum(len(l) for k, l in catalog_changed_entities.items()) + \
-            sum(len(l) for k, l in budget_changed_entities.items())
+                sum(len(l) for k, l in budget_changed_entities.items())
 
         if delta != expected_delta:
             raise WrongPushException(expected_delta, delta)
@@ -178,4 +180,3 @@ class nYnabClient_(Base):
                                       "currency_format": json.dumps(currency_format),
                                       "date_format": json.dumps(date_format)
                                   })
-

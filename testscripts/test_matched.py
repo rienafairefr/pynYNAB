@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from dotenv import load_dotenv,find_dotenv
+from dotenv import load_dotenv, find_dotenv
 
 from pynYNAB.ClientFactory import clientfromargs
 from pynYNAB.schema.budget import Transaction
@@ -14,8 +14,8 @@ args = parser.parse_known_args()[0]
 client = clientfromargs(args)
 client.sync()
 
-accounts = {v.account_name:v for v in client.budget.be_accounts}
-payees = {p.name:p for p in client.budget.be_payees}
+accounts = {v.account_name: v for v in client.budget.be_accounts}
+payees = {p.name: p for p in client.budget.be_payees}
 listaccounts = list(accounts.values())
 account0 = listaccounts[0]
 account1 = listaccounts[1]
@@ -36,8 +36,7 @@ payee = get_or_create_payee(client, payee_name)
 payee_id = payee.id
 
 amount = 10
-date = datetime(2016,10,5).date()
-
+date = datetime(2016, 10, 5).date()
 
 transaction_1 = Transaction(
     entities_account_id=account_id,

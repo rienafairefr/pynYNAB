@@ -37,7 +37,7 @@ webpackJsonp([1], [function(e, n, i) {
                 if (b.hasOwnProperty(l)) {
                     if (e = [], n = b[l], n.name && (e.push(n.name.toLowerCase()), n.options && n.options.aliases && n.options.aliases.length))
                         for (i = 0; i < n.options.aliases.length; i++) e.push(n.options.aliases[i].toLowerCase());
-                    for (t = o(n.fn, "function") ? n.fn() : n.fn, s = 0; s < e.length; s++) r = e[s], a = r.split("."), 1 === a.length ? y[a[0]] = t : (!y[a[0]] || y[a[0]] instanceof Boolean || (y[a[0]] = new Boolean(y[a[0]])), y[a[0]][a[1]] = t), w.push((t ? "" : "no-") + a.join("-"))
+                    for (t = o(n.fn, "function") ? n.fn() : n.fn, s = 0; s < e.length; s++) r = e[s], a = r.split("."), 1 === a.length ? y[a[0]] = t : (!y[a[0]] || y[a[0]] instanceof Boolean || (y[a[0]] = Boolean(y[a[0]])), y[a[0]][a[1]] = t), w.push((t ? "" : "no-") + a.join("-"))
                 }
         }
 

@@ -45,6 +45,9 @@ class LiveTests2(unittest.TestCase):
                     if server_changed_entities[key] != obj_dict2[key]:
                         AssertionError('changed {}: {}->{}'.format(key, server_changed_entities[key], obj_dict2[key]))
 
+test_budget_name = 'Test Budget - Dont Remove'
+
+
 
 # this test cases expect that
 # a budget named "Test Budget" exists
@@ -71,5 +74,4 @@ class LiveTestBudget(unittest.TestCase):
         for transaction in transactions:
             if transaction['memo'] == 'TEST TRANSACTION':
                 amount = fromapi_conversion_functions_table[AmountType](AmountType, transaction['amount'])
-                break
         self.assertEqual(12.34, amount)

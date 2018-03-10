@@ -19,6 +19,7 @@ from pynYNAB.schema.types import AmountType
 
 LOG = logging.getLogger(__name__)
 
+
 class AccountTypes(Enum):
     undef = 'undef'
     Checking = 'Checking'
@@ -35,7 +36,7 @@ class AccountTypes(Enum):
 
 
 def flag(s):
-    return 'ynab-flag-'+s
+    return 'ynab-flag-' + s
 
 
 class ColorFlagType(Enum):
@@ -95,8 +96,8 @@ class BaseModel(object):
     @property
     def scalarfields(self):
         scalarcolumns = self.__table__.columns
-        return {k: scalarcolumns[k].type.__class__ for k in scalarcolumns.keys() if k != 'parent_id' and k != 'knowledge_id'}
-
+        return {k: scalarcolumns[k].type.__class__ for k in scalarcolumns.keys() if
+                k != 'parent_id' and k != 'knowledge_id'}
 
 
 def configure_listener(mapper, class_):
@@ -116,7 +117,7 @@ def expectedtype_listener(rel_attr):
         value_type = type(value)
         if expected_type != value_type:
             raise ValueError('type %s, attribute %s, expect a %s, received a %s ' % (
-            type(target), rel_attr.key, expected_type, value_type))
+                type(target), rel_attr.key, expected_type, value_type))
 
 
 def default_listener(col_attr, default):
@@ -162,7 +163,6 @@ re_uuid = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{1
 re_date = re.compile(r'\d{4}[\/ .-]\d{2}[\/.-]\d{2}')
 
 
-
 def date_from_api(columntype, string):
     result = re_date.search(string)
     if result is not None:
@@ -179,7 +179,7 @@ def enumconversion(t, x):
 
 fromapi_conversion_functions_table = {
     Date: date_from_api,
-    DateTime: lambda t,x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f'),
+    DateTime: lambda t, x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f'),
     AmountType: lambda t, x: float(x) / 1000,
     sqlaEnum: enumconversion
 }
@@ -222,7 +222,7 @@ class Entity(BaseModel):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def key(self,excludes=None):
+    def key(self, excludes=None):
         t = tuple()
         for k, v in self.get_dict().items():
             if excludes and k in excludes:
@@ -289,5 +289,3 @@ class DictDiffer(object):
 
     def changed(self):
         return set(o for o in self.intersect if self.past_dict[o] != self.current_dict[o])
-
-

@@ -60,6 +60,7 @@ def get_or_create_payee(client, name):
     client.push(1)
     return payee
 
+
 def get_one_or_create(session,
                       model,
                       create_method='',
@@ -78,8 +79,10 @@ def get_one_or_create(session,
             session.rollback()
             return session.query(model).filter_by(**kwargs).one(), True
 
+
 # https://stackoverflow.com/a/37757378/1685379
 def pp_json(json_thing, sort=True, indents=4):
     def d(t):
         return json.dumps(t, sort_keys=sort, indent=indents)
+
     return d(json.loads(json_thing)) if type(json_thing) is str else d(json_thing)

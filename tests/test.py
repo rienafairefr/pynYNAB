@@ -32,6 +32,7 @@ class CommonTest(unittest.TestCase):
         self.Session = sessionmaker(bind=engine)
         self.session = self.Session()
 
+
 factory = nYnabClientFactory()
 
 
@@ -64,9 +65,9 @@ class TestGetChangedEntities(CommonTest):
         self.client.session.commit()
 
         changed_entities = self.client.budget.get_changed_entities()
-        self.assertIsInstance(changed_entities,dict)
+        self.assertIsInstance(changed_entities, dict)
         self.assertEqual(1, len(changed_entities.keys()))
-        self.assertEqual('be_transaction_groups',list(changed_entities.keys())[0])
+        self.assertEqual('be_transaction_groups', list(changed_entities.keys())[0])
         transaction_groups = changed_entities['be_transaction_groups']
 
         self.assertEqual(1, len(transaction_groups))
@@ -74,10 +75,9 @@ class TestGetChangedEntities(CommonTest):
 
         self.assertIsNotNone(transaction_groups[0]['be_subtransactions'])
         try:
-            self.assertItemsEqual([subtransaction1,subtransaction2], set(transaction_groups[0]['be_subtransactions']))
+            self.assertItemsEqual([subtransaction1, subtransaction2], set(transaction_groups[0]['be_subtransactions']))
         except AttributeError:
-            self.assertCountEqual([subtransaction1,subtransaction2], set(transaction_groups[0]['be_subtransactions']))
-
+            self.assertCountEqual([subtransaction1, subtransaction2], set(transaction_groups[0]['be_subtransactions']))
 
     def testgetChangedEntities_delete(self):
         self.obj.be_accounts.remove(self.account)
@@ -93,12 +93,12 @@ class TestGetChangedEntities(CommonTest):
 
     def test_arraytype(self):
         user = User()
-        user.feature_flags = ['featureA','feature1']
+        user.feature_flags = ['featureA', 'feature1']
         self.session.add(user)
         self.session.commit()
 
         fetched_user = self.session.query(User).first()
-        self.assertEqual(user,fetched_user)
+        self.assertEqual(user, fetched_user)
 
 
 class TestUpdateChangedEntities(CommonTest):
@@ -162,7 +162,7 @@ class OtherTests(CommonTest):
 
     def testrepr(self):
         tr1 = Transaction(id='t')
-        self.assertEqual(tr1.__repr__(),tr1.__str__())
+        self.assertEqual(tr1.__repr__(), tr1.__str__())
 
     def testappend(self):
         obj = Budget()
@@ -210,7 +210,7 @@ class DummyEntity(Base, Entity):
 
 class TestApiDict(unittest.TestCase):
     def test_input(self):
-        inputdict=dict(
+        inputdict = dict(
             id='dummyid/ca85f126-04a1-4196-bbeb-a77acec4b28e',
             account_type='Checking',
             date='2016-10-01',
@@ -218,16 +218,16 @@ class TestApiDict(unittest.TestCase):
             is_tombstone=False
         )
         dummy = DummyEntity.from_apidict(inputdict)
-        self.assertEqual(dummy.id,inputdict['id'])
-        self.assertEqual(dummy.account_type,AccountTypes.Checking)
-        self.assertEqual(dummy.date, datetime.date(year=2016,month=10,day=1))
-        self.assertEqual(dummy.balance,1)
+        self.assertEqual(dummy.id, inputdict['id'])
+        self.assertEqual(dummy.account_type, AccountTypes.Checking)
+        self.assertEqual(dummy.date, datetime.date(year=2016, month=10, day=1))
+        self.assertEqual(dummy.balance, 1)
 
     def test_output(self):
         inputentity = DummyEntity(
-            account_type = AccountTypes.Checking,
-            date = datetime.date(year=2016,month=10,day=1),
-            balance = 1
+            account_type=AccountTypes.Checking,
+            date=datetime.date(year=2016, month=10, day=1),
+            balance=1
         )
         entitydict = inputentity.get_apidict()
         self.assertEqual(entitydict['id'], str(inputentity.id))
