@@ -15,6 +15,9 @@ class LiveTests2(unittest.TestCase):
         # 1. gets sync data from server
         # 2. tests that to_api(from_api(data)) is the same thing
         kwargs = merge_config({'budget_name': test_budget_name})
+        if 'email' not in kwargs or 'password' not in kwargs:
+            # test run without a good
+            return
         client = clientfromkwargs(sync=False, **kwargs)
         sync_data = client.catalogClient.get_sync_data_obj()
         budget_version_id = next(d['id'] for d in sync_data['changed_entities']['ce_budget_versions'] if
@@ -59,11 +62,16 @@ class LiveTestBudget(unittest.TestCase):
 
     def setUp(self):
         kwargs = merge_config({'budget_name': test_budget_name})
+        if 'email' not in kwargs or 'password' not in kwargs:
+            # test run without email/password, on a PR for example
+            self.client = None
         self.client = clientfromkwargs(sync=False, **kwargs)
         self.client.catalogClient.sync()
         self.client.select_budget(test_budget_name)
 
     def test_api_scaling_is_ok(self):
+        if self.client is None:
+            return
         sync_data = self.client.budgetClient.get_sync_data_obj()
         server_entities = sync_data['changed_entities']
         transactions = server_entities['be_transactions']
