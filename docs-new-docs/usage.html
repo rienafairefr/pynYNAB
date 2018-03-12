@@ -33,9 +33,82 @@
             
   <div class="section" id="usage">
 <h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
-<p>To use pynYNAB in a project:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pynYNAB</span>
+<div class="section" id="canonical-client-creation">
+<h2>Canonical client creation<a class="headerlink" href="#canonical-client-creation" title="Permalink to this headline">¶</a></h2>
+<p>A way to create a client and fetch data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pynYNAB.Client</span> <span class="k">import</span> <span class="n">nYnabClient</span>
+
+<span class="n">client</span> <span class="o">=</span> <span class="n">nYnabClient</span><span class="p">(</span><span class="n">email</span><span class="o">=</span><span class="s2">&quot;############&quot;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="s2">&quot;######&quot;</span><span class="p">,</span> <span class="n">budgetname</span><span class="o">=</span><span class="s1">&#39;TestBudget&#39;</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">sync</span><span class="p">()</span>
 </pre></div>
+</div>
+<p>You can also decouple the connection and session management from the client object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">connection</span> <span class="o">=</span> <span class="n">nYnabConnection</span><span class="p">(</span><span class="n">email</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+<span class="n">connection</span><span class="o">.</span><span class="n">init_session</span><span class="p">()</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">nYnabClient</span><span class="p">(</span><span class="n">nynabconnection</span><span class="o">=</span><span class="n">connection</span><span class="p">,</span> <span class="n">budgetname</span><span class="o">=</span><span class="s1">&#39;TestBudget&#39;</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">sync</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="local-database">
+<h2>Local database<a class="headerlink" href="#local-database" title="Permalink to this headline">¶</a></h2>
+<p>Once data is downloaded from the servers, it is stored in a local database, accessed through sqlAlchemy.
+All the relations between objects are in here through appropriate One-to-Many or Many-to-One relations, etc.</p>
+</div>
+<div class="section" id="client-factory">
+<h2>Client factory<a class="headerlink" href="#client-factory" title="Permalink to this headline">¶</a></h2>
+<p>A YNAB client (of type nYnabClient_) is just another object that can be persisted in the database.
+The nYnabClient( […] ) –without the _– constructor is just a wrapper around calling
+nYnabClientFactory().create_client( […] )</p>
+<p>The ClientFactory initializes the database, just pass it an engine URL, like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pynYNAB.ClientFactory</span> <span class="k">import</span> <span class="n">ClientFactory</span>
+<span class="n">factory</span> <span class="o">=</span> <span class="n">ClientFactoy</span><span class="p">(</span><span class="s1">&#39;sqlite:////tmp/persist.db&#39;</span><span class="p">)</span>
+<span class="n">client1</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">create_client</span><span class="p">(</span><span class="n">email</span><span class="o">=***</span><span class="p">,</span><span class="n">password</span><span class="o">=***</span><span class="p">,</span><span class="n">budget_name</span><span class="o">=***</span><span class="p">)</span>
+<span class="p">[</span> <span class="n">do</span> <span class="n">something</span> <span class="k">with</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">client1</span> <span class="p">]</span>
+<span class="n">client2</span> <span class="o">=</span> <span class="n">factory</span><span class="o">.</span><span class="n">create_client</span><span class="p">(</span><span class="n">email</span><span class="o">=***</span><span class="p">,</span><span class="n">password</span><span class="o">=***</span><span class="p">,</span><span class="n">budget_name</span><span class="o">=***</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>These two clients will be strictly identical, referring to the same client in the database, so client2
+will contain the modifications done in client1</p>
+</div>
+<div class="section" id="pushing-entities">
+<h2>Pushing entities<a class="headerlink" href="#pushing-entities" title="Permalink to this headline">¶</a></h2>
+<p>In order to sync data to the YNAB servers, we need to know how much data we want to push.
+We don’t need to construct the array of data to push, this is all done transparently
+for you in the background through sqlAlchemy modification hooks.</p>
+<p>Here we add two transactions and one payee, then push them:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">client</span><span class="o">.</span><span class="n">sync</span><span class="p">()</span>
+<span class="n">client</span><span class="o">.</span><span class="n">budget</span><span class="o">.</span><span class="n">be_transactions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transaction1</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">budget</span><span class="o">.</span><span class="n">be_transactions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">transaction2</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">budget</span><span class="o">.</span><span class="n">be_payees</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">payee</span><span class="p">)</span>
+<span class="n">client</span><span class="o">.</span><span class="n">budget</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>With the first sync, the amount of currently modified data is reset to 0, and the additions of data are tracked</p>
+<p>Previously, you could accidentally push a modification that erased all your YNAB data. Now the <cite>push</cite> method stops you
+from doing that, by limiting the modifications to at most 1 entity if no paramaters are passed.</p>
+</div>
+<div class="section" id="database-query">
+<h2>Database query<a class="headerlink" href="#database-query" title="Permalink to this headline">¶</a></h2>
+<p>We can use the sqlAlchemy backend in order to get interesting views to the data:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sqlalchemy.sql</span> <span class="k">import</span> <span class="n">func</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="n">session</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">session</span>
+
+<span class="c1"># sum of the amounts for all transactions younger than 10 weeks</span>
+<span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">Transaction</span><span class="o">.</span><span class="n">amount</span><span class="p">))</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Transaction</span><span class="o">.</span><span class="n">date</span> <span class="o">&gt;</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">weeks</span><span class="o">=</span><span class="mi">10</span><span class="p">))</span><span class="o">.</span><span class="n">scalar</span><span class="p">()</span>
+
+<span class="c1"># sum of the amounts for each month</span>
+<span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m&#39;</span><span class="p">,</span><span class="n">Transaction</span><span class="o">.</span><span class="n">date</span><span class="p">),</span><span class="n">func</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">Transaction</span><span class="o">.</span><span class="n">amount</span><span class="p">))</span><span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="n">extract</span><span class="p">(</span><span class="s1">&#39;month&#39;</span><span class="p">,</span><span class="n">Transaction</span><span class="o">.</span><span class="n">date</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+<span class="c1"># same for positive amounts only</span>
+<span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m&#39;</span><span class="p">,</span><span class="n">Transaction</span><span class="o">.</span><span class="n">date</span><span class="p">),</span><span class="n">func</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">Transaction</span><span class="o">.</span><span class="n">amount</span><span class="p">))</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Transaction</span><span class="o">.</span><span class="n">amount</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="n">extract</span><span class="p">(</span><span class="s1">&#39;month&#39;</span><span class="p">,</span><span class="n">Transaction</span><span class="o">.</span><span class="n">date</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+<span class="c1"># see the total of the transactions, grouping per-payee</span>
+<span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">Transaction</span><span class="o">.</span><span class="n">amount</span><span class="p">),</span><span class="n">Transaction</span><span class="o">.</span><span class="n">amount</span><span class="p">)</span><span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="n">Transaction</span><span class="o">.</span><span class="n">entities_payee</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">Payee</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Everything is possible, see sqlAlchemy docs :-)</p>
 </div>
 </div>
 
@@ -44,7 +117,19 @@
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Usage</a><ul>
+<li><a class="reference internal" href="#canonical-client-creation">Canonical client creation</a></li>
+<li><a class="reference internal" href="#local-database">Local database</a></li>
+<li><a class="reference internal" href="#client-factory">Client factory</a></li>
+<li><a class="reference internal" href="#pushing-entities">Pushing entities</a></li>
+<li><a class="reference internal" href="#database-query">Database query</a></li>
+</ul>
+</li>
+</ul>
+<div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>

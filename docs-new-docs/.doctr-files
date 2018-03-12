@@ -3,9 +3,7 @@ docs-new-docs/_sources/cmd_csvimport.rst.txt
 docs-new-docs/_sources/cmd_ofximport.rst.txt
 docs-new-docs/_sources/index.rst.txt
 docs-new-docs/_sources/installation.rst.txt
-docs-new-docs/_sources/readme.rst.txt
 docs-new-docs/_sources/reference/index.rst.txt
-docs-new-docs/_sources/reference/pynYNAB.rst.txt
 docs-new-docs/_sources/scripts.rst.txt
 docs-new-docs/_sources/usage.rst.txt
 docs-new-docs/_static/ajax-loader.gif
@@ -38,10 +36,7 @@ docs-new-docs/genindex.html
 docs-new-docs/index.html
 docs-new-docs/installation.html
 docs-new-docs/objects.inv
-docs-new-docs/py-modindex.html
-docs-new-docs/readme.html
 docs-new-docs/reference/index.html
-docs-new-docs/reference/pynYNAB.html
 docs-new-docs/scripts.html
 docs-new-docs/search.html
 docs-new-docs/searchindex.js

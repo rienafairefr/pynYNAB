@@ -1,5 +1,0 @@
-pynYNAB
-=======
-
-.. automodule:: pynYNAB
-    :members:
