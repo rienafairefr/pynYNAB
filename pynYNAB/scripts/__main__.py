@@ -124,16 +124,21 @@ def ofximport_parser():
     return OfxImport().parser
 
 
+def main_parser():
+    parser = argparse.ArgumentParser(
+        description='nYnab-CLI using the python library',
+        usage='''nynab <command> [<args>]
+
+                ''')
+
+    parser.add_argument('command', help='Subcommand to run', choices=COMMANDS.keys())
+    parser.usage += 'commands : ' + ','.join(COMMANDS.keys())
+    return parser
+
+
 class MainCommands(object):
     def __init__(self):
-        parser = argparse.ArgumentParser(
-            description='nYnab-CLI using the python library',
-            usage='''nynab <command> [<args>]
-
-            ''')
-
-        parser.add_argument('command', help='Subcommand to run', choices=COMMANDS.keys())
-        parser.usage += 'commands : ' + ','.join(COMMANDS.keys())
+        parser = main_parser()
         # parse_args defaults to [1:] for args, but you need to
         # exclude the rest of the args too, or validation will fail
         args = parser.parse_args(sys.argv[1:2])
@@ -145,7 +150,6 @@ class MainCommands(object):
 
         if getattr(args, 'password', None):
             args.password = getpass('YNAB password:')
-
 
         sys.argv.pop(1)
 

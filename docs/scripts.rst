@@ -8,5 +8,6 @@ This library also include some scripts that you can use directly to import some 
 .. toctree::
    :maxdepth: 1
 
+   cmd_main
    cmd_csvimport
    cmd_ofximport
