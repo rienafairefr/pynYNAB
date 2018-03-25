@@ -11,6 +11,13 @@ install:
 before_install:
 - export TRAVIS_COMMIT_MESSAGE=$(git log --format=%B -n 1 $TRAVIS_COMMIT)
 - echo "$TRAVIS_COMMIT_MESSAGE"
+jobs:
+  include:
+    - stage: deploy_docs
+      script:
+        - pip install -r docs-requirements.txt
+        - "./docs-build-deploy.sh"
+      python: 3.5
 script:
 - ./test.sh
 before_deploy:
@@ -25,3 +32,7 @@ deploy:
     tags: true
     distributions: sdist bdist_wheel
     condition: $TRAVIS_PYTHON_VERSION = "2.7"
+env:
+  global:
+    # Doctr deploy key for rienafairefr/pynYNAB
+    - secure: "Zr5HILpWkdEWbvAQEMz3BfRGjFYFf0RXLfNOXWu5DIeaUCeAJa+0AbTnCDmSQ7znvROlSsJQ4d11JQaSAf+h270FaX33atrnCjsRSfhXxE1ipAurc4OitROiQopOfFIs0jumCebm1RGy5m4+ZhrxZUXke/U/TLi5d8nEL+5z2YVsq1kez5Nts+WOHCEKmoWesP/GenC5eYSt0rL59JyJSrCxCnokk0Tza1dwuU5jM1gvuh4Km4nfWHtoRWH4rbvYX2JR4VlwUvkZ4/trSDWIywM/litWXaVxRqRetpJ7qCjGQ4y/JyuafetxjJAuXcUMmwN/m4lNxS1x3XpXwSm8cwr6k8yxS1PMAzcMaYYadGW+M04ln6TzmujAHTYPCkVOjhchXThyBkUMHYTWuQqOWAkqxyW3ImovLbXR4Et5WF9qXFXe+ahZiVEJzCrSKHHK+v6EydW+WfvNCLVYzVJL+w1mG82KYl3q8Fm0dOEyzyGKvuNJCxdAm1MEuM40SfN4850HNM4mUq1YyuBM14EjgV1xyuy8MZu7sT7sAVjb6WqkHQyDYvpzP0jJ/tCsifoQrm/sw9LA1oUkdU8wWx6FyBs3aDPphC2fwlPGb8WVvjYLPMgvf4GGNa9wwOZ1G6/apwqaKFRrdu991y2s2+JcORqIrvvkWVVx8wfAvq8sF2s="

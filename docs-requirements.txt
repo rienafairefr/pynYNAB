@@ -1,0 +1,4 @@
+sphinx
+doctr
+sphinx-argparse
+-r dev-requirements.txt
