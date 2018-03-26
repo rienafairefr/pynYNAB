@@ -5,5 +5,4 @@ six>=1.5
 sqlalchemy
 lxml
 ofxtools
-bcrypt
 pyYAML
