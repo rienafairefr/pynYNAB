@@ -1,5 +1,7 @@
 import unittest
 
+import pytest
+
 from pynYNAB.ClientFactory import nYnabClientFactory
 from pynYNAB.schema import BudgetVersion
 from pynYNAB.schema import Transaction
@@ -44,10 +46,13 @@ class DummyConnection(object):
         return d
 
 
-class TestMerge(unittest.TestCase):
-    def test_merge(self):
-        connection = DummyConnection()
-        connection.transactions=[Transaction(memo=str(i)) for i in range(51)]
-        client = nYnabClientFactory().create_client(connection=connection, budget_name='Test', sync=False)
-        client.sync()
-        self.assertEqual(set(client.budget.be_transactions),set(connection.transactions))
+@pytest.fixture
+def connection():
+    return DummyConnection()
+
+
+def test_merge(connection):
+    connection.transactions=[Transaction(memo=str(i)) for i in range(51)]
+    client = nYnabClientFactory().create_client(connection=connection, budget_name='Test', sync=False)
+    client.sync()
+    assert set(client.budget.be_transactions) == set(connection.transactions)
