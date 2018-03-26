@@ -21,6 +21,7 @@ def rate_limited(maxpersecond):
                 elapsed = time.clock() - lastTimeCalled[0]
                 leftToWait = minInterval - elapsed
                 if leftToWait > 0:
+                    print('rate limiting, waiting %g...' % leftToWait)
                     time.sleep(leftToWait)
             ret = func(*args, **kargs)
             lastTimeCalled[0] = time.clock()
