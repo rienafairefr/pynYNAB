@@ -180,6 +180,15 @@ class OtherTests(CommonTest):
 
         self.assertRaises(ValueError, testappend)
 
+    def testsetBad(self):
+        obj = Budget()
+        transaction = Transaction()
+
+        def testset():
+            obj.be_accounts = [transaction]
+
+        self.assertRaises(ValueError, testset)
+
     def test_str(self):
         # tests no exceptions when getting the string representation of some entities
         obj = Transaction()
