@@ -31,6 +31,17 @@ def test_get_ce_add(obj):
     obj.be_accounts.append(added_account)
     changed_entities = obj.get_changed_entities()
     assert changed_entities == {'be_accounts': [added_account]}
+    # assert obj.get_tracked_modifications() == changed_entities
+
+
+def test_get_ce_replace(obj, account):
+    added_account = Account()
+    obj.be_accounts = [added_account]
+    changed_entities = obj.get_changed_entities()
+    removed_account = account.copy()
+    removed_account.is_tombstone = True
+    assert changed_entities == {'be_accounts': [added_account, removed_account]}
+    # assert obj.get_tracked_modifications() == changed_entities
 
 
 def test_get_ce_delete(obj, account):
@@ -39,12 +50,14 @@ def test_get_ce_delete(obj, account):
     deleted = account.copy()
     deleted.is_tombstone = True
     assert changed_entities == {'be_accounts': [deleted]}
+    # assert obj.get_tracked_modifications() == changed_entities
 
 
 def test_get_ce_modify(obj, account):
     account.account_name = 'BLA'
     changed_entities = obj.get_changed_entities()
     assert changed_entities == {'be_accounts': [account]}
+    # assert obj.get_tracked_modifications() == changed_entities
 
 
 def test_update_ce_add(client):

@@ -13,3 +13,4 @@ ynab.yaml
 nosetests*.xml
 tests/*.json
 testscripts/*.json
+\.pytest_cache/

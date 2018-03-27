@@ -74,10 +74,6 @@ class ComplexEncoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, obj)
 
 
-class UnknowEntityFieldValueError(Exception):
-    pass
-
-
 def listfields(cls):
     relations = inspect(cls).relationships
     return {k: relations[k].mapper.class_ for k in relations.keys() if
@@ -87,6 +83,9 @@ def listfields(cls):
 def scalarfields(cls):
     scalarcolumns = inspect(cls).columns
     return {k: scalarcolumns[k].type.__class__ for k in scalarcolumns.keys() if k != 'parent_id' and k != 'knowledge_id'}
+
+
+EVENTS = ['append','bulk_replace','remove','set','init_collection','dispose_collection']
 
 
 class BaseModel(object):
@@ -101,6 +100,8 @@ class BaseModel(object):
         new_obj = super(BaseModel, cls).__new__(cls)
         setattr(new_obj, 'listfields', listfields(cls))
         setattr(new_obj, 'scalarfields', scalarfields(cls))
+        setattr(new_obj, '_track_modifications', {ev:{key:[] for key in new_obj.listfields} for ev in EVENTS})
+
         return new_obj
 
 
@@ -112,6 +113,8 @@ def configure_listener(mapper, class_):
 
     for rel_attr in mapper.relationships:
         expectedtype_listener(rel_attr)
+        if rel_attr.direction == ONETOMANY:
+            collection_listener(rel_attr)
 
 
 def expectedtype_listener(rel_attr):
@@ -123,43 +126,58 @@ def expectedtype_listener(rel_attr):
             raise ValueError('type %s, attribute %s, expect a %s, received a %s ' % (
             type(target), rel_attr.key, expected_type, value_type))
 
+    @event.listens_for(rel_attr, 'set')
+    def set(target, value, oldvalue, initiator):
+        expected_type = initiator.parent_token.mapper.class_
+        value_type = type(value)
+        if expected_type != value_type:
+            raise ValueError('type %s, attribute %s, expect a %s, received a %s ' % (
+                type(target), rel_attr.key, expected_type, value_type))
+
+
+def collection_listener(rel_attr):
+    @event.listens_for(rel_attr, 'append')
+    def append(target, value, initiator):
+        target._track_modifications['append'][rel_attr.key].append(value)
+
+    @event.listens_for(rel_attr, 'bulk_replace')
+    def bulk_replace(target, values, initiator):
+        target._track_modifications['bulk_replace'][rel_attr.key].append(values)
+
+    @event.listens_for(rel_attr, 'remove')
+    def remove(target, value, initiator):
+        target._track_modifications['remove'][rel_attr.key].append(value)
+
+    @event.listens_for(rel_attr, 'set')
+    def set(target, value, oldvalue, initiator):
+        target._track_modifications['set'][rel_attr.key].append(value)
+
+    @event.listens_for(rel_attr, 'init_collection')
+    def init_collection(target, collection, collection_adapter):
+        target._track_modifications['init_collection'][rel_attr.key].append(collection)
+
+    @event.listens_for(rel_attr, 'dispose_collection')
+    def dispose_collection(target, collection, collection_adpater):
+        target._track_modifications['dispose_collection'][rel_attr.key].append(collection)
+
 
 def default_listener(col_attr, default):
-    """Establish a default-setting listener.
-
-    Given a class_, attrname, and a :class:`.DefaultGenerator` instance.
-    The default generator should be a :class:`.ColumnDefault` object with a
-    plain Python value or callable default; otherwise, the appropriate behavior
-    for SQL functions and defaults should be determined here by the
-    user integrating this feature.
-
-    """
+    """Establish a default-setting listener."""
 
     @event.listens_for(col_attr, "init_scalar", retval=True, propagate=True)
     def init_scalar(target, value, dict_):
 
         if default.is_callable:
-            # the callable of ColumnDefault always accepts a context
-            # argument; we can pass it as None here.
+            # the callable of ColumnDefault always accepts a context argument
             value = default.arg(None)
         elif default.is_scalar:
             value = default.arg
         else:
-            # default is a Sequence, a SQL expression, server
-            # side default generator, or other non-Python-evaluable
-            # object.  The feature here can't easily support this.   This
-            # can be made to return None, rather than raising,
-            # or can procure a connection from an Engine
-            # or Session and actually run the SQL, if desired.
             raise NotImplementedError(
                 "Can't invoke pre-default for a SQL-level column default")
 
-        # set the value in the given dict_; this won't emit any further
-        # attribute set events or create attribute "history", but the value
-        # will be used in the INSERT statement
         dict_[col_attr.key] = value
 
-        # return the value as well
         return value
 
 

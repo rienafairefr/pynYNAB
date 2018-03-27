@@ -2,7 +2,7 @@ from sqlalchemy import orm, Column, ForeignKey
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from pynYNAB.schema import BaseModel, DictDiffer
+from pynYNAB.schema import BaseModel, DictDiffer, EVENTS
 
 
 class RootEntity(BaseModel):
@@ -20,6 +20,25 @@ class RootEntity(BaseModel):
 
     def get_changed_dict(self):
         return self._get_changed(lambda entity: entity.get_dict())
+
+    def get_tracked_modifications(self):
+        returnvalue = {}
+        for key in self.listfields:
+            returnvalue[key] = []
+
+            appended = self._track_modifications['append'][key]
+            removed = self._track_modifications['remove'][key]
+
+            returnvalue[key] = [obj for obj \
+                                in appended
+                                if obj not in removed]
+
+            cremoved = [r.copy() for r in removed]
+            for r in cremoved:
+                r.is_tombstone = True
+
+            returnvalue[key] += cremoved
+        return self.filter_empty(returnvalue)
 
     def get_changed_entities(self):
         current_map = self.getmaps()
@@ -43,11 +62,17 @@ class RootEntity(BaseModel):
 
                 else:
                     diff_map[key] = current_map[key]
+        return self.filter_empty(diff_map)
+
+    def filter_empty(self, input_dict):
         returnvalue = {}
-        for key, value in diff_map.items():
+        for key, value in input_dict.items():
             if isinstance(value, dict):
                 if value:
                     returnvalue[key] = list(value.values())
+            elif isinstance(value, list):
+                if value:
+                    returnvalue[key] = value
 
         return returnvalue
 
@@ -58,6 +83,8 @@ class RootEntity(BaseModel):
     @orm.reconstructor
     def clear_changed_entities(self):
         self.previous_map = self.getmaps()
+
+        self._track_modifications = {ev: {key: [] for key in self.listfields} for ev in EVENTS}
 
     def getmap(self, key):
         objs_dict = {}
