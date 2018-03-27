@@ -78,6 +78,17 @@ class UnknowEntityFieldValueError(Exception):
     pass
 
 
+def listfields(cls):
+    relations = inspect(cls).relationships
+    return {k: relations[k].mapper.class_ for k in relations.keys() if
+            relations[k].direction == ONETOMANY or relations[k].direction == MANYTOMANY}
+
+
+def scalarfields(cls):
+    scalarcolumns = inspect(cls).columns
+    return {k: scalarcolumns[k].type.__class__ for k in scalarcolumns.keys() if k != 'parent_id' and k != 'knowledge_id'}
+
+
 class BaseModel(object):
     id = Column(String, primary_key=True, default=KeyGenerator.generateuuid)
     is_tombstone = Column(Boolean, default=False)
@@ -86,17 +97,11 @@ class BaseModel(object):
     def __tablename__(cls):
         return cls.__name__.lower()
 
-    @property
-    def listfields(self):
-        relations = inspect(self.__class__).relationships
-        return {k: relations[k].mapper.class_ for k in relations.keys() if
-                relations[k].direction == ONETOMANY or relations[k].direction == MANYTOMANY}
-
-    @property
-    def scalarfields(self):
-        scalarcolumns = self.__table__.columns
-        return {k: scalarcolumns[k].type.__class__ for k in scalarcolumns.keys() if k != 'parent_id' and k != 'knowledge_id'}
-
+    def __new__(cls, *args, **kwargs):
+        new_obj = super(BaseModel, cls).__new__(cls)
+        setattr(new_obj, 'listfields', listfields(cls))
+        setattr(new_obj, 'scalarfields', scalarfields(cls))
+        return new_obj
 
 
 def configure_listener(mapper, class_):
@@ -160,7 +165,6 @@ def default_listener(col_attr, default):
 
 re_uuid = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 re_date = re.compile(r'\d{4}[\/ .-]\d{2}[\/.-]\d{2}')
-
 
 
 def date_from_api(columntype, string):

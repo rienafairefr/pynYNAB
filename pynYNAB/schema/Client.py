@@ -121,7 +121,6 @@ class nYnabClient_(Base):
         self.budget.be_accounts.append(account)
         self.budget.be_payees.append(payee)
         self.budget.be_transactions.append(transaction)
-        pass
 
     @operation(1)
     def delete_account(self, account):
