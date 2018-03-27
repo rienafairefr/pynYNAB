@@ -78,14 +78,14 @@ class UnknowEntityFieldValueError(Exception):
     pass
 
 
-def listfields(instance):
-    relations = inspect(instance.__class__).relationships
+def listfields(cls):
+    relations = inspect(cls).relationships
     return {k: relations[k].mapper.class_ for k in relations.keys() if
             relations[k].direction == ONETOMANY or relations[k].direction == MANYTOMANY}
 
 
-def scalarfields(instance):
-    scalarcolumns = inspect(instance.__class__).columns
+def scalarfields(cls):
+    scalarcolumns = inspect(cls).columns
     return {k: scalarcolumns[k].type.__class__ for k in scalarcolumns.keys() if k != 'parent_id' and k != 'knowledge_id'}
 
 
@@ -98,9 +98,9 @@ class BaseModel(object):
         return cls.__name__.lower()
 
     def __new__(cls, *args, **kwargs):
-        new_obj = object.__new__(cls, *args, **kwargs)
-        setattr(new_obj, 'listfields', listfields(new_obj))
-        setattr(new_obj, 'scalarfields', scalarfields(new_obj))
+        new_obj = super(BaseModel, cls).__new__(cls)
+        setattr(new_obj, 'listfields', listfields(cls))
+        setattr(new_obj, 'scalarfields', scalarfields(cls))
         return new_obj
 
 

@@ -185,3 +185,22 @@ def test_output():
     assert entitydict['account_type'] == 'Checking'
     assert entitydict['date'] == '2016-10-01'
     assert entitydict['balance'] == 1000
+
+
+def test_copy_coupling():
+    # verify that the copied entities are really uncoupled
+    entity = DummyEntity(
+        account_type=AccountTypes.Checking,
+        date=datetime.date(year=2016, month=10, day=1),
+        balance=1
+    )
+
+    copied = entity.copy()
+
+    entity.balance = 3
+    assert copied.balance == 1
+
+    copied.date=datetime.date(year=2017, month=10, day=1)
+
+    assert entity.date == datetime.date(year=2016, month=10, day=1)
+
