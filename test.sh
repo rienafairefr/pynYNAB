@@ -5,7 +5,7 @@ set -ev
 tox
 
 if [[ ${TRAVIS_EVENT_TYPE} = "cron" || ${TRAVIS_COMMIT_MESSAGE} = *"[ci-cron]"* ]]; then
-    tox -e test_live;
+    tox -c live_tox.ini
 fi
 
 if [ -n "$TRAVIS_TAG" ]; then
