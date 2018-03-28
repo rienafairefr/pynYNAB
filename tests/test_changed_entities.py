@@ -4,6 +4,7 @@ from pynYNAB.ClientFactory import clientfromkwargs
 from pynYNAB.schema.budget import Account
 from pynYNAB.schema.roots import Budget
 from tests.common_mock import MockConnection
+from tests.test_entities import session
 
 
 @pytest.fixture
@@ -17,6 +18,7 @@ def client(account):
 def obj(account):
     budget = Budget()
     budget.be_accounts = [account]
+    account.parent = budget
     budget.clear_changed_entities()
     return budget
 

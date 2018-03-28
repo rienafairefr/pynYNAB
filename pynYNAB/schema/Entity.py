@@ -111,6 +111,7 @@ class BaseModel(object):
 def configure_listener(mapper, class_):
     for col_attr in mapper.column_attrs:
         column = col_attr.columns[0]
+        attribute_track_listener(col_attr)
         if column.default is not None:
             default_listener(col_attr, column.default)
 
@@ -176,10 +177,13 @@ def default_listener(col_attr, default):
 
         return value
 
+
+def attribute_track_listener(col_attr):
     @event.listens_for(col_attr, "set")
     def receive_set(target, value, oldvalue, initiator):
-        if target.parent is not None:
-            target.parent._track_modifications['change'][target.parent.rev_listfields[target.__class__]].setdefault(target.id ,{})[initiator.key] = value
+        if hasattr(target,'parent') and target.parent is not None:
+            target.parent._track_modifications['change'][target.parent.rev_listfields[target.__class__]][target.id] = target.get_dict()
+            target.parent._track_modifications['change'][target.parent.rev_listfields[target.__class__]][target.id][initiator.key] = value
 
 
 re_uuid = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')

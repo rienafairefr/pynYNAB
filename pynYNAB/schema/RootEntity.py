@@ -31,6 +31,7 @@ class RootEntity(BaseModel):
             changed = self._track_modifications['change'][key]
 
             returnvalue[key] = appended
+            returnvalue[key].update(changed)
 
             for k,v in removed.items():
                 v['is_tombstone'] = True
