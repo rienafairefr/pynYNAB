@@ -2,7 +2,7 @@ from sqlalchemy import orm, Column, ForeignKey
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from pynYNAB.schema import BaseModel, DictDiffer, EVENTS
+from pynYNAB.schema import BaseModel, DictDiffer, EVENTS, Entity
 
 
 class RootEntity(BaseModel):
@@ -28,17 +28,15 @@ class RootEntity(BaseModel):
 
             appended = self._track_modifications['append'][key]
             removed = self._track_modifications['remove'][key]
+            changed = self._track_modifications['change'][key]
 
-            returnvalue[key] = [obj for obj \
-                                in appended
-                                if obj not in removed]
+            returnvalue[key] = appended
 
-            cremoved = [r.copy() for r in removed]
-            for r in cremoved:
-                r.is_tombstone = True
+            for k,v in removed.items():
+                v['is_tombstone'] = True
 
-            returnvalue[key] += cremoved
-        return self.filter_empty(returnvalue)
+            returnvalue[key].update(removed)
+        return self.filter_empty(returnvalue, lambda k: Entity.key_from_dict(k))
 
     def get_changed_entities(self):
         current_map = self.getmaps()
@@ -62,17 +60,15 @@ class RootEntity(BaseModel):
 
                 else:
                     diff_map[key] = current_map[key]
-        return self.filter_empty(diff_map)
+        return self.filter_empty(diff_map, lambda k: k.key())
 
-    def filter_empty(self, input_dict):
+    def filter_empty(self, input_dict, cmp_key):
         returnvalue = {}
         for key, value in input_dict.items():
             if isinstance(value, dict):
                 if value:
-                    returnvalue[key] = list(value.values())
-            elif isinstance(value, list):
-                if value:
-                    returnvalue[key] = value
+                    sorted_values = sorted(list(value.values()), key=cmp_key)
+                    returnvalue[key] = sorted_values
 
         return returnvalue
 
@@ -84,7 +80,7 @@ class RootEntity(BaseModel):
     def clear_changed_entities(self):
         self.previous_map = self.getmaps()
 
-        self._track_modifications = {ev: {key: [] for key in self.listfields} for ev in EVENTS}
+        self._track_modifications = {ev: {key: {} for key in self.listfields} for ev in EVENTS}
 
     def getmap(self, key):
         objs_dict = {}

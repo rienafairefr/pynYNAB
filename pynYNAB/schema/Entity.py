@@ -19,6 +19,7 @@ from pynYNAB.schema.types import AmountType
 
 LOG = logging.getLogger(__name__)
 
+
 class AccountTypes(Enum):
     undef = 'undef'
     Checking = 'Checking'
@@ -35,7 +36,7 @@ class AccountTypes(Enum):
 
 
 def flag(s):
-    return 'ynab-flag-'+s
+    return 'ynab-flag-' + s
 
 
 class ColorFlagType(Enum):
@@ -82,10 +83,11 @@ def listfields(cls):
 
 def scalarfields(cls):
     scalarcolumns = inspect(cls).columns
-    return {k: scalarcolumns[k].type.__class__ for k in scalarcolumns.keys() if k != 'parent_id' and k != 'knowledge_id'}
+    return {k: scalarcolumns[k].type.__class__ for k in scalarcolumns.keys() if
+            k != 'parent_id' and k != 'knowledge_id'}
 
 
-EVENTS = ['append','bulk_replace','remove','set','init_collection','dispose_collection']
+EVENTS = ['append', 'remove', 'set', 'change']
 
 
 class BaseModel(object):
@@ -99,8 +101,9 @@ class BaseModel(object):
     def __new__(cls, *args, **kwargs):
         new_obj = super(BaseModel, cls).__new__(cls)
         setattr(new_obj, 'listfields', listfields(cls))
+        setattr(new_obj, 'rev_listfields', {v:k for k,v in listfields(cls).items()})
         setattr(new_obj, 'scalarfields', scalarfields(cls))
-        setattr(new_obj, '_track_modifications', {ev:{key:[] for key in new_obj.listfields} for ev in EVENTS})
+        setattr(new_obj, '_track_modifications', {ev: {key: {} for key in new_obj.listfields} for ev in EVENTS})
 
         return new_obj
 
@@ -124,7 +127,7 @@ def expectedtype_listener(rel_attr):
         value_type = type(value)
         if expected_type != value_type:
             raise ValueError('type %s, attribute %s, expect a %s, received a %s ' % (
-            type(target), rel_attr.key, expected_type, value_type))
+                type(target), rel_attr.key, expected_type, value_type))
 
     @event.listens_for(rel_attr, 'set')
     def set(target, value, oldvalue, initiator):
@@ -138,27 +141,20 @@ def expectedtype_listener(rel_attr):
 def collection_listener(rel_attr):
     @event.listens_for(rel_attr, 'append')
     def append(target, value, initiator):
-        target._track_modifications['append'][rel_attr.key].append(value)
-
-    @event.listens_for(rel_attr, 'bulk_replace')
-    def bulk_replace(target, values, initiator):
-        target._track_modifications['bulk_replace'][rel_attr.key].append(values)
+        target._track_modifications['append'][rel_attr.key][value.id] = value.get_dict()
 
     @event.listens_for(rel_attr, 'remove')
     def remove(target, value, initiator):
-        target._track_modifications['remove'][rel_attr.key].append(value)
+        target._track_modifications['remove'][rel_attr.key][value.id] = value.get_dict()
 
     @event.listens_for(rel_attr, 'set')
     def set(target, value, oldvalue, initiator):
-        target._track_modifications['set'][rel_attr.key].append(value)
-
-    @event.listens_for(rel_attr, 'init_collection')
-    def init_collection(target, collection, collection_adapter):
-        target._track_modifications['init_collection'][rel_attr.key].append(collection)
+        target._track_modifications['set'][rel_attr.key][value.id] = value.get_dict()
 
     @event.listens_for(rel_attr, 'dispose_collection')
     def dispose_collection(target, collection, collection_adpater):
-        target._track_modifications['dispose_collection'][rel_attr.key].append(collection)
+        target._track_modifications['remove'][rel_attr.key].update(
+            {value.id: value.get_dict() for value in collection})
 
 
 def default_listener(col_attr, default):
@@ -179,6 +175,11 @@ def default_listener(col_attr, default):
         dict_[col_attr.key] = value
 
         return value
+
+    @event.listens_for(col_attr, "set")
+    def receive_set(target, value, oldvalue, initiator):
+        if target.parent is not None:
+            target.parent._track_modifications['change'][target.parent.rev_listfields[target.__class__]].setdefault(target.id ,{})[initiator.key] = value
 
 
 re_uuid = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
@@ -201,7 +202,7 @@ def enumconversion(t, x):
 
 fromapi_conversion_functions_table = {
     Date: date_from_api,
-    DateTime: lambda t,x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f'),
+    DateTime: lambda t, x: datetime.strptime(x, '%Y-%m-%dT%H:%M:%S.%f'),
     AmountType: lambda t, x: float(x) / 1000,
     sqlaEnum: enumconversion
 }
@@ -244,9 +245,21 @@ class Entity(BaseModel):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def key(self,excludes=None):
+    def key(self, excludes=None):
         t = tuple()
         for k, v in self.get_dict().items():
+            if excludes and k in excludes:
+                continue
+            if isinstance(v, list):
+                t += tuple(v)
+            else:
+                t += (v,)
+        return t
+
+    @classmethod
+    def key_from_dict(cls, input_dict, excludes=None):
+        t = tuple()
+        for k, v in input_dict.items():
             if excludes and k in excludes:
                 continue
             if isinstance(v, list):
@@ -311,5 +324,3 @@ class DictDiffer(object):
 
     def changed(self):
         return set(o for o in self.intersect if self.past_dict[o] != self.current_dict[o])
-
-
