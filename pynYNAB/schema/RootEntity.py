@@ -39,6 +39,9 @@ class RootEntity(BaseModel):
             returnvalue[key].update(removed)
         return self.filter_empty(returnvalue, lambda k: Entity.key_from_dict(k))
 
+    def get_changed_entities_dict(self):
+        return self.filter_empty(self._changed_entities_dict, lambda k: Entity.key_from_dict(k))
+
     def get_changed_entities(self):
         current_map = self.getmaps()
         diff_map = {}
@@ -81,7 +84,7 @@ class RootEntity(BaseModel):
     def clear_changed_entities(self):
         self.previous_map = self.getmaps()
 
-        self._track_modifications = {ev: {key: {} for key in self.listfields} for ev in EVENTS}
+        self._changed_entities_dict = {key: {} for key in self.listfields}
 
     def getmap(self, key):
         objs_dict = {}
