@@ -104,6 +104,7 @@ class BaseModel(object):
         setattr(new_obj, 'rev_listfields', {v: k for k, v in listfields(cls).items()})
         setattr(new_obj, 'scalarfields', scalarfields(cls))
         setattr(new_obj, '_changed_entities_dict', {})
+        setattr(new_obj, '_changed_entities', {})
 
         return new_obj
 
@@ -146,22 +147,40 @@ def dict_merge(a, b):
 def collection_listener(rel_attr):
     @event.listens_for(rel_attr, 'append')
     def append(target, value, initiator):
-        target._changed_entities_dict.setdefault(rel_attr.key, {})[value.id] = value.get_dict()
+        print('append %s' % value.id)
+        container = target._changed_entities_dict.setdefault(rel_attr.key, {})
+        target._changed_entities.setdefault(rel_attr.key, {})
+        if value.id in container:
+            if container[value.id]['is_tombstone']:
+                del container[value.id]
+                del target._changed_entities[rel_attr.key][value.id]
+                return
+
+        target._changed_entities_dict[rel_attr.key][value.id] = value.get_dict()
+        target._changed_entities[rel_attr.key][value.id] = value
+
+    def _remove(target, value):
+        print('remove %s' % value.id)
+        container = target._changed_entities_dict.setdefault(rel_attr.key, {})
+        target._changed_entities.setdefault(rel_attr.key, {})
+        if value.id in container:
+            del container[value.id]
+            del target._changed_entities[rel_attr.key][value.id]
+        else:
+            target._changed_entities_dict[rel_attr.key][value.id] = dict_merge(value.get_dict(), {'is_tombstone': True})
+            removed = value.copy()
+            removed.is_tombstone = True
+            target._changed_entities[rel_attr.key][value.id] = removed
 
     @event.listens_for(rel_attr, 'remove')
     def remove(target, value, initiator):
-        target._changed_entities_dict.setdefault(rel_attr.key, {})[value.id] = dict_merge(value.get_dict(),
-                                                                                          {'is_tombstone': True})
+        _remove(target, value)
 
     @event.listens_for(rel_attr, 'set')
     def set(target, value, oldvalue, initiator):
+        print('set %s' % value.id)
+        target._changed_entities.setdefault(rel_attr.key, {})
         target._changed_entities_dict.setdefault(rel_attr.key, {})[value.id] = value.get_dict()
-
-    @event.listens_for(rel_attr, 'dispose_collection')
-    def dispose_collection(target, collection, collection_adpater):
-        for value in collection:
-            target._changed_entities_dict.setdefault(rel_attr.key, {})[value.id] = dict_merge(value.get_dict(),
-                                                                                              {'is_tombstone': True})
 
 
 def default_listener(col_attr, default):
@@ -188,10 +207,18 @@ def attribute_track_listener(col_attr):
     @event.listens_for(col_attr, "set")
     def receive_set(target, value, oldvalue, initiator):
         if hasattr(target, 'parent') and target.parent is not None:
-            target.parent._changed_entities_dict.setdefault(target.parent.rev_listfields[target.__class__], {})[
+            target.parent._changed_entities_dict.setdefault(target.parent.rev_listfields[target.__class__],
+                                                            {})
+            target.parent._changed_entities.setdefault(target.parent.rev_listfields[target.__class__],
+                                                       {})
+
+            target.parent._changed_entities_dict[target.parent.rev_listfields[target.__class__]][
                 target.id] = target.get_dict()
-            target.parent._changed_entities_dict.setdefault(target.parent.rev_listfields[target.__class__], {})[target.id][
-                initiator.key] = value
+            target.parent._changed_entities_dict[target.parent.rev_listfields[target.__class__]][
+                target.id][initiator.key] = value
+
+            target.parent._changed_entities[target.parent.rev_listfields[target.__class__]][
+                target.id] = target
 
 
 re_uuid = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
@@ -229,8 +256,12 @@ toapi_conversion_functions_table = {
 
 class Entity(BaseModel):
     def get_apidict(self):
-        entityDict = self.get_dict()
+        return self.dict_to_apidict(self.get_dict())
+
+    @classmethod
+    def dict_to_apidict(self, entityDict):
         for column in self.__table__.columns:
+            print(column.name)
             if column.name in entityDict and entityDict[column.name] is not None:
                 conversion_function = toapi_conversion_functions_table.get(column.type.__class__, lambda t, x: x)
                 entityDict[column.name] = conversion_function(column.type, entityDict[column.name])
@@ -297,10 +328,10 @@ class Entity(BaseModel):
 
     @classmethod
     def from_apidict(cls, entityDict):
-        return cls.from_dict(cls.apidict_toinsertdict(entityDict))
+        return cls.from_dict(cls.apidict_todict(entityDict))
 
     @classmethod
-    def apidict_toinsertdict(cls, entityDict):
+    def apidict_todict(cls, entityDict):
         modified_dict = {}
         for column in cls.__table__.columns:
             if column.name in entityDict and entityDict[column.name] is not None:
@@ -312,27 +343,3 @@ class Entity(BaseModel):
 Base = declarative_base(cls=Entity)
 
 event.listen(BaseModel, 'mapper_configured', configure_listener, propagate=True)
-
-
-class DictDiffer(object):
-    """
-    Calculate the difference between two dictionaries as:
-    (1) items added
-    (2) items removed
-    (3) keys same in both but changed values
-    (4) keys same in both and unchanged values
-    """
-
-    def __init__(self, current_dict, past_dict):
-        self.current_dict, self.past_dict = current_dict, past_dict
-        self.set_current, self.set_past = set(current_dict.keys()), set(past_dict.keys())
-        self.intersect = self.set_current.intersection(self.set_past)
-
-    def added(self):
-        return self.set_current - self.intersect
-
-    def removed(self):
-        return self.set_past - self.intersect
-
-    def changed(self):
-        return set(o for o in self.intersect if self.past_dict[o] != self.current_dict[o])

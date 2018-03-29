@@ -28,15 +28,11 @@ def account():
     return Account()
 
 
-def modif_from_ce(ce):
-    return {k: [el.get_dict() for el in v] for k, v in ce.items()}
-
-
 def test_get_ce_add(obj):
     added_account = Account()
     obj.be_accounts.append(added_account)
     changed_entities = obj.get_changed_entities()
-    assert changed_entities == {'be_accounts': [added_account]}
+    assert changed_entities == {'be_accounts': {added_account.id:added_account}}
 
 
 def test_get_ce_replace(obj, account):
@@ -45,7 +41,7 @@ def test_get_ce_replace(obj, account):
     changed_entities = obj.get_changed_entities()
     removed_account = account.copy()
     removed_account.is_tombstone = True
-    assert changed_entities == {'be_accounts': [added_account, removed_account]}
+    assert changed_entities == {'be_accounts': {added_account.id:added_account, removed_account.id:removed_account}}
 
 
 def test_get_ce_delete(obj, account):
@@ -53,13 +49,28 @@ def test_get_ce_delete(obj, account):
     changed_entities = obj.get_changed_entities()
     deleted = account.copy()
     deleted.is_tombstone = True
-    assert changed_entities == {'be_accounts': [deleted]}
+    assert changed_entities == {'be_accounts': {deleted.id:deleted}}
 
 
 def test_get_ce_modify(obj, account):
     account.account_name = 'BLA'
     changed_entities = obj.get_changed_entities()
-    assert changed_entities == {'be_accounts': [account]}
+    assert changed_entities == {'be_accounts': {account.id:account}}
+
+
+def test_get_ce_add_delete(obj):
+    added_account = Account()
+    obj.be_accounts.append(added_account)
+    obj.be_accounts.remove(added_account)
+    changed_entities = obj.get_changed_entities()
+    assert changed_entities == {'be_accounts': {}}
+
+
+def test_get_ce_delete_add(obj, account):
+    obj.be_accounts.remove(account)
+    obj.be_accounts.append(account)
+    changed_entities = obj.get_changed_entities()
+    assert changed_entities == {'be_accounts': {}}
 
 
 def test_update_ce_add(client):

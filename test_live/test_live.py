@@ -3,7 +3,6 @@ import unittest
 import pytest
 
 from pynYNAB.ClientFactory import clientfromkwargs
-from pynYNAB.schema import DictDiffer
 from pynYNAB.schema.budget import Transaction
 from pynYNAB.scripts.helpers import merge_config
 from tests.common import util_add_account

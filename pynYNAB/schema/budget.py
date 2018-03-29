@@ -280,6 +280,9 @@ class MonthlySubcategoryBudget(Base, BudgetEntity):
 
 
 class TransactionGroup(dict):
+    def dict_to_apidict(self, input_dict):
+        return input_dict
+
     def get_apidict(self):
         return self
 

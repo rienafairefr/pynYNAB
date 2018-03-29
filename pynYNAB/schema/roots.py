@@ -44,15 +44,15 @@ class Budget(Base, RootEntity):
     def get_changed_entities(self):
         changed_entities = super(Budget, self).get_changed_entities()
         if 'be_transactions' in changed_entities:
-            changed_entities['be_transaction_groups'] = []
-            for tr in changed_entities.pop('be_transactions'):
+            changed_entities['be_transaction_groups'] = {}
+            for transaction_id, tr in changed_entities.pop('be_transactions').items():
                 subtransactions = []
                 if 'be_subtransactions' in changed_entities:
-                    for subtransaction in changed_entities['be_subtransactions']:
-                        if subtransaction.entities_transaction_id == tr.id:
+                    for subtransaction_id, subtransaction in changed_entities['be_subtransactions'].items():
+                        if subtransaction.entities_transaction_id == transaction_id:
                             subtransactions.append(subtransaction)
                     for subtransaction in subtransactions:
-                        changed_entities['be_subtransactions'].remove(subtransaction)
+                        del changed_entities['be_subtransactions'][subtransaction.id]
                 if not subtransactions:
                     subtransactions = None
                 group = TransactionGroup(
@@ -60,7 +60,7 @@ class Budget(Base, RootEntity):
                     be_transaction=tr,
                     be_subtransactions=subtransactions,
                     be_matched_transaction=None)
-                changed_entities['be_transaction_groups'].append(group)
+                changed_entities['be_transaction_groups'][tr.id] = group
         if changed_entities.get('be_subtransactions') is not None:
             del changed_entities['be_subtransactions']
         return changed_entities
