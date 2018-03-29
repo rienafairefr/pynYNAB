@@ -101,9 +101,9 @@ class BaseModel(object):
     def __new__(cls, *args, **kwargs):
         new_obj = super(BaseModel, cls).__new__(cls)
         setattr(new_obj, 'listfields', listfields(cls))
-        setattr(new_obj, 'rev_listfields', {v:k for k,v in listfields(cls).items()})
+        setattr(new_obj, 'rev_listfields', {v: k for k, v in listfields(cls).items()})
         setattr(new_obj, 'scalarfields', scalarfields(cls))
-        setattr(new_obj, '_changed_entities_dict', {key: {} for key in new_obj.listfields})
+        setattr(new_obj, '_changed_entities_dict', {})
 
         return new_obj
 
@@ -146,21 +146,22 @@ def dict_merge(a, b):
 def collection_listener(rel_attr):
     @event.listens_for(rel_attr, 'append')
     def append(target, value, initiator):
-        target._changed_entities_dict[rel_attr.key][value.id] = value.get_dict()
+        target._changed_entities_dict.setdefault(rel_attr.key, {})[value.id] = value.get_dict()
 
     @event.listens_for(rel_attr, 'remove')
     def remove(target, value, initiator):
-        target._changed_entities_dict[rel_attr.key][value.id] = dict_merge(value.get_dict(), {'is_tombstone':True})
+        target._changed_entities_dict.setdefault(rel_attr.key, {})[value.id] = dict_merge(value.get_dict(),
+                                                                                          {'is_tombstone': True})
 
     @event.listens_for(rel_attr, 'set')
     def set(target, value, oldvalue, initiator):
-        target._changed_entities_dict[rel_attr.key][value.id] = value.get_dict()
-
+        target._changed_entities_dict.setdefault(rel_attr.key, {})[value.id] = value.get_dict()
 
     @event.listens_for(rel_attr, 'dispose_collection')
     def dispose_collection(target, collection, collection_adpater):
         for value in collection:
-            target._changed_entities_dict[rel_attr.key][value.id] = dict_merge(value.get_dict(), {'is_tombstone':True})
+            target._changed_entities_dict.setdefault(rel_attr.key, {})[value.id] = dict_merge(value.get_dict(),
+                                                                                              {'is_tombstone': True})
 
 
 def default_listener(col_attr, default):
@@ -186,9 +187,11 @@ def default_listener(col_attr, default):
 def attribute_track_listener(col_attr):
     @event.listens_for(col_attr, "set")
     def receive_set(target, value, oldvalue, initiator):
-        if hasattr(target,'parent') and target.parent is not None:
-            target.parent._changed_entities_dict[target.parent.rev_listfields[target.__class__]][target.id] = target.get_dict()
-            target.parent._changed_entities_dict[target.parent.rev_listfields[target.__class__]][target.id][initiator.key] = value
+        if hasattr(target, 'parent') and target.parent is not None:
+            target.parent._changed_entities_dict.setdefault(target.parent.rev_listfields[target.__class__], {})[
+                target.id] = target.get_dict()
+            target.parent._changed_entities_dict.setdefault(target.parent.rev_listfields[target.__class__], {})[target.id][
+                initiator.key] = value
 
 
 re_uuid = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')

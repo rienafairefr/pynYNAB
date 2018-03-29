@@ -68,7 +68,7 @@ def merge_config(arguments=None, nominal=DEFAULT_CONFIG_FILE):
 
     print('Config used:')
     print('------------')
-    print(yaml.dump(merged_config), end='')
+    print(yaml.dump(merged_config, default_flow_style=False), end='',)
     print('------------')
     return merged_config
 
