@@ -28,7 +28,7 @@ class RootEntity(BaseModel):
         returnvalue = {}
         changed = self.get_changed_entities()
         for key, values in changed.items():
-            for k,v in values.items():
+            for k, v in values.items():
                 returnvalue.setdefault(key, []).append(v.dict_to_apidict(v.get_dict()))
 
         return returnvalue

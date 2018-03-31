@@ -261,7 +261,6 @@ class Entity(BaseModel):
     @classmethod
     def dict_to_apidict(self, entityDict):
         for column in self.__table__.columns:
-            print(column.name)
             if column.name in entityDict and entityDict[column.name] is not None:
                 conversion_function = toapi_conversion_functions_table.get(column.type.__class__, lambda t, x: x)
                 entityDict[column.name] = conversion_function(column.type, entityDict[column.name])

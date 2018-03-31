@@ -279,17 +279,6 @@ class MonthlySubcategoryBudget(Base, BudgetEntity):
     overspending_handling = Column(String)
 
 
-class TransactionGroup(dict):
-    def dict_to_apidict(self, input_dict):
-        return input_dict
-
-    def get_apidict(self):
-        return self
-
-    def get_dict(self):
-        return self
-
-
 class PayeeRenameCondition(Base, BudgetEntity):
     entities_payee_id = Column(ForeignKey('payee.id'))
     entities_payee = relationship('Payee', foreign_keys=entities_payee_id)

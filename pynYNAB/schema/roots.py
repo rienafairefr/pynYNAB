@@ -6,7 +6,6 @@ from sqlalchemy.orm import relationship
 from pynYNAB import KeyGenerator
 from pynYNAB.schema.Entity import Base
 from pynYNAB.schema.RootEntity import RootEntity
-from pynYNAB.schema.budget import TransactionGroup
 
 
 class Catalog(Base, RootEntity):
@@ -41,29 +40,30 @@ class Budget(Base, RootEntity):
 
     knowledge = relationship('Knowledge')
 
-    def get_changed_entities(self):
-        changed_entities = super(Budget, self).get_changed_entities()
-        if 'be_transactions' in changed_entities:
-            changed_entities['be_transaction_groups'] = {}
-            for transaction_id, tr in changed_entities.pop('be_transactions').items():
+    def get_changed_apidict(self):
+        changed_api_dict = super(Budget, self).get_changed_apidict()
+        if 'be_transactions' in changed_api_dict:
+            changed_api_dict['be_transaction_groups'] = []
+            for transaction_dict in changed_api_dict.pop('be_transactions'):
+                transaction_id = transaction_dict['id']
                 subtransactions = []
-                if 'be_subtransactions' in changed_entities:
-                    for subtransaction_id, subtransaction in changed_entities['be_subtransactions'].items():
-                        if subtransaction.entities_transaction_id == transaction_id:
-                            subtransactions.append(subtransaction)
+                if 'be_subtransactions' in changed_api_dict:
+                    for subtransaction_dic in changed_api_dict['be_subtransactions'].items():
+                        if subtransaction_dic['entities_transaction_id'] == transaction_id:
+                            subtransactions.append(subtransaction_dic)
                     for subtransaction in subtransactions:
-                        del changed_entities['be_subtransactions'][subtransaction.id]
+                        changed_api_dict['be_subtransactions'].remove(subtransaction)
                 if not subtransactions:
                     subtransactions = None
-                group = TransactionGroup(
-                    id=tr.id,
-                    be_transaction=tr,
+                group = dict(
+                    id=transaction_id,
+                    be_transaction=transaction_dict,
                     be_subtransactions=subtransactions,
                     be_matched_transaction=None)
-                changed_entities['be_transaction_groups'][tr.id] = group
-        if changed_entities.get('be_subtransactions') is not None:
-            del changed_entities['be_subtransactions']
-        return changed_entities
+                changed_api_dict['be_transaction_groups'].append(group)
+        if changed_api_dict.get('be_subtransactions') is not None:
+            del changed_api_dict['be_subtransactions']
+        return changed_api_dict
 
 
 class Knowledge(Base):
