@@ -168,6 +168,7 @@ def collection_listener(rel_attr):
             del target._changed_entities[rel_attr.key][value.id]
         else:
             target._changed_entities_dict[rel_attr.key][value.id] = dict_merge(value.get_dict(), {'is_tombstone': True})
+            value.is_tombstone = True
             removed = value.copy()
             removed.is_tombstone = True
             target._changed_entities[rel_attr.key][value.id] = removed
