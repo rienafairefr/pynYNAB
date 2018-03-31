@@ -16,14 +16,6 @@ class RootEntity(BaseModel):
 
         return changed_dict
 
-    def _get_changed_dict(self, fn):
-        changed_entities = self.get_changed_entities_dict()
-        changed_dict = {}
-        for key in changed_entities:
-            changed_dict[key] = list(map(fn, changed_entities[key]))
-
-        return changed_dict
-
     def get_changed_apidict(self):
         returnvalue = {}
         changed = self.get_changed_entities()
@@ -35,9 +27,6 @@ class RootEntity(BaseModel):
 
     def get_changed_entities(self):
         return self._changed_entities
-
-    def get_changed_entities_dict(self):
-        return self._changed_entities_dict
 
     def _sort_ce_values(self, input_dict, cmp_key):
         returnvalue = {}
@@ -53,7 +42,6 @@ class RootEntity(BaseModel):
 
     @orm.reconstructor
     def clear_changed_entities(self):
-        self._changed_entities_dict = {}
         self._changed_entities = {}
 
     @declared_attr

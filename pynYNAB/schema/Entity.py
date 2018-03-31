@@ -103,7 +103,6 @@ class BaseModel(object):
         setattr(new_obj, 'listfields', listfields(cls))
         setattr(new_obj, 'rev_listfields', {v: k for k, v in listfields(cls).items()})
         setattr(new_obj, 'scalarfields', scalarfields(cls))
-        setattr(new_obj, '_changed_entities_dict', {})
         setattr(new_obj, '_changed_entities', {})
 
         return new_obj
@@ -148,26 +147,20 @@ def collection_listener(rel_attr):
     @event.listens_for(rel_attr, 'append')
     def append(target, value, initiator):
         print('append %s' % value.id)
-        container = target._changed_entities_dict.setdefault(rel_attr.key, {})
         target._changed_entities.setdefault(rel_attr.key, {})
-        if value.id in container:
-            if container[value.id]['is_tombstone']:
-                del container[value.id]
+        if value.id in target._changed_entities[rel_attr.key]:
+            if target._changed_entities[rel_attr.key][value.id].is_tombstone:
                 del target._changed_entities[rel_attr.key][value.id]
                 return
 
-        target._changed_entities_dict[rel_attr.key][value.id] = value.get_dict()
         target._changed_entities[rel_attr.key][value.id] = value
 
     def _remove(target, value):
         print('remove %s' % value.id)
-        container = target._changed_entities_dict.setdefault(rel_attr.key, {})
         target._changed_entities.setdefault(rel_attr.key, {})
-        if value.id in container:
-            del container[value.id]
+        if value.id in target._changed_entities[rel_attr.key]:
             del target._changed_entities[rel_attr.key][value.id]
         else:
-            target._changed_entities_dict[rel_attr.key][value.id] = dict_merge(value.get_dict(), {'is_tombstone': True})
             value.is_tombstone = True
             removed = value.copy()
             removed.is_tombstone = True
@@ -181,7 +174,6 @@ def collection_listener(rel_attr):
     def set(target, value, oldvalue, initiator):
         print('set %s' % value.id)
         target._changed_entities.setdefault(rel_attr.key, {})
-        target._changed_entities_dict.setdefault(rel_attr.key, {})[value.id] = value.get_dict()
 
 
 def default_listener(col_attr, default):
@@ -208,15 +200,8 @@ def attribute_track_listener(col_attr):
     @event.listens_for(col_attr, "set")
     def receive_set(target, value, oldvalue, initiator):
         if hasattr(target, 'parent') and target.parent is not None:
-            target.parent._changed_entities_dict.setdefault(target.parent.rev_listfields[target.__class__],
-                                                            {})
             target.parent._changed_entities.setdefault(target.parent.rev_listfields[target.__class__],
                                                        {})
-
-            target.parent._changed_entities_dict[target.parent.rev_listfields[target.__class__]][
-                target.id] = target.get_dict()
-            target.parent._changed_entities_dict[target.parent.rev_listfields[target.__class__]][
-                target.id][initiator.key] = value
 
             target.parent._changed_entities[target.parent.rev_listfields[target.__class__]][
                 target.id] = target
