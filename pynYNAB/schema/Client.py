@@ -40,10 +40,6 @@ class nYnabClient_(Base):
     def user_id(self):
         return self.id
 
-    @property
-    def online(self):
-        return self.connection is not None
-
     def add_missing(self):
         self.catalog = Catalog()
         self.catalog.knowledge = Knowledge()
@@ -52,11 +48,6 @@ class nYnabClient_(Base):
         self.session.add(self.catalog)
         self.session.add(self.budget)
         self.session.commit()
-
-    def init_internal_db(self):
-        Base.metadata.create_all(self.engine)
-        self.Session = sessionmaker(bind=self.engine)
-        self.session = self.Session()
 
     def sync(self, update_keys=None):
         LOG.debug('Client.sync')
