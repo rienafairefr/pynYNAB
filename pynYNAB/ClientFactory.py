@@ -1,15 +1,12 @@
 import logging
 
-import os
-
-import yaml
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from pynYNAB.ObjClient import RootObjClient
 from pynYNAB.connection import nYnabConnection
 from pynYNAB.exceptions import NoBudgetNameException, BudgetNotFound, NoCredentialsException
-from pynYNAB.schema import Base
+from pynYNAB.schema import Base, Catalog, Budget
 
 LOG = logging.getLogger(__name__)
 
@@ -22,7 +19,7 @@ class CatalogClient(RootObjClient):
     opname = 'syncCatalogData'
 
     def __init__(self, client):
-        super(CatalogClient, self).__init__(client.catalog, client)
+        super(CatalogClient, self).__init__(client.catalog, client, Catalog)
 
 
 class BudgetClient(RootObjClient):
@@ -33,7 +30,32 @@ class BudgetClient(RootObjClient):
     opname = 'syncBudgetData'
 
     def __init__(self, client):
-        super(BudgetClient, self).__init__(client.budget, client)
+        super(BudgetClient, self).__init__(client.budget, client, Budget)
+
+    def get_changed_apidict(self):
+        changed_api_dict = super(BudgetClient, self).get_changed_apidict()
+        if 'be_transactions' in changed_api_dict:
+            changed_api_dict['be_transaction_groups'] = []
+            for transaction_dict in changed_api_dict.pop('be_transactions'):
+                transaction_id = transaction_dict['id']
+                subtransactions = []
+                if 'be_subtransactions' in changed_api_dict:
+                    for subtransaction_dic in changed_api_dict['be_subtransactions']:
+                        if subtransaction_dic['entities_transaction_id'] == transaction_id:
+                            subtransactions.append(subtransaction_dic)
+                    for subtransaction in subtransactions:
+                        changed_api_dict['be_subtransactions'].remove(subtransaction)
+                if not subtransactions:
+                    subtransactions = None
+                group = dict(
+                    id=transaction_id,
+                    be_transaction=transaction_dict,
+                    be_subtransactions=subtransactions,
+                    be_matched_transaction=None)
+                changed_api_dict['be_transaction_groups'].append(group)
+        if changed_api_dict.get('be_subtransactions') is not None:
+            del changed_api_dict['be_subtransactions']
+        return changed_api_dict
 
 
 class nYnabClientFactory(object):

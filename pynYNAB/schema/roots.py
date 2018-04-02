@@ -1,10 +1,10 @@
-from sqlalchemy import Column
+from sqlalchemy import Column, ForeignKey, Table
 from sqlalchemy import Date
 from sqlalchemy import String, Integer
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, remote, backref
 
 from pynYNAB import KeyGenerator
-from pynYNAB.schema.Entity import Base
+from pynYNAB.schema.Entity import Base, Entity
 from pynYNAB.schema.RootEntity import RootEntity
 
 

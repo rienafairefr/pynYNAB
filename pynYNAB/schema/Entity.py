@@ -77,14 +77,16 @@ class ComplexEncoder(json.JSONEncoder):
 
 def listfields(cls):
     relations = inspect(cls).relationships
-    return {k: relations[k].mapper.class_ for k in relations.keys() if
-            relations[k].direction == ONETOMANY or relations[k].direction == MANYTOMANY}
+    returnvalue = {k: relations[k].mapper.class_ for k in relations.keys() if
+            relations[k].direction == ONETOMANY}
+    return returnvalue
 
 
 def scalarfields(cls):
     scalarcolumns = inspect(cls).columns
-    return {k: scalarcolumns[k].type.__class__ for k in scalarcolumns.keys() if
+    returnvalue = {k: scalarcolumns[k].type.__class__ for k in scalarcolumns.keys() if
             k != 'parent_id' and k != 'knowledge_id'}
+    return returnvalue
 
 
 EVENTS = ['append', 'remove', 'set', 'change']
@@ -101,24 +103,23 @@ class BaseModel(object):
     def __new__(cls, *args, **kwargs):
         new_obj = super(BaseModel, cls).__new__(cls)
         setattr(new_obj, 'listfields', listfields(cls))
-        setattr(new_obj, 'rev_listfields', {v: k for k, v in listfields(cls).items()})
         setattr(new_obj, 'scalarfields', scalarfields(cls))
-        setattr(new_obj, '_changed_entities', {})
 
         return new_obj
+
+    def __init__(self):
+        super(BaseModel, self).__init__(self)
+        setattr(self, 'bin', self.__class__())
 
 
 def configure_listener(mapper, class_):
     for col_attr in mapper.column_attrs:
         column = col_attr.columns[0]
-        attribute_track_listener(col_attr)
         if column.default is not None:
             default_listener(col_attr, column.default)
 
     for rel_attr in mapper.relationships:
         expectedtype_listener(rel_attr)
-        if rel_attr.direction == ONETOMANY:
-            collection_listener(rel_attr)
 
 
 def expectedtype_listener(rel_attr):
@@ -143,39 +144,6 @@ def dict_merge(a, b):
     return a.update(b) or a
 
 
-def collection_listener(rel_attr):
-    @event.listens_for(rel_attr, 'append')
-    def append(target, value, initiator):
-        print('append %s' % value.id)
-        target._changed_entities.setdefault(rel_attr.key, {})
-        if value.id in target._changed_entities[rel_attr.key]:
-            if target._changed_entities[rel_attr.key][value.id].is_tombstone:
-                del target._changed_entities[rel_attr.key][value.id]
-                return
-
-        target._changed_entities[rel_attr.key][value.id] = value
-
-    def _remove(target, value):
-        print('remove %s' % value.id)
-        target._changed_entities.setdefault(rel_attr.key, {})
-        if value.id in target._changed_entities[rel_attr.key]:
-            del target._changed_entities[rel_attr.key][value.id]
-        else:
-            value.is_tombstone = True
-            removed = value.copy()
-            removed.is_tombstone = True
-            target._changed_entities[rel_attr.key][value.id] = removed
-
-    @event.listens_for(rel_attr, 'remove')
-    def remove(target, value, initiator):
-        _remove(target, value)
-
-    @event.listens_for(rel_attr, 'set')
-    def set(target, value, oldvalue, initiator):
-        print('set %s' % value.id)
-        target._changed_entities.setdefault(rel_attr.key, {})
-
-
 def default_listener(col_attr, default):
     """Establish a default-setting listener."""
 
@@ -194,17 +162,6 @@ def default_listener(col_attr, default):
         dict_[col_attr.key] = value
 
         return value
-
-
-def attribute_track_listener(col_attr):
-    @event.listens_for(col_attr, "set")
-    def receive_set(target, value, oldvalue, initiator):
-        if hasattr(target, 'parent') and target.parent is not None:
-            target.parent._changed_entities.setdefault(target.parent.rev_listfields[target.__class__],
-                                                       {})
-
-            target.parent._changed_entities[target.parent.rev_listfields[target.__class__]][
-                target.id] = target
 
 
 re_uuid = re.compile('[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
@@ -259,7 +216,7 @@ class Entity(BaseModel):
         return self.__str__()
 
     def __str__(self):
-        return (type(self), self.id).__str__()
+        return (type(self).__name__, self.id).__str__()
 
     def __repr__(self):
         return self.__str__()

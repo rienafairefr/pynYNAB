@@ -37,7 +37,7 @@ class RootEntity(BaseModel):
         return returnvalue
 
     def __init__(self):
-        super(RootEntity, self).__init__()
+        super(BaseModel, self).__init__()
         self.clear_changed_entities()
 
     @orm.reconstructor

@@ -36,8 +36,7 @@ def get_or_create_account(client, name):
     accounts = {a.account_name: a for a in client.budget.be_accounts if
                 a.account_name == name}
     if name in accounts:
-        account = accounts[name]
-        client.delete_account(account)
+        return accounts[name]
 
     account = Account(
         account_type=AccountTypes.Checking,

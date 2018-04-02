@@ -68,7 +68,7 @@ def obj(account):
 
 
 def test_get_ce_addtransactionsubtransaction(client):
-    client.budget.clear_changed_entities()
+    client.budgetClient.clear_changed_entities()
 
     added_transaction = Transaction()
     subtransaction1 = Subtransaction(entities_transaction=added_transaction)
@@ -80,7 +80,7 @@ def test_get_ce_addtransactionsubtransaction(client):
 
     client.session.commit()
 
-    changed_entities = client.budget.get_changed_apidict()
+    changed_entities = client.budgetClient.get_changed_apidict()
     assert isinstance(changed_entities, dict)
     assert 1 == len(changed_entities.keys())
     assert 'be_transaction_groups' == list(changed_entities.keys())[0]

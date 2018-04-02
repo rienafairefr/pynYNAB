@@ -41,7 +41,7 @@ def test_roundtrip():
                     AssertionError('removed {}: {}'.format(k, obj_dict[k]))
                 for k in diff.added():
                     AssertionError('added {}: {}'.format(k, obj_dict2[k]))
-            elif key in objclient.obj.scalarfields:
+            elif key in objclient.scalarfields:
                 obj_dict2 = objclient.obj.from_apidict(server_changed_entities).get_apidict()
                 if server_changed_entities[key] != obj_dict2[key]:
                     AssertionError('changed {}: {}->{}'.format(key, server_changed_entities[key], obj_dict2[key]))

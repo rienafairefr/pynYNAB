@@ -65,6 +65,9 @@ class nYnabClient_(Base):
         self.select_budget(self.budget_name)
         self.budgetClient.sync(update_keys)
 
+        self.catalogClient.clear_changed_entities()
+        self.budgetClient.clear_changed_entities()
+
         if self.budget_version_id is None and self.budget_name is not None:
             raise BudgetNotFound()
 
@@ -72,8 +75,8 @@ class nYnabClient_(Base):
         # ending-starting represents the number of modifications that have been done to the data ?
         LOG.debug('Client.push')
 
-        catalog_changed_entities = self.catalog.get_changed_apidict()
-        budget_changed_entities = self.budget.get_changed_apidict()
+        catalog_changed_entities = self.catalogClient.get_changed_apidict()
+        budget_changed_entities = self.budgetClient.get_changed_apidict()
 
         delta = sum(len(l) for k, l in catalog_changed_entities.items()) + \
             sum(len(l) for k, l in budget_changed_entities.items())
@@ -86,6 +89,8 @@ class nYnabClient_(Base):
 
         self.catalogClient.push()
         self.budgetClient.push()
+        self.catalogClient.clear_changed_entities()
+        self.budgetClient.clear_changed_entities()
 
         self.starting_device_knowledge = self.ending_device_knowledge
         self.session.commit()
