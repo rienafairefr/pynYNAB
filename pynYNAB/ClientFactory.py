@@ -111,14 +111,22 @@ class nYnabClientFactory(object):
             LOG.error('No budget by the name %s found in nYNAB' % budget_name)
             raise
 
+    @classmethod
+    def from_args(cls, args, sync=True):
+        return nYnabClientFactory().create_client(args.email, args.password, args.budget_name, args.connection, sync)
+
+    @classmethod
+    def from_kwargs(cls, **kwargs):
+        return nYnabClientFactory().create_client(kwargs.get("email", None),
+                                                  kwargs.get("password", None),
+                                                  kwargs.get("budget_name", None),
+                                                  kwargs.get("connection", None),
+                                                  kwargs.get("sync", True))
+
 
 def clientfromargs(args, sync=True):
-    return nYnabClientFactory().create_client(args.email, args.password, args.budget_name, args.connection, sync)
+    return nYnabClientFactory.from_args(args, sync)
 
 
 def clientfromkwargs(**kwargs):
-    return nYnabClientFactory().create_client(kwargs.get("email", None),
-                                              kwargs.get("password", None),
-                                              kwargs.get("budget_name", None),
-                                              kwargs.get("connection", None),
-                                              kwargs.get("sync", True))
+    return nYnabClientFactory.from_kwargs(**kwargs)
