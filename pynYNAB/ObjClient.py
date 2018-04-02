@@ -18,13 +18,10 @@ def split_seq(iterable, size):
 
 
 class RootObjClient():
-    __metaclass__ = ABCMeta
 
-    @abstractproperty
     def extra(self):
         return {}
 
-    @abstractproperty
     def opname(self):
         return ''
 
@@ -44,7 +41,7 @@ class RootObjClient():
 
         mapper_obj = inspect(cls)
         for rel_attr in mapper_obj.relationships:
-            if rel_attr.key in obj.listfields:
+            if rel_attr.key in self.listfields:
                 self.collection_listener(rel_attr)
 
         for container,cls in self.listfields.items():

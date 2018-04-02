@@ -1,6 +1,7 @@
 import pytest
 from mock import Mock
 
+from pynYNAB.ClientFactory import BudgetClient
 from pynYNAB.ObjClient import RootObjClient
 from pynYNAB.schema import nYnabClient_
 from pynYNAB.schema.budget import Account
@@ -8,17 +9,19 @@ from pynYNAB.schema.roots import Budget
 
 
 @pytest.fixture
-def obj(account):
-    budget = Budget()
+def obj(objclient, account):
+    budget = objclient.obj
     budget.be_accounts = [account]
     account.parent = budget
+    objclient.clear_changed_entities()
     return budget
 
 
 @pytest.fixture
-def objclient(obj):
+def objclient():
     client = Mock(spec=nYnabClient_)
-    obj_client = RootObjClient(obj, client, Budget)
+    client.budget = Budget()
+    obj_client = BudgetClient(client)
     return obj_client
 
 
