@@ -2,7 +2,7 @@
 import pytest
 
 from pynYNAB.ClientFactory import clientfromkwargs
-from pynYNAB.schema.Entity import fromapi_conversion_functions_table
+from pynYNAB.schema import fromapi_conversion_functions_table
 from pynYNAB.schema.types import AmountType
 from pynYNAB.scripts.helpers import merge_config
 

@@ -40,31 +40,6 @@ class Budget(Base, RootEntity):
 
     knowledge = relationship('Knowledge')
 
-    def get_changed_apidict(self):
-        changed_api_dict = super(Budget, self).get_changed_apidict()
-        if 'be_transactions' in changed_api_dict:
-            changed_api_dict['be_transaction_groups'] = []
-            for transaction_dict in changed_api_dict.pop('be_transactions'):
-                transaction_id = transaction_dict['id']
-                subtransactions = []
-                if 'be_subtransactions' in changed_api_dict:
-                    for subtransaction_dic in changed_api_dict['be_subtransactions'].items():
-                        if subtransaction_dic['entities_transaction_id'] == transaction_id:
-                            subtransactions.append(subtransaction_dic)
-                    for subtransaction in subtransactions:
-                        changed_api_dict['be_subtransactions'].remove(subtransaction)
-                if not subtransactions:
-                    subtransactions = None
-                group = dict(
-                    id=transaction_id,
-                    be_transaction=transaction_dict,
-                    be_subtransactions=subtransactions,
-                    be_matched_transaction=None)
-                changed_api_dict['be_transaction_groups'].append(group)
-        if changed_api_dict.get('be_subtransactions') is not None:
-            del changed_api_dict['be_subtransactions']
-        return changed_api_dict
-
 
 class Knowledge(Base):
     __tablename__ = 'knowledge'

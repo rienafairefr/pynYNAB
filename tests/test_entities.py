@@ -12,8 +12,10 @@ from sqlalchemy import Integer
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from pynYNAB.ClientFactory import nYnabClientFactory
-from pynYNAB.schema.Entity import Entity, ComplexEncoder, Base, AccountTypes
+from pynYNAB.ClientFactory import nYnabClientFactory, BudgetClient
+from pynYNAB.schema.Entity import Entity, Base
+from pynYNAB.connection import ComplexEncoder
+from pynYNAB.schema import AccountTypes
 from pynYNAB.schema.budget import Account, Transaction, Subtransaction
 from pynYNAB.schema.catalog import User
 from pynYNAB.schema.roots import Budget
@@ -46,25 +48,22 @@ def client(account):
                                                 sync=False)
     client.budget.be_accounts = [account]
     client.session.commit()
-    client.budget.clear_changed_entities()
+    client.budgetClient.clear_changed_entities()
     return client
 
 
 @pytest.fixture
-def obj_w_account(account):
+def obj_w_account(client, account):
     ObjWAccount = namedtuple('ObjWAccount', ['obj', 'account'])
-    budget = Budget()
+    budget = client.budgetClient.budget
     budget.be_accounts = [account]
-    budget.clear_changed_entities()
+    client.budgetClient.clear_changed_entities()
     return ObjWAccount(budget, account)
 
 
 @pytest.fixture
-def obj(account):
-    budget = Budget()
-    budget.be_accounts = [account]
-    budget.clear_changed_entities()
-    return budget
+def obj(client):
+    return client.budgetClient.budget
 
 
 def test_get_ce_addtransactionsubtransaction(client):

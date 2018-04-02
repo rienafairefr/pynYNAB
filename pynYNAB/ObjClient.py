@@ -88,18 +88,18 @@ class RootObjClient():
             if target == self.obj:
                 print('c remove %s' % value.id)
                 container = getattr(self.changed, rel_attr.key)
-                try:
+                if value in container:
                     container.remove(value)
-                except Exception as e:
-                    # added to container via attribute_track listener
+                else:
                     value.is_tombstone = True
-
+                    if value not in container:
+                        container.append(value)
 
     def attribute_track_listener(self, col_attr):
         @event.listens_for(col_attr, "set")
         def receive_set(target, value, oldvalue, initiator):
-            if hasattr(target, 'parent') and target.parent  is not None and target.parent == self.obj == self.obj:
-                print('c attr set %s' % target.id)
+            if hasattr(target, 'parent') and target.parent  is not None and target.parent == self.obj:
+                print('c attr set %s %s' % (target.id, initiator.key))
                 getattr(self.changed, self.rev_listfields[target.__class__]).append(target)
 
     def update_from_api_changed_entitydicts(self, changed_entitydicts, update_keys=None):
@@ -166,7 +166,7 @@ class RootObjClient():
         LOG.debug('current_server_knowledge ' + str(sync_data['current_server_knowledge']))
         self.update_from_sync_data(sync_data,update_keys)
         self.session.commit()
-        self.obj.clear_changed_entities()
+        self.clear_changed_entities()
 
         server_knowledge_of_device = sync_data['server_knowledge_of_device']
         current_server_knowledge = sync_data['current_server_knowledge']

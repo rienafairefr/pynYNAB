@@ -53,9 +53,7 @@ def client():
     obj.budget.be_subcategories.append(subcategory)
     obj.budget.be_payees.append(payee)
     session.commit()
-    obj.budget.clear_changed_entities()
     obj.budgetClient.clear_changed_entities()
-    obj.catalog.clear_changed_entities()
     obj.catalogClient.clear_changed_entities()
 
     obj.budgetClient.device_knowledge_of_server = 0
