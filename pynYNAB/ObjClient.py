@@ -17,7 +17,7 @@ def split_seq(iterable, size):
         item = list(itertools.islice(it, size))
 
 
-class RootObjClient():
+class RootObjClient(object):
 
     def extra(self):
         return {}
