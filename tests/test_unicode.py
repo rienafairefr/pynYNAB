@@ -14,7 +14,7 @@ def run_test(payee_name):
     client = nYnabClientFactory().create_client(budget_name=u'budgetname',
                                                 connection=MockConnection(),
                                                 sync=False)
-    client.budget.be_payees.append(payee)
+    client.budget.payees.append(payee)
     client.session.commit()
 
 

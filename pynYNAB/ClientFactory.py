@@ -17,6 +17,7 @@ class CatalogClient(RootObjClient):
         return dict(user_id=self.client.user_id)
 
     opname = 'syncCatalogData'
+    prefix = 'ce_'
 
     def __init__(self, client):
         super(CatalogClient, self).__init__(client.catalog, client, Catalog)
@@ -28,33 +29,34 @@ class BudgetClient(RootObjClient):
         return dict(calculated_entities_included=False, budget_version_id=self.client.budget_version_id)
 
     opname = 'syncBudgetData'
+    prefix = 'be_'
 
     def __init__(self, client):
         super(BudgetClient, self).__init__(client.budget, client, Budget)
 
     def get_changed_apidict(self):
         changed_api_dict = super(BudgetClient, self).get_changed_apidict()
-        if 'be_transactions' in changed_api_dict:
-            changed_api_dict['be_transaction_groups'] = []
-            for transaction_dict in changed_api_dict.pop('be_transactions'):
+        if 'transactions' in changed_api_dict:
+            changed_api_dict['transaction_groups'] = []
+            for transaction_dict in changed_api_dict.pop('transactions'):
                 transaction_id = transaction_dict['id']
                 subtransactions = []
-                if 'be_subtransactions' in changed_api_dict:
-                    for subtransaction_dic in changed_api_dict['be_subtransactions']:
+                if 'subtransactions' in changed_api_dict:
+                    for subtransaction_dic in changed_api_dict['subtransactions']:
                         if subtransaction_dic['entities_transaction_id'] == transaction_id:
                             subtransactions.append(subtransaction_dic)
                     for subtransaction in subtransactions:
-                        changed_api_dict['be_subtransactions'].remove(subtransaction)
+                        changed_api_dict['subtransactions'].remove(subtransaction)
                 if not subtransactions:
                     subtransactions = None
                 group = dict(
                     id=transaction_id,
-                    be_transaction=transaction_dict,
-                    be_subtransactions=subtransactions,
-                    be_matched_transaction=None)
-                changed_api_dict['be_transaction_groups'].append(group)
-        if changed_api_dict.get('be_subtransactions') is not None:
-            del changed_api_dict['be_subtransactions']
+                    transaction=transaction_dict,
+                    subtransactions=subtransactions,
+                    matched_transaction=None)
+                changed_api_dict['transaction_groups'].append(group)
+        if changed_api_dict.get('subtransactions') is not None:
+            del changed_api_dict['subtransactions']
         return changed_api_dict
 
 

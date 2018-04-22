@@ -73,26 +73,29 @@ def test_get_ce_addtransactionsubtransaction(client):
     subtransaction1 = Subtransaction(entities_transaction=added_transaction)
     subtransaction2 = Subtransaction(entities_transaction=added_transaction)
 
-    client.budget.be_transactions.append(added_transaction)
-    client.budget.be_subtransactions.append(subtransaction1)
-    client.budget.be_subtransactions.append(subtransaction2)
+    client.budget.transactions.append(added_transaction)
+    client.budget.subtransactions.append(subtransaction1)
+    client.budget.subtransactions.append(subtransaction2)
 
     client.session.commit()
 
     changed_entities = client.budgetClient.get_changed_apidict()
+
     assert isinstance(changed_entities, dict)
     assert 1 == len(changed_entities.keys())
-    assert 'be_transaction_groups' == list(changed_entities.keys())[0]
-    transaction_groups = list(changed_entities['be_transaction_groups'])
+    assert 'transaction_groups' == list(changed_entities.keys())[0]
+    transaction_groups = list(changed_entities['transaction_groups'])
 
     assert 1 == len(transaction_groups)
-    assert added_transaction.get_apidict() == transaction_groups[0]['be_transaction']
+    assert added_transaction.get_apidict() == transaction_groups[0]['transaction']
 
-    assert transaction_groups[0]['be_subtransactions'] is not None
-    subtransactions = transaction_groups[0]['be_subtransactions']
+    assert transaction_groups[0]['subtransactions'] is not None
+    subtransactions = transaction_groups[0]['subtransactions']
     assert len(subtransactions) == 2
     assert subtransaction1.get_apidict() in subtransactions
     assert subtransaction2.get_apidict() in subtransactions
+
+
 
 
 def test_arraytype(session):
@@ -132,9 +135,9 @@ def test_repr():
 def test_append():
     obj = Budget()
     account = Account()
-    obj.be_accounts.append(account)
-    assert len(obj.be_accounts) == 1
-    assert list(obj.be_accounts)[-1] == account
+    obj.accounts.append(account)
+    assert len(obj.accounts) == 1
+    assert list(obj.accounts)[-1] == account
 
 
 def test_str():
@@ -144,7 +147,7 @@ def test_str():
     obj.__unicode__()
 
     obj2 = Budget()
-    obj2.be_accounts.__str__()
+    obj2.accounts.__str__()
 
 
 def test_copy():

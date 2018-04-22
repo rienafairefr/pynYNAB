@@ -11,7 +11,7 @@ from datetime import datetime
 
 @pytest.fixture
 def account(live_client_w_account):
-    for account in live_client_w_account.budget.be_accounts:
+    for account in live_client_w_account.budget.accounts:
         return account
 
 
@@ -22,7 +22,7 @@ def live_client():
 
 @pytest.fixture
 def live_client_w_account(live_client):
-    if len(live_client.budget.be_accounts) > 0:
+    if len(live_client.budget.accounts) > 0:
         return live_client
     util_add_account(live_client, 'TestAccount')
     return live_client
@@ -42,10 +42,10 @@ def test_add_deletetransaction(account, live_client_w_account):
     )
     live_client_w_account.add_transaction(transaction)
     live_client_w_account = reload()
-    assert transaction in live_client_w_account.budget.be_transactions
+    assert transaction in live_client_w_account.budget.transactions
     live_client_w_account.delete_transaction(transaction)
     live_client_w_account = reload()
-    assert transaction not in live_client_w_account.budget.be_transactions
+    assert transaction not in live_client_w_account.budget.transactions
 
 
 def test_add_deleteaccount(live_client):
@@ -56,7 +56,7 @@ def test_add_deleteaccount(live_client):
     live_client.add_account(account, balance=random.randint(-10, 10), balance_date=datetime.now())
     live_client = reload()
 
-    assert account in live_client.budget.be_accounts
+    assert account in live_client.budget.accounts
     live_client.delete_account(account)
     live_client = reload()
-    assert account not in live_client.budget.be_accounts
+    assert account not in live_client.budget.accounts

@@ -33,7 +33,7 @@ def rate_limited(maxpersecond):
 
 
 def get_or_create_account(client, name):
-    accounts = {a.account_name: a for a in client.budget.be_accounts if
+    accounts = {a.account_name: a for a in client.budget.accounts if
                 a.account_name == name}
     if name in accounts:
         return accounts[name]
@@ -48,7 +48,7 @@ def get_or_create_account(client, name):
 
 
 def get_or_create_payee(client, name):
-    payees = {p.name: p for p in client.budget.be_payees if
+    payees = {p.name: p for p in client.budget.payees if
               p.name == name}
     if name in payees:
         return payees[name]
@@ -56,7 +56,7 @@ def get_or_create_payee(client, name):
         name=name
     )
 
-    client.budget.be_payees.append(payee)
+    client.budget.payees.append(payee)
     client.push(1)
     return payee
 

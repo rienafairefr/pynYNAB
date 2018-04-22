@@ -14,7 +14,7 @@ args = parser.parse_known_args()[0]
 client = clientfromargs(args)
 client.sync()
 
-accounts = {v.account_name:v for v in client.budget.be_accounts}
+accounts = {v.account_name:v for v in client.budget.accounts}
 payees = {p.name:p for p in client.budget.be_payees}
 listaccounts = list(accounts.values())
 account0 = listaccounts[0]

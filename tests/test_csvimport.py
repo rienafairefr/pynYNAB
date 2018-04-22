@@ -13,7 +13,7 @@ from tests.common_mock import client
 
 
 def ensure_has_account(client, account_name):
-    for account in client.budget.be_accounts:
+    for account in client.budget.accounts:
         if account_name is None or account.account_name == account_name:
             return client
     util_add_account(client, account_name)
@@ -68,7 +68,7 @@ def test_duplicate(client_w_account_credit):
                                   'Buying pants',
                                   'Credit')
     client.budgetClient.clear_changed_entities()
-    client.budget.be_transactions.append(transaction)
+    client.budget.transactions.append(transaction)
     verify_csvimport(args.schema, args.account_name)
     delta = do_csvimport(args, client)
     assert delta == 0
@@ -88,12 +88,12 @@ def test_duplicateForced(client_w_account_cash):
                                   'Buying pants',
                                   'Cash')
 
-    client.budget.be_transactions.append(transaction)
+    client.budget.transactions.append(transaction)
     verify_csvimport(args.schema, args.account_name)
     delta = do_csvimport(args, client)
     assert delta == 1
 
-    assert sum(1 for tr in client.budget.be_transactions if tr.key2 == transaction.key2) == 2
+    assert sum(1 for tr in client.budget.transactions if tr.key2 == transaction.key2) == 2
 
 
 def test_import(client_w_accounts):
@@ -119,7 +119,7 @@ def test_import(client_w_accounts):
     verify_csvimport(args.schema, args.account_name)
     do_csvimport(args, client)
     for transaction in transactions:
-        assert transaction.key2 in [tr.key2 for tr in client.budget.be_transactions]
+        assert transaction.key2 in [tr.key2 for tr in client.budget.transactions]
 
 
 __all__ = ['client']

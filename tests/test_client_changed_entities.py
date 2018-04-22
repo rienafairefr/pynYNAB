@@ -11,7 +11,7 @@ from pynYNAB.schema.roots import Budget
 @pytest.fixture
 def obj(objclient, account):
     budget = objclient.obj
-    budget.be_accounts = [account]
+    budget.accounts = [account]
     account.parent = budget
     objclient.clear_changed_entities()
     return budget
@@ -32,44 +32,44 @@ def account():
 
 def test_get_ce_add(obj, objclient):
     added_account = Account()
-    obj.be_accounts.append(added_account)
+    obj.accounts.append(added_account)
     changed_entities = objclient.get_changed_entities()
-    assert changed_entities == {'be_accounts': {added_account.id:added_account}}
+    assert changed_entities == {'accounts': {added_account.id:added_account}}
 
 
 def test_get_ce_replace(obj, objclient, account):
     added_account = Account()
-    obj.be_accounts = [added_account]
+    obj.accounts = [added_account]
     changed_entities = objclient.get_changed_entities()
     removed_account = account.copy()
     removed_account.is_tombstone = True
-    assert changed_entities == {'be_accounts': {added_account.id:added_account, removed_account.id:removed_account}}
+    assert changed_entities == {'accounts': {added_account.id:added_account, removed_account.id:removed_account}}
 
 
 def test_get_ce_delete(obj, objclient, account):
-    obj.be_accounts.remove(account)
+    obj.accounts.remove(account)
     changed_entities = objclient.get_changed_entities()
     deleted = account.copy()
     deleted.is_tombstone = True
-    assert changed_entities == {'be_accounts': {deleted.id:deleted}}
+    assert changed_entities == {'accounts': {deleted.id:deleted}}
 
 
 def test_get_ce_modify(obj, objclient, account):
     account.account_name = 'BLA'
     changed_entities = objclient.get_changed_entities()
-    assert changed_entities == {'be_accounts': {account.id:account}}
+    assert changed_entities == {'accounts': {account.id:account}}
 
 
 def test_get_ce_add_delete(obj, objclient):
     added_account = Account()
-    obj.be_accounts.append(added_account)
-    obj.be_accounts.remove(added_account)
+    obj.accounts.append(added_account)
+    obj.accounts.remove(added_account)
     changed_entities = objclient.get_changed_entities()
     assert changed_entities == {}
 
 
 def test_get_ce_delete_add(obj, objclient, account):
-    obj.be_accounts.remove(account)
-    obj.be_accounts.append(account)
+    obj.accounts.remove(account)
+    obj.accounts.append(account)
     changed_entities = objclient.get_changed_entities()
     assert changed_entities == {}

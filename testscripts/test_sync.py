@@ -13,6 +13,6 @@ client = nYnabClientFactory().create_client(args)
 client.sync()
 
 for i in range(0,1000):
-    client.budget.be_transactions.append(Transaction())
+    client.budget.transactions.append(Transaction())
 client.push(1000)
 print('OK')

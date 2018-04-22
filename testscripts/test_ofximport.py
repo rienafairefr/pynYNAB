@@ -107,5 +107,6 @@ NEWFILEUID:NONE
 
         delta = do_ofximport(args,self.client)
         self.assertEqual(delta,1,msg="should add exactly one transaction")
-        self.assertIn(transaction.key2, [tr.key2 for tr in self.client.budget.be_transactions],
+        self.assertIn(transaction.key2, [tr.key2 for tr in self.client.budget.
+                      transactions],
                       msg='couldnt find an imported transaction after ofx import')

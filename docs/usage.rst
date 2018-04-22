@@ -55,9 +55,9 @@ for you in the background through sqlAlchemy modification hooks.
 Here we add two transactions and one payee, then push them::
 
     client.sync()
-    client.budget.be_transactions.append(transaction1)
-    client.budget.be_transactions.append(transaction2)
-    client.budget.be_payees.append(payee)
+    client.budget.transactions.append(transaction1)
+    client.budget.transactions.append(transaction2)
+    client.budget.payees.append(payee)
     client.budget.push(3)
 
 With the first sync, the amount of currently modified data is reset to 0, and the additions of data are tracked
