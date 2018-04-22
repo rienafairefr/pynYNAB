@@ -5,10 +5,11 @@ import uuid
 from time import sleep
 
 import requests
+from aenum import Enum
 from requests.cookies import RequestsCookieJar
 
 from pynYNAB.KeyGenerator import generateuuid
-from pynYNAB.schema.Entity import ComplexEncoder
+from pynYNAB.schema import Entity
 from pynYNAB.utils import rate_limited, pp_json
 
 LOG = logging.getLogger(__name__)
@@ -94,3 +95,12 @@ class nYnabConnection(object):
         else:
             errorout('Unknown API Error \"%s\" was returned from the API when sending request (%s)' % (error['id'], params))
 
+
+class ComplexEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Entity):
+            return obj.get_apidict()
+        elif isinstance(obj, Enum):
+            return obj.value
+        else:
+            return json.JSONEncoder.default(self, obj)

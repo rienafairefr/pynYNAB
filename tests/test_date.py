@@ -1,8 +1,7 @@
 import re
 from datetime import datetime
 
-from pynYNAB.schema.Entity import date_from_api
-
+from pynYNAB.schema import date_from_api
 
 strdate0 = '2015-04-03'
 date0 = datetime.strptime(strdate0, '%Y-%m-%d').date()

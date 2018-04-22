@@ -8,8 +8,8 @@ from sqlalchemy import String
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
 
-from pynYNAB.schema.Entity import Entity, AccountTypes, Base, ColorFlagType
-from pynYNAB.schema.types import AmountType
+from pynYNAB.schema.Entity import Entity, Base
+from pynYNAB.schema.types import AccountTypes, ColorFlagType, AmountType
 
 
 class BudgetEntity(Entity):
@@ -277,14 +277,6 @@ class MonthlySubcategoryBudget(Base, BudgetEntity):
     entities_subcategory = relationship('SubCategory', foreign_keys=entities_subcategory_id)
     note = Column(String)
     overspending_handling = Column(String)
-
-
-class TransactionGroup(dict):
-    def get_apidict(self):
-        return self
-
-    def get_dict(self):
-        return self
 
 
 class PayeeRenameCondition(Base, BudgetEntity):

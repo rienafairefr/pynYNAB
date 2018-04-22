@@ -16,7 +16,8 @@ def ensure_has_account(client, account_name):
     for account in client.budget.be_accounts:
         if account_name is None or account.account_name == account_name:
             return client
-        util_add_account(client, account_name)
+    util_add_account(client, account_name)
+    client.budgetClient.clear_changed_entities()
     return client
 
 
@@ -66,6 +67,7 @@ def test_duplicate(client_w_account_credit):
     transaction = get_transaction(client, datetime(year=2016, month=2, day=1).date(), 'Super Pants Inc.', -20,
                                   'Buying pants',
                                   'Credit')
+    client.budgetClient.clear_changed_entities()
     client.budget.be_transactions.append(transaction)
     verify_csvimport(args.schema, args.account_name)
     delta = do_csvimport(args, client)

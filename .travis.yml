@@ -7,7 +7,7 @@ python:
 install:
 - PACKAGE_VERSION=`python setup.py --version`
 - TAG_NAME=v$PACKAGE_VERSION
-- pip install tox-travis
+- pip install -r dev-requirements.txt
 before_install:
 - export TRAVIS_COMMIT_MESSAGE=$(git log --format=%B -n 1 $TRAVIS_COMMIT)
 - echo "$TRAVIS_COMMIT_MESSAGE"

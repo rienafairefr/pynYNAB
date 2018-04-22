@@ -2,7 +2,7 @@ import datetime
 
 from sqlalchemy import Date
 
-from pynYNAB.schema.Entity import fromapi_conversion_functions_table, toapi_conversion_functions_table
+from pynYNAB.schema import toapi_conversion_functions_table, fromapi_conversion_functions_table
 from pynYNAB.schema.types import AmountType
 
 

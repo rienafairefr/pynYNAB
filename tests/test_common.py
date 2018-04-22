@@ -27,8 +27,8 @@ class TestCommonMock(unittest.TestCase):
         self.client.budget.be_subcategories.append(subcategory)
         self.client.budget.be_payees.append(payee)
         session.commit()
-        self.client.budget.clear_changed_entities()
-        self.client.catalog.clear_changed_entities()
+        self.client.budgetClient.clear_changed_entities()
+        self.client.catalogClient.clear_changed_entities()
 
         self.client.budgetClient.device_knowledge_of_server = 0
         self.client.catalogClient.device_knowledge_of_server = 0

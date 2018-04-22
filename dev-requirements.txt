@@ -3,3 +3,4 @@ coveralls
 pytest
 jsbeautifier
 python-dotenv
+tox-travis

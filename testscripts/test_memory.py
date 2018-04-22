@@ -20,7 +20,7 @@ def func():
     for i in range(0,5000):
         client.budget.be_transactions.append(Transaction())
     client.session.commit()
-    client.budget.clear_changed_entities()
+    client.budgetClient.clear_changed_entities()
     print('Entities in the client: %i'%(sum([len(getattr(client.budget, f)) for f in client.budget.listfields]) +
           sum([len(getattr(client.catalog, f)) for f in client.catalog.listfields])))
     pass

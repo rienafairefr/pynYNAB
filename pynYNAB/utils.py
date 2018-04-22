@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
-from pynYNAB.schema.Entity import AccountTypes
+from pynYNAB.schema import AccountTypes
 from pynYNAB.schema.budget import Account, Payee
 
 
@@ -36,8 +36,7 @@ def get_or_create_account(client, name):
     accounts = {a.account_name: a for a in client.budget.be_accounts if
                 a.account_name == name}
     if name in accounts:
-        account = accounts[name]
-        client.delete_account(account)
+        return accounts[name]
 
     account = Account(
         account_type=AccountTypes.Checking,

@@ -12,8 +12,10 @@ from sqlalchemy import Integer
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from pynYNAB.ClientFactory import nYnabClientFactory
-from pynYNAB.schema.Entity import Entity, ComplexEncoder, Base, AccountTypes
+from pynYNAB.ClientFactory import nYnabClientFactory, BudgetClient
+from pynYNAB.schema.Entity import Entity, Base
+from pynYNAB.connection import ComplexEncoder
+from pynYNAB.schema import AccountTypes
 from pynYNAB.schema.budget import Account, Transaction, Subtransaction
 from pynYNAB.schema.catalog import User
 from pynYNAB.schema.roots import Budget
@@ -46,28 +48,27 @@ def client(account):
                                                 sync=False)
     client.budget.be_accounts = [account]
     client.session.commit()
-    client.budget.clear_changed_entities()
+    client.budgetClient.clear_changed_entities()
     return client
 
 
 @pytest.fixture
-def obj_w_account(account):
+def obj_w_account(client, account):
     ObjWAccount = namedtuple('ObjWAccount', ['obj', 'account'])
-    budget = Budget()
+    budget = client.budgetClient.budget
     budget.be_accounts = [account]
-    budget.clear_changed_entities()
+    client.budgetClient.clear_changed_entities()
     return ObjWAccount(budget, account)
 
 
 @pytest.fixture
-def obj(account):
-    budget = Budget()
-    budget.be_accounts = [account]
-    budget.clear_changed_entities()
-    return budget
+def obj(client):
+    return client.budgetClient.budget
 
 
 def test_get_ce_addtransactionsubtransaction(client):
+    client.budgetClient.clear_changed_entities()
+
     added_transaction = Transaction()
     subtransaction1 = Subtransaction(entities_transaction=added_transaction)
     subtransaction2 = Subtransaction(entities_transaction=added_transaction)
@@ -78,20 +79,20 @@ def test_get_ce_addtransactionsubtransaction(client):
 
     client.session.commit()
 
-    changed_entities = client.budget.get_changed_entities()
+    changed_entities = client.budgetClient.get_changed_apidict()
     assert isinstance(changed_entities, dict)
     assert 1 == len(changed_entities.keys())
     assert 'be_transaction_groups' == list(changed_entities.keys())[0]
-    transaction_groups = changed_entities['be_transaction_groups']
+    transaction_groups = list(changed_entities['be_transaction_groups'])
 
     assert 1 == len(transaction_groups)
-    assert added_transaction == transaction_groups[0]['be_transaction']
+    assert added_transaction.get_apidict() == transaction_groups[0]['be_transaction']
 
     assert transaction_groups[0]['be_subtransactions'] is not None
-    try:
-        assert {subtransaction1, subtransaction2} == set(transaction_groups[0]['be_subtransactions'])
-    except AttributeError:
-        assert len([subtransaction1, subtransaction2]) == len(set(transaction_groups[0]['be_subtransactions']))
+    subtransactions = transaction_groups[0]['be_subtransactions']
+    assert len(subtransactions) == 2
+    assert subtransaction1.get_apidict() in subtransactions
+    assert subtransaction2.get_apidict() in subtransactions
 
 
 def test_arraytype(session):
