@@ -60,23 +60,6 @@ def get_or_create_payee(client, name):
     client.push(1)
     return payee
 
-def get_one_or_create(session,
-                      model,
-                      create_method='',
-                      create_method_kwargs=None,
-                      **kwargs):
-    try:
-        return session.query(model).filter_by(**kwargs).one(), False
-    except NoResultFound:
-        kwargs.update(create_method_kwargs or {})
-        created = getattr(model, create_method, model)(**kwargs)
-        try:
-            session.add(created)
-            session.flush()
-            return created, True
-        except IntegrityError:
-            session.rollback()
-            return session.query(model).filter_by(**kwargs).one(), True
 
 # https://stackoverflow.com/a/37757378/1685379
 def pp_json(json_thing, sort=True, indents=4):

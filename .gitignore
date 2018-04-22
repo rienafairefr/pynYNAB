@@ -16,3 +16,5 @@ testscripts/*.json
 \.pytest_cache/
 
 \.cache/v/cache/
+
+\.python-version
