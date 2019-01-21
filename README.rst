@@ -12,6 +12,10 @@
 nYNABapi
 ========
 
+**this library was written using the internal undocumented YNAB API**
+**You should use a library using the newer PAPI (Public API) for YNAB**
+`PAPI`_
+
 a python client for the new YNAB API. This is integrating with the old-school, internal-use API
 on https://app.youneedabudget.com/api/v1, not the new API that went live on December 2017
 
@@ -57,3 +61,4 @@ I've taken all precautionary steps so that this python Client can't affect YNAB 
 .. _WIKI: https://github.com/rienafairefr/pynYNAB/wiki
 .. _DOCS: http://rienafairefr.github.io/pynYNAB/
 .. _SCRIPTS_DOCS: http://rienafairefr.github.io/pynYNAB/scripts.html
+.. _PAPI: https://api.youneedabudget.com/
